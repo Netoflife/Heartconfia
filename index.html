@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HeartConfia | Anonymous Relationships</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background-color: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
+        .bg-card { background-color: #111111; border: 1px solid #222; }
+        .paywall-blur { filter: blur(8px); pointer-events: none; user-select: none; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 1. PROJECT CONFIG
+        const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+        const SUPABASE_KEY = 'YOUR_ANON_KEY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const App = () => {
+            const [posts, setPosts] = useState([]);
+            const [user, setUser] = useState(null);
+            const [view, setView] = useState('feed'); // 'feed', 'auth', 'create'
+            const [isLogin, setIsLogin] = useState(true);
+
+            useEffect(() => {
+                const session = supabase.auth.getSession().then(({ data }) => {
+                    setUser(data.session?.user || null);
+                });
+                fetchPosts();
+                
+                // Real-time listener
+                const channel = supabase.channel('schema-db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
+                    fetchPosts();
+                }).subscribe();
+
+                return () => supabase.removeChannel(channel);
+            }, []);
+
+            const fetchPosts = async () => {
+                const { data } = await supabase.from('posts').select(`
+                    *,
+                    profiles ( anonymous_name ),
+                    reactions ( type, user_id ),
+                    votes ( vote_type, user_id )
+                `).order('created_at', { ascending: false });
+                if (data) setPosts(data);
+            };
+
+            const handleAuth = async (e) => {
+                e.preventDefault();
+                const email = e.target.email.value;
+                const password = e.target.password.value;
+                
+                if (isLogin) {
+                    const { error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) alert(error.message);
+                } else {
+                    // Sign up + Create Profile with the Heart_#### logic
+                    const anonName = `Heart_${Math.floor(1000 + Math.random() * 9000)}`;
+                    const { data, error } = await supabase.auth.signUp({ 
+                        email, password, 
+                        options: { data: { anonymous_name: anonName } } 
+                    });
+                    if (error) alert(error.message);
+                    else alert("Check your email for verification!");
+                }
+                const { data: { session } } = await supabase.auth.getSession();
+                setUser(session?.user);
+                setView('feed');
+            };
+
+            return (
+                <div className="max-w-lg mx-auto min-h-screen pb-20">
+                    {/* Header */}
+                    <header className="p-4 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-40">
+                        <h1 className="text-xl font-black text-rose-500 italic">HeartConfia</h1>
+                        {user ? (
+                            <div className="flex items-center gap-3">
+                                <button onClick={() => setView('create')} className="bg-rose-600 p-2 rounded-full text-white">＋</button>
+                                <button onClick={() => supabase.auth.signOut().then(()=>setUser(null))} className="text-xs text-gray-500">Sign Out</button>
+                            </div>
+                        ) : (
+                            <button onClick={() => setView('auth')} className="text-sm font-bold bg-white text-black px-4 py-1.5 rounded-full">Login</button>
+                        )}
+                    </header>
+
+                    {view === 'auth' ? (
+                        <div className="p-6 pt-10">
+                            <h2 className="text-3xl font-bold mb-2">{isLogin ? 'Welcome Back' : 'Join Privately'}</h2>
+                            <p className="text-gray-500 mb-8">Confess your secrets anonymously.</p>
+                            <form onSubmit={handleAuth} className="space-y-4">
+                                <input name="email" type="email" placeholder="Email" className="w-full bg-card p-4 rounded-2xl outline-none focus:border-rose-500 border border-transparent" />
+                                <input name="password" type="password" placeholder="Password" className="w-full bg-card p-4 rounded-2xl outline-none focus:border-rose-500 border border-transparent" />
+                                <button className="w-full bg-rose-600 text-white font-bold p-4 rounded-2xl">
+                                    {isLogin ? 'Sign In' : 'Create Account'}
+                                </button>
+                            </form>
+                            <p onClick={() => setIsLogin(!isLogin)} className="text-center mt-6 text-sm text-gray-400 cursor-pointer">
+                                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
+                            </p>
+                        </div>
+                    ) : view === 'create' ? (
+                        <CreatePost user={user} onDone={() => setView('feed')} />
+                    ) : (
+                        <div className="p-4 space-y-4">
+                            {posts.map(post => (
+                                <PostCard key={post.id} post={post} user={user} onLocked={() => setView('auth')} />
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Navbar */}
+                    <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-black border-t border-gray-900 flex justify-around p-4 text-gray-500">
+                        <button className="text-rose-500" onClick={() => setView('feed')}>🏠</button>
+                        <button onClick={() => alert('Trending coming soon!')}>🔥</button>
+                        <button onClick={() => setView('create')}>✍️</button>
+                        <button onClick={() => setView('auth')}>👤</button>
+                    </nav>
+                </div>
+            );
+        };
+
+        const PostCard = ({ post, user, onLocked }) => {
+            const isLocked = !user;
+            return (
+                <div className="bg-card rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+                    <div className="flex justify-between items-start mb-3">
+                        <span className="text-[10px] uppercase tracking-widest text-rose-500 font-bold">#{post.tags?.[0] || 'Relationship'}</span>
+                        <span className="text-[10px] text-gray-600 font-mono">{post.profiles?.anonymous_name || 'Heart_####'}</span>
+                    </div>
+                    <h3 className="text-lg font-bold mb-2 leading-tight">{post.title}</h3>
+                    
+                    <div className="relative">
+                        <p className={`text-gray-400 text-sm leading-relaxed ${isLocked ? 'paywall-blur' : ''}`}>
+                            {isLocked ? post.content.substring(0, 80) + "..." : post.content}
+                        </p>
+                        
+                        {isLocked && (
+                            <div className="absolute inset-0 flex items-center justify-center pt-4">
+                                <button onClick={onLocked} className="bg-white text-black text-xs font-black px-4 py-2 rounded-full shadow-lg">
+                                    SIGN UP TO READ FULL STORY 💔
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Who is Right Section */}
+                    {post.option_a && !isLocked && (
+                        <div className="mt-4 grid grid-cols-2 gap-2">
+                            <button className="bg-gray-800 hover:bg-rose-900/30 p-3 rounded-xl text-xs font-bold border border-gray-700">
+                                TEAM: {post.option_a}
+                            </button>
+                            <button className="bg-gray-800 hover:bg-blue-900/30 p-3 rounded-xl text-xs font-bold border border-gray-700">
+                                TEAM: {post.option_b}
+                            </button>
+                        </div>
+                    )}
+
+                    <div className="mt-5 pt-4 border-t border-gray-800/50 flex justify-between items-center text-xl">
+                        <div className="flex gap-4">
+                            <span>🔥</span> <span>😢</span> <span>😡</span>
+                        </div>
+                        <span className="text-xs text-gray-600 font-bold">{post.reactions?.length || 0} REACTION</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const CreatePost = ({ user, onDone }) => {
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                const title = e.target.title.value;
+                const content = e.target.content.value;
+                const { error } = await supabase.from('posts').insert({
+                    user_id: user.id,
+                    title,
+                    content,
+                    post_type: 'confession',
+                    option_a: 'User A',
+                    option_b: 'User B'
+                });
+                if (error) alert(error.message);
+                else onDone();
+            };
+
+            return (
+                <div className="p-6">
+                    <h2 className="text-2xl font-bold mb-6">Spill the tea...</h2>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <input name="title" placeholder="Catchy Title" className="w-full bg-card p-4 rounded-2xl outline-none" required />
+                        <textarea name="content" placeholder="What's the story?" className="w-full bg-card p-4 rounded-2xl h-40 outline-none" required></textarea>
+                        <button type="submit" className="w-full bg-rose-600 p-4 rounded-2xl font-bold">Post Anonymously</button>
+                    </form>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
