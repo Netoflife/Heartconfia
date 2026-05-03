@@ -1,214 +1,531 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HeartConfia | Anonymous Relationships</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-        body { background-color: #050505; color: #e5e7eb; font-family: 'Inter', sans-serif; }
-        .bg-card { background-color: #111111; border: 1px solid #222; }
-        .paywall-blur { filter: blur(8px); pointer-events: none; user-select: none; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HeartConfia 💔 - Anonymous Relationship Confessions</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/react-router-dom@6/umd/react-router-dom.production.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+    * { font-family: 'Inter', sans-serif; }
+    .glass { backdrop-filter: blur(20px); background: rgba(255,255,255,0.1); }
+    .gradient-text { background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #f43f5e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .reaction-btn { @apply px-3 py-1 rounded-full text-sm font-semibold transition-all hover:scale-110 hover:bg-white/20; }
+    .line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  </style>
 </head>
-<body>
-    <div id="root"></div>
+<body class="bg-gradient-to-br from-purple-900 via-pink-900/50 to-red-900 min-h-screen text-white overflow-x-hidden">
+  <div id="root"></div>
 
-    <script type="text/babel">
-        const { useState, useEffect } = React;
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useRef } = React;
+    const { BrowserRouter: Router, Routes, Route, Link, useParams, useNavigate, useLocation } = ReactRouterDOM;
 
-        // 1. PROJECT CONFIG
-        const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
-        const SUPABASE_KEY = 'YOUR_ANON_KEY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // === SUPABASE SETUP ===
+    const supabaseUrl = 'YOUR_SUPABASE_URL';
+    const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+    const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
 
-        const App = () => {
-            const [posts, setPosts] = useState([]);
-            const [user, setUser] = useState(null);
-            const [view, setView] = useState('feed'); // 'feed', 'auth', 'create'
-            const [isLogin, setIsLogin] = useState(true);
+    const generateAnonymousName = () => {
+      const prefixes = ['Heart', 'Confess', 'Love', 'Break', 'Soul', 'Crush'];
+      return `${prefixes[Math.floor(Math.random() * prefixes.length)]}_${Math.floor(Math.random() * 9000) + 1000}`;
+    };
 
-            useEffect(() => {
-                const session = supabase.auth.getSession().then(({ data }) => {
-                    setUser(data.session?.user || null);
-                });
-                fetchPosts();
-                
-                // Real-time listener
-                const channel = supabase.channel('schema-db-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'posts' }, payload => {
-                    fetchPosts();
-                }).subscribe();
+    // === CUSTOM HOOKS ===
+    function useSession() {
+      const [session, setSession] = useState(null);
+      const [loading, setLoading] = useState(true);
 
-                return () => supabase.removeChannel(channel);
-            }, []);
+      useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => {
+          setSession(data.session);
+          setLoading(false);
+        });
 
-            const fetchPosts = async () => {
-                const { data } = await supabase.from('posts').select(`
-                    *,
-                    profiles ( anonymous_name ),
-                    reactions ( type, user_id ),
-                    votes ( vote_type, user_id )
-                `).order('created_at', { ascending: false });
-                if (data) setPosts(data);
-            };
+        const { data } = supabase.auth.onAuthStateChange((_, s) => setSession(s));
+        return () => data.subscription.unsubscribe();
+      }, []);
 
-            const handleAuth = async (e) => {
-                e.preventDefault();
-                const email = e.target.email.value;
-                const password = e.target.password.value;
-                
-                if (isLogin) {
-                    const { error } = await supabase.auth.signInWithPassword({ email, password });
-                    if (error) alert(error.message);
-                } else {
-                    // Sign up + Create Profile with the Heart_#### logic
-                    const anonName = `Heart_${Math.floor(1000 + Math.random() * 9000)}`;
-                    const { data, error } = await supabase.auth.signUp({ 
-                        email, password, 
-                        options: { data: { anonymous_name: anonName } } 
-                    });
-                    if (error) alert(error.message);
-                    else alert("Check your email for verification!");
-                }
-                const { data: { session } } = await supabase.auth.getSession();
-                setUser(session?.user);
-                setView('feed');
-            };
+      return { session, loading };
+    }
 
-            return (
-                <div className="max-w-lg mx-auto min-h-screen pb-20">
-                    {/* Header */}
-                    <header className="p-4 flex justify-between items-center sticky top-0 bg-black/80 backdrop-blur-md z-40">
-                        <h1 className="text-xl font-black text-rose-500 italic">HeartConfia</h1>
-                        {user ? (
-                            <div className="flex items-center gap-3">
-                                <button onClick={() => setView('create')} className="bg-rose-600 p-2 rounded-full text-white">＋</button>
-                                <button onClick={() => supabase.auth.signOut().then(()=>setUser(null))} className="text-xs text-gray-500">Sign Out</button>
-                            </div>
-                        ) : (
-                            <button onClick={() => setView('auth')} className="text-sm font-bold bg-white text-black px-4 py-1.5 rounded-full">Login</button>
-                        )}
-                    </header>
+    // === COMPONENTS ===
+    function Navbar({ session }) {
+      return (
+        <nav className="glass sticky top-0 z-50 px-6 py-4 border-b border-white/20 backdrop-blur-xl">
+          <div className="max-w-2xl mx-auto flex items-center justify-between">
+            <Link to="/" className="text-2xl font-bold gradient-text hover:scale-105 transition-all">💔 HeartConfia</Link>
+            <div className="flex items-center space-x-4">
+              <Link to="/trending" className="px-4 py-2 rounded-xl hover:bg-white/10 transition-all">🔥 Trending</Link>
+              <Link to="/advice" className="px-4 py-2 rounded-xl hover:bg-white/10 transition-all">💡 Advice</Link>
+              {session ? (
+                <>
+                  <Link to="/create" className="px-6 py-2 bg-gradient-to-r from-pink-500 to-red-500 rounded-2xl font-semibold hover:scale-105">✍️ Post</Link>
+                  <button onClick={() => supabase.auth.signOut()} className="px-4 py-2 rounded-xl hover:bg-white/10">Logout</button>
+                </>
+              ) : (
+                <Link to="/login" className="px-6 py-2 border-2 border-white/30 rounded-2xl font-semibold hover:bg-white/10">Sign In</Link>
+              )}
+            </div>
+          </div>
+        </nav>
+      );
+    }
 
-                    {view === 'auth' ? (
-                        <div className="p-6 pt-10">
-                            <h2 className="text-3xl font-bold mb-2">{isLogin ? 'Welcome Back' : 'Join Privately'}</h2>
-                            <p className="text-gray-500 mb-8">Confess your secrets anonymously.</p>
-                            <form onSubmit={handleAuth} className="space-y-4">
-                                <input name="email" type="email" placeholder="Email" className="w-full bg-card p-4 rounded-2xl outline-none focus:border-rose-500 border border-transparent" />
-                                <input name="password" type="password" placeholder="Password" className="w-full bg-card p-4 rounded-2xl outline-none focus:border-rose-500 border border-transparent" />
-                                <button className="w-full bg-rose-600 text-white font-bold p-4 rounded-2xl">
-                                    {isLogin ? 'Sign In' : 'Create Account'}
-                                </button>
-                            </form>
-                            <p onClick={() => setIsLogin(!isLogin)} className="text-center mt-6 text-sm text-gray-400 cursor-pointer">
-                                {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
-                            </p>
-                        </div>
-                    ) : view === 'create' ? (
-                        <CreatePost user={user} onDone={() => setView('feed')} />
-                    ) : (
-                        <div className="p-4 space-y-4">
-                            {posts.map(post => (
-                                <PostCard key={post.id} post={post} user={user} onLocked={() => setView('auth')} />
-                            ))}
-                        </div>
-                    )}
+    function Paywall({ onClose }) {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [isLogin, setIsLogin] = useState(true);
+      const [loading, setLoading] = useState(false);
+      const navigate = useNavigate();
 
-                    {/* Navbar */}
-                    <nav className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-black border-t border-gray-900 flex justify-around p-4 text-gray-500">
-                        <button className="text-rose-500" onClick={() => setView('feed')}>🏠</button>
-                        <button onClick={() => alert('Trending coming soon!')}>🔥</button>
-                        <button onClick={() => setView('create')}>✍️</button>
-                        <button onClick={() => setView('auth')}>👤</button>
-                    </nav>
-                </div>
-            );
-        };
-
-        const PostCard = ({ post, user, onLocked }) => {
-            const isLocked = !user;
-            return (
-                <div className="bg-card rounded-3xl p-5 shadow-2xl relative overflow-hidden">
-                    <div className="flex justify-between items-start mb-3">
-                        <span className="text-[10px] uppercase tracking-widest text-rose-500 font-bold">#{post.tags?.[0] || 'Relationship'}</span>
-                        <span className="text-[10px] text-gray-600 font-mono">{post.profiles?.anonymous_name || 'Heart_####'}</span>
-                    </div>
-                    <h3 className="text-lg font-bold mb-2 leading-tight">{post.title}</h3>
-                    
-                    <div className="relative">
-                        <p className={`text-gray-400 text-sm leading-relaxed ${isLocked ? 'paywall-blur' : ''}`}>
-                            {isLocked ? post.content.substring(0, 80) + "..." : post.content}
-                        </p>
-                        
-                        {isLocked && (
-                            <div className="absolute inset-0 flex items-center justify-center pt-4">
-                                <button onClick={onLocked} className="bg-white text-black text-xs font-black px-4 py-2 rounded-full shadow-lg">
-                                    SIGN UP TO READ FULL STORY 💔
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Who is Right Section */}
-                    {post.option_a && !isLocked && (
-                        <div className="mt-4 grid grid-cols-2 gap-2">
-                            <button className="bg-gray-800 hover:bg-rose-900/30 p-3 rounded-xl text-xs font-bold border border-gray-700">
-                                TEAM: {post.option_a}
-                            </button>
-                            <button className="bg-gray-800 hover:bg-blue-900/30 p-3 rounded-xl text-xs font-bold border border-gray-700">
-                                TEAM: {post.option_b}
-                            </button>
-                        </div>
-                    )}
-
-                    <div className="mt-5 pt-4 border-t border-gray-800/50 flex justify-between items-center text-xl">
-                        <div className="flex gap-4">
-                            <span>🔥</span> <span>😢</span> <span>😡</span>
-                        </div>
-                        <span className="text-xs text-gray-600 font-bold">{post.reactions?.length || 0} REACTION</span>
-                    </div>
-                </div>
-            );
-        };
-
-        const CreatePost = ({ user, onDone }) => {
-            const handleSubmit = async (e) => {
-                e.preventDefault();
-                const title = e.target.title.value;
-                const content = e.target.content.value;
-                const { error } = await supabase.from('posts').insert({
-                    user_id: user.id,
-                    title,
-                    content,
-                    post_type: 'confession',
-                    option_a: 'User A',
-                    option_b: 'User B'
-                });
-                if (error) alert(error.message);
-                else onDone();
-            };
-
-            return (
-                <div className="p-6">
-                    <h2 className="text-2xl font-bold mb-6">Spill the tea...</h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <input name="title" placeholder="Catchy Title" className="w-full bg-card p-4 rounded-2xl outline-none" required />
-                        <textarea name="content" placeholder="What's the story?" className="w-full bg-card p-4 rounded-2xl h-40 outline-none" required></textarea>
-                        <button type="submit" className="w-full bg-rose-600 p-4 rounded-2xl font-bold">Post Anonymously</button>
-                    </form>
-                </div>
-            );
+      const handleAuth = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+          if (isLogin) {
+            await supabase.auth.signInWithPassword({ email, password });
+          } else {
+            await supabase.auth.signUp({
+              email, password,
+              options: {  { anonymous_name: generateAnonymousName() } }
+            });
+            alert('Check your email to verify!');
+            return;
+          }
+          navigate(-1);
+        } catch (error) {
+          alert(error.message);
+        } finally {
+          setLoading(false);
         }
+      };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
+      return (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
+          <div className="glass max-w-md w-full p-8 rounded-3xl border border-white/20 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-gradient-to-r from-pink-500 to-red-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <span className="text-3xl">💔</span>
+              </div>
+              <h2 className="text-2xl font-bold gradient-text mb-2">Unlock Full Confessions</h2>
+              <p className="text-gray-300">Join thousands sharing real relationship stories</p>
+            </div>
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-pink-400"
+                required
+              />
+              <input
+                type="password"
+                placeholder={isLogin ? "Password" : "Create password"}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-pink-400"
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-3 px-6 rounded-2xl font-semibold hover:scale-105 disabled:opacity-50"
+              >
+                {loading ? 'Loading...' : isLogin ? 'Sign In' : 'Sign Up'}
+              </button>
+            </form>
+
+            <div className="text-center mt-6">
+              <button
+                type="button"
+                onClick={() => setIsLogin(!isLogin)}
+                className="text-gray-300 hover:text-white px-4 py-2 rounded-xl hover:bg-white/10"
+              >
+                {isLogin ? "Don't have account? Sign up" : "Have account? Sign in"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function PostCard({ post, session, className = "" }) {
+      const [showPaywall, setShowPaywall] = useState(false);
+      const isGuest = !session;
+      const preview = post.content.length > 200 && isGuest 
+        ? post.content.slice(0, 200) + '...' 
+        : post.content;
+
+      const handleClick = (e) => {
+        if (isGuest) {
+          e.preventDefault();
+          setShowPaywall(true);
+        }
+      };
+
+      return (
+        <div className={`glass p-6 rounded-2xl hover:border-white/40 hover:scale-[1.02] transition-all duration-300 cursor-pointer ${className}`} onClick={handleClick}>
+          {showPaywall && isGuest && <Paywall onClose={() => setShowPaywall(false)} />}
+          
+          <div className="flex items-center mb-4 gap-2 flex-wrap">
+            <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+              post.type === 'confession' ? 'bg-gradient-to-r from-pink-500/80 to-red-500/80' : 'bg-gradient-to-r from-blue-500/80 to-purple-500/80'
+            }`}>
+              {post.type.toUpperCase()}
+            </span>
+            {post.tags?.slice(0, 3).map(tag => (
+              <span key={tag} className="px-2 py-1 bg-white/10 rounded-lg text-xs">#{tag}</span>
+            ))}
+          </div>
+
+          <h2 className="text-xl font-bold mb-3 leading-tight">{post.title}</h2>
+
+          <div className="text-gray-100 mb-6 line-clamp-3" style={{ WebkitLineClamp: isGuest ? 2 : 3 }}>
+            {preview}
+            {isGuest && post.content.length > 200 && (
+              <span className="block mt-2 text-pink-400 font-semibold text-sm">🔒 Sign up to read full story</span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between pt-4 border-t border-white/10">
+            <div className="text-sm text-gray-400">
+              Heart_{post.users?.anonymous_name?.slice(-4) || '???'} • {Math.floor(Math.random() * 24)}h
+            </div>
+            <div className="flex items-center space-x-2">
+              <button className="reaction-btn bg-fire/20 text-fire hover:bg-fire/40">🔥 1.2k</button>
+              <button className="reaction-btn bg-laugh/20 text-laugh hover:bg-laugh/40">😂 892</button>
+              <button className="reaction-btn bg-cry/20 text-cry hover:bg-cry/40">😢 2.3k</button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function PostsFeed({ session, postType = null }) {
+      const [posts, setPosts] = useState([]);
+      const [loading, setLoading] = useState(false);
+      const [page, setPage] = useState(1);
+      const observer = useRef();
+
+      const lastPostRef = useCallback(node => {
+        if (loading) return;
+        if (observer.current) observer.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+          if (entries[0].isIntersecting && posts.length > 0) {
+            setPage(p => p + 1);
+          }
+        });
+        if (node) observer.current.observe(node);
+      }, [loading, posts.length]);
+
+      const fetchPosts = useCallback(async (pageNum) => {
+        setLoading(true);
+        const from = (pageNum - 1) * 10;
+        
+        let query = supabase
+          .from('posts')
+          .select('*, users!inner(anonymous_name)')
+          .order('created_at', { ascending: false })
+          .range(from, from + 9);
+
+        if (postType) query = query.eq('type', postType);
+
+        const { data, error } = await query;
+        if (!error) {
+          if (pageNum === 1) {
+            setPosts(data);
+          } else {
+            setPosts(prev => [...prev, ...data]);
+          }
+        }
+        setLoading(false);
+      }, [postType]);
+
+      useEffect(() => {
+        fetchPosts(1);
+      }, [fetchPosts]);
+
+      useEffect(() => {
+        if (page > 1) fetchPosts(page);
+      }, [page, fetchPosts]);
+
+      if (!posts.length && !loading) {
+        return (
+          <div className="text-center py-20">
+            <div className="w-24 h-24 mx-auto mb-6 opacity-20">💔</div>
+            <h2 className="text-2xl font-bold gradient-text mb-4">No confessions yet</h2>
+            <p className="text-gray-400">Be the first to share your story</p>
+          </div>
+        );
+      }
+
+      return (
+        <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+          {posts.map((post, index) => (
+            <div
+              key={post.id}
+              ref={posts.length === index + 1 ? lastPostRef : null}
+            >
+              <PostCard post={post} session={session} />
+            </div>
+          ))}
+          {loading && (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+              Loading more...
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function CreatePost() {
+      const [title, setTitle] = useState('');
+      const [content, setContent] = useState('');
+      const [type, setType] = useState('confession');
+      const [tags, setTags] = useState('');
+      const [loading, setLoading] = useState(false);
+      const navigate = useNavigate();
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        const tagArray = tags.split(',').map(t => t.trim()).filter(t => t);
+        
+        const { error } = await supabase
+          .from('posts')
+          .insert({ title, content, type, tags: tagArray });
+        
+        if (!error) {
+          navigate('/');
+        } else {
+          alert('Error posting: ' + error.message);
+        }
+        setLoading(false);
+      };
+
+      return (
+        <div className="max-w-2xl mx-auto px-4 py-12">
+          <Link to="/" className="inline-flex items-center text-gray-300 hover:text-white mb-8">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+            Back to feed
+          </Link>
+
+          <div className="glass p-8 rounded-3xl border border-white/20">
+            <h1 className="text-3xl font-bold gradient-text mb-8 text-center">Share Your Story 💔</h1>
+            
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-pink-400"
+                  placeholder="What's breaking your heart?"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">Story</label>
+                <textarea
+                  rows="8"
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-pink-400 resize-vertical"
+                  placeholder="Tell us everything... We won't judge."
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">Type</label>
+                  <select
+                    value={type}
+                    onChange={e => setType(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none"
+                  >
+                    <option value="confession">💔 Confession</option>
+                    <option value="advice">💡 Advice</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">Tags (comma separated)</label>
+                  <input
+                    type="text"
+                    value={tags}
+                    onChange={e => setTags(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none"
+                    placeholder="cheating, breakup, dating..."
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-4 px-8 rounded-2xl font-semibold text-lg hover:scale-105 transition-all disabled:opacity-50"
+              >
+                {loading ? 'Posting...' : 'Post Anonymously'}
+              </button>
+            </form>
+
+            <div className="mt-8 p-4 bg-white/5 rounded-2xl text-center text-sm text-gray-400">
+              <strong>100% Anonymous</strong> - No one will know it's you
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function LoginPage() {
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [loading, setLoading] = useState(false);
+      const navigate = useNavigate();
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+          const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {  { anonymous_name: generateAnonymousName() } }
+          });
+          if (!error) {
+            alert('Check your email to verify your account!');
+          }
+        } catch (err) {
+          alert(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex items-center justify-center px-4 py-12">
+          <div className="glass max-w-md w-full p-12 rounded-3xl border border-white/20">
+            <div className="text-center mb-12">
+              <h1 className="text-4xl font-bold gradient-text mb-4">Welcome 💔</h1>
+              <p className="text-xl text-gray-300">Create your anonymous account</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-pink-400"
+                required
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-pink-400"
+                required
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-pink-500 to-red-500 text-white py-4 rounded-2xl font-bold text-lg hover:scale-105"
+              >
+                {loading ? 'Creating...' : 'Sign Up Free'}
+              </button>
+            </form>
+
+            <p className="text-center mt-8 text-sm text-gray-400">
+              Already have account? <Link to="/" className="text-pink-400 hover:underline font-semibold">Sign in</Link>
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // === PAGES ===
+    function Home() {
+      const { session, loading } = useSession();
+      if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-10 w-10 border-4 border-pink-500 border-t-transparent rounded-full"></div></div>;
+
+      return (
+        <>
+          <div className="max-w-2xl mx-auto px-6 pt-24 pb-12 text-center">
+            <h1 className="text-5xl md:text-6xl font-black gradient-text mb-6 leading-tight">
+              Real Confessions.<br/>Real Emotions.<br/>Real Advice.
+            </h1>
+            <p className="text-xl text-gray-300 max-w-md mx-auto leading-relaxed">
+              Join 50K+ people sharing relationship stories anonymously
+            </p>
+          </div>
+          <PostsFeed session={session} />
+        </>
+      );
+    }
+
+    function Trending() {
+      const { session, loading } = useSession();
+      if (loading) return <div>Loading...</div>;
+      return (
+        <>
+          <div className="max-w-2xl mx-auto px-6 pt-24 pb-12">
+            <h1 className="text-4xl font-bold gradient-text mb-8">🔥 Trending Now</h1>
+          </div>
+          <PostsFeed session={session} />
+        </>
+      );
+    }
+
+    function AdviceFeed() {
+      const { session, loading } = useSession();
+      if (loading) return <div>Loading...</div>;
+      return (
+        <>
+          <div className="max-w-2xl mx-auto px-6 pt-24 pb-12">
+            <h1 className="text-4xl font-bold gradient-text mb-8">💡 Relationship Advice</h1>
+          </div>
+          <PostsFeed session={session} postType="advice" />
+        </>
+      );
+    }
+
+    // === MAIN APP ===
+    function App() {
+      const { session, loading } = useSession();
+
+      if (loading) {
+        return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-12 w-12 border-4 border-white border-t-transparent rounded-full"></div></div>;
+      }
+
+      return (
+        <Router>
+          <Navbar session={session} />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/create" element={session ? <CreatePost /> : <LoginPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/trending" element={<Trending />} />
+            <Route path="/advice" element={<AdviceFeed />} />
+          </Routes>
+        </Router>
+      );
+    }
+
+    // === RENDER ===
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
 </body>
 </html>
