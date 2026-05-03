@@ -2,1295 +2,1658 @@
 
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<!-- Open Graph / Social Sharing -->
+<meta property="og:title" content="HeartConfia — Anonymous Relationship Confessions"/>
+<meta property="og:description" content="Share the stories you've never told anyone. No names. No judgment. Just hearts."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="https://heartconfia.com/og.png"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:title" content="HeartConfia"/>
+<meta name="twitter:description" content="Anonymous relationship confessions. Read, react, vote."/>
 <title>HeartConfia — Anonymous Relationship Confessions</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--surface3:#22223a;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --text:#f0eef8;--text2:#9a96b4;--text3:#5e5a78;
+  --rose:#ff4d6d;--rose-dim:rgba(255,77,109,0.15);--rose-glow:rgba(255,77,109,0.3);
+  --violet:#7c3aed;--violet-dim:rgba(124,58,237,0.15);
+  --amber:#f59e0b;--teal:#14b8a6;--green:#22c55e;
+  --glow:0 0 40px rgba(255,77,109,0.12);
+  --radius:16px;
+  --font-display:'Playfair Display',serif;
+  --font-body:'DM Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.3}
+#root{min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
 
-:root {
-–bg: #0a0a0f;
-–surface: #12121a;
-–surface2: #1a1a26;
-–surface3: #22223a;
-–border: rgba(255,255,255,0.07);
-–text: #f0eef8;
-–text2: #9a96b4;
-–text3: #5e5a78;
-–rose: #ff4d6d;
-–rose-dim: rgba(255,77,109,0.15);
-–violet: #7c3aed;
-–violet-dim: rgba(124,58,237,0.15);
-–amber: #f59e0b;
-–teal: #14b8a6;
-–glow: 0 0 40px rgba(255,77,109,0.12);
-–radius: 16px;
-–font-display: ‘Playfair Display’, serif;
-–font-body: ‘DM Sans’, sans-serif;
-}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}45%{transform:scale(1.15)}60%{transform:scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{0%{transform:scale(0.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes countdownPulse{0%,100%{color:var(–rose)}50%{color:#c9184a}}
 
-html { scroll-behavior: smooth; }
-body {
-background: var(–bg);
-color: var(–text);
-font-family: var(–font-body);
-min-height: 100vh;
-overflow-x: hidden;
-}
+.fade-up{animation:fadeUp .45s ease forwards}
+.pop-in{animation:popIn .3s ease forwards}
 
-body::before {
-content: ‘’;
-position: fixed; inset: 0;
-background-image: url(“data:image/svg+xml,%3Csvg viewBox=‘0 0 256 256’ xmlns=‘http://www.w3.org/2000/svg’%3E%3Cfilter id=‘n’%3E%3CfeTurbulence type=‘fractalNoise’ baseFrequency=‘0.9’ numOctaves=‘4’ stitchTiles=‘stitch’/%3E%3C/filter%3E%3Crect width=‘100%25’ height=‘100%25’ filter=‘url(%23n)’ opacity=‘0.04’/%3E%3C/svg%3E”);
-pointer-events: none; z-index: 9999; opacity: 0.35;
-}
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:50px;font-family:var(–font-body);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s ease;text-decoration:none;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(–rose),#c9184a);color:#fff;box-shadow:0 4px 20px var(–rose-glow)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(255,77,109,.45)}
+.btn-secondary{background:var(–surface2);color:var(–text);border:1px solid var(–border)}
+.btn-secondary:hover{background:var(–surface3);border-color:var(–border2)}
+.btn-ghost{background:transparent;color:var(–text2);padding:8px 14px}
+.btn-ghost:hover{color:var(–text);background:var(–surface2)}
+.btn-violet{background:linear-gradient(135deg,var(–violet),#5b21b6);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.3)}
+.btn-violet:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(124,58,237,.45)}
+.btn-teal{background:linear-gradient(135deg,var(–teal),#0d9488);color:#fff;box-shadow:0 4px 16px rgba(20,184,166,.3)}
+.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
 
-#root { min-height: 100vh; }
+/* Inputs */
+.input{width:100%;padding:12px 16px;background:var(–surface2);border:1px solid var(–border);border-radius:12px;color:var(–text);font-family:var(–font-body);font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+.input:focus{border-color:var(–rose);box-shadow:0 0 0 3px rgba(255,77,109,.12)}
+.input::placeholder{color:var(–text3)}
+textarea.input{resize:vertical;min-height:120px;line-height:1.65}
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(–bg); }
-::-webkit-scrollbar-thumb { background: var(–surface3); border-radius: 2px; }
+/* Cards */
+.card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:20px;transition:border-color .2s,box-shadow .2s}
+.card:hover{border-color:rgba(255,77,109,.2);box-shadow:var(–glow)}
 
-@keyframes fadeUp {
-from { opacity: 0; transform: translateY(18px); }
-to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes shimmer {
-0%   { background-position: -200% 0; }
-100% { background-position:  200% 0; }
-}
-@keyframes heartbeat {
-0%,100% { transform: scale(1); }
-15%     { transform: scale(1.3); }
-30%     { transform: scale(1); }
-45%     { transform: scale(1.15); }
-60%     { transform: scale(1); }
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes slideIn {
-from { opacity: 0; transform: translateX(-10px); }
-to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes popIn {
-0%   { transform: scale(0.85); opacity: 0; }
-70%  { transform: scale(1.04); }
-100% { transform: scale(1); opacity: 1; }
-}
+/* Tags */
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.tag-cheating{background:rgba(239,68,68,.12);color:#ef4444}
+.tag-breakup{background:var(–rose-dim);color:var(–rose)}
+.tag-dating{background:var(–violet-dim);color:#a78bfa}
+.tag-marriage{background:rgba(20,184,166,.12);color:var(–teal)}
+.tag-situationship{background:rgba(245,158,11,.12);color:var(–amber)}
+.tag-hot{background:rgba(255,77,109,.2);color:var(–rose);animation:countdownPulse 2s ease infinite}
 
-.fade-up  { animation: fadeUp  0.45s ease forwards; }
-.slide-in { animation: slideIn 0.3s  ease forwards; }
+/* Nav */
+.nav{position:fixed;top:0;left:0;right:0;height:60px;z-index:100;background:rgba(10,10,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(–border);display:flex;align-items:center;padding:0 14px;gap:10px}
+.nav-logo{font-family:var(–font-display);font-size:19px;font-weight:900;color:var(–rose);text-shadow:0 0 28px rgba(255,77,109,.45);cursor:pointer;flex-shrink:0;user-select:none;display:inline-flex;align-items:center;gap:5px;animation:heartbeat 3.5s ease-in-out infinite}
+.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.nav-tabs::-webkit-scrollbar{display:none}
+.nav-tab{padding:6px 12px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;color:var(–text2);transition:all .2s;border:none;background:transparent;white-space:nowrap;font-family:var(–font-body)}
+.nav-tab:hover{color:var(–text);background:var(–surface2)}
+.nav-tab.active{color:var(–rose);background:var(–rose-dim)}
 
-/* ── Skeleton ── */
-.skeleton {
-background: linear-gradient(90deg, var(–surface) 25%, var(–surface2) 50%, var(–surface) 75%);
-background-size: 200% 100%;
-animation: shimmer 1.5s infinite;
-border-radius: 8px;
-}
+/* Layout */
+.layout{display:grid;grid-template-columns:1fr min(700px,100%) 1fr;min-height:100vh;padding-top:60px}
+.layout-center{grid-column:2;padding:24px 16px 80px}
 
-/* ── Buttons ── */
-.btn {
-display: inline-flex; align-items: center; gap: 8px;
-padding: 10px 20px; border-radius: 50px;
-font-family: var(–font-body); font-size: 14px; font-weight: 600;
-cursor: pointer; border: none; transition: all 0.2s ease;
-text-decoration: none; white-space: nowrap;
-}
-.btn-primary {
-background: linear-gradient(135deg, var(–rose), #c9184a);
-color: #fff;
-box-shadow: 0 4px 20px rgba(255,77,109,0.3);
-}
-.btn-primary:hover  { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(255,77,109,0.45); }
-.btn-secondary {
-background: var(–surface2); color: var(–text);
-border: 1px solid var(–border);
-}
-.btn-secondary:hover { background: var(–surface3); border-color: rgba(255,255,255,0.15); }
-.btn-ghost {
-background: transparent; color: var(–text2); padding: 8px 14px;
-}
-.btn-ghost:hover { color: var(–text); background: var(–surface2); }
-.btn-violet {
-background: linear-gradient(135deg, var(–violet), #5b21b6);
-color: #fff; box-shadow: 0 4px 20px rgba(124,58,237,0.3);
-}
-.btn-violet:hover { transform: translateY(-1px); box-shadow: 0 6px 28px rgba(124,58,237,0.45); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+/* Post card */
+.post-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:20px;margin-bottom:12px;cursor:pointer;transition:all .25s ease;animation:fadeUp .4s ease both;position:relative;overflow:hidden}
+.post-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(–rose),var(–violet));opacity:0;transition:opacity .2s}
+.post-card:hover{border-color:rgba(255,77,109,.28);transform:translateY(-2px);box-shadow:var(–glow)}
+.post-card:hover::before{opacity:1}
+.post-card.boosted{border-color:rgba(245,158,11,.3)!important}
+.post-card.boosted::before{opacity:1;background:linear-gradient(90deg,var(–amber),var(–rose))!important}
+.post-card.hot-take{border-color:rgba(255,77,109,.25)!important}
 
-/* ── Inputs ── */
-.input {
-width: 100%; padding: 12px 16px;
-background: var(–surface2); border: 1px solid var(–border);
-border-radius: 12px; color: var(–text);
-font-family: var(–font-body); font-size: 15px;
-outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-}
-.input:focus { border-color: var(–rose); box-shadow: 0 0 0 3px rgba(255,77,109,0.12); }
-.input::placeholder { color: var(–text3); }
-textarea.input { resize: vertical; min-height: 120px; line-height: 1.65; }
+.post-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.post-type-badge.confession{color:var(–rose)}
+.post-type-badge.advice{color:#a78bfa}
+.post-type-badge.hot_take{color:var(–amber);animation:countdownPulse 2s ease infinite}
 
-/* ── Cards ── */
-.card {
-background: var(–surface); border: 1px solid var(–border);
-border-radius: var(–radius); padding: 20px;
-transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
-}
-.card:hover { border-color: rgba(255,77,109,0.2); box-shadow: var(–glow); }
+.post-title{font-family:var(–font-display);font-size:18px;font-weight:700;line-height:1.35;color:var(–text);margin-bottom:10px}
+.post-preview{font-size:14px;line-height:1.7;color:var(–text2);margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.post-meta{display:flex;align-items:center;gap:10px;font-size:13px;color:var(–text3);margin-bottom:14px;flex-wrap:wrap}
+.post-meta-dot{width:3px;height:3px;border-radius:50%;background:var(–text3);flex-shrink:0}
+.anon-name{color:var(–text2);font-weight:600}
 
-/* ── Tags ── */
-.tag {
-display: inline-flex; align-items: center;
-padding: 3px 10px; border-radius: 50px;
-font-size: 11px; font-weight: 700;
-text-transform: uppercase; letter-spacing: 0.06em;
-}
-.tag-cheating     { background: rgba(239,68,68,0.12); color: #ef4444; }
-.tag-breakup      { background: var(–rose-dim); color: var(–rose); }
-.tag-dating       { background: var(–violet-dim); color: #a78bfa; }
-.tag-marriage     { background: rgba(20,184,166,0.12); color: var(–teal); }
-.tag-situationship{ background: rgba(245,158,11,0.12); color: var(–amber); }
+/* Reactions */
+.post-reactions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.reaction-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:50px;background:var(–surface2);border:1px solid var(–border);cursor:pointer;font-size:13px;font-weight:500;color:var(–text2);transition:all .2s;font-family:var(–font-body)}
+.reaction-btn:hover{background:var(–surface3);color:var(–text);transform:scale(1.06)}
+.reaction-btn.active{background:var(–rose-dim);border-color:rgba(255,77,109,.35);color:var(–rose)}
+.comment-count{display:flex;align-items:center;gap:5px;font-size:13px;color:var(–text3)}
 
-/* ── Nav ── */
-.nav {
-position: fixed; top: 0; left: 0; right: 0; height: 60px; z-index: 100;
-background: rgba(10,10,15,0.88); backdrop-filter: blur(20px);
-border-bottom: 1px solid var(–border);
-display: flex; align-items: center; padding: 0 16px; gap: 12px;
-}
-.nav-logo {
-font-family: var(–font-display); font-size: 20px; font-weight: 900;
-color: var(–rose); text-shadow: 0 0 28px rgba(255,77,109,0.45);
-cursor: pointer; flex-shrink: 0; user-select: none;
-display: inline-flex; align-items: center; gap: 6px;
-animation: heartbeat 3.5s ease-in-out infinite;
-}
-.nav-tabs {
-display: flex; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none;
-}
-.nav-tabs::-webkit-scrollbar { display: none; }
-.nav-tab {
-padding: 6px 14px; border-radius: 50px;
-font-size: 13px; font-weight: 500; cursor: pointer;
-color: var(–text2); transition: all 0.2s;
-border: none; background: transparent; white-space: nowrap;
-font-family: var(–font-body);
-}
-.nav-tab:hover  { color: var(–text); background: var(–surface2); }
-.nav-tab.active { color: var(–rose); background: var(–rose-dim); }
+/* Blur / Paywall */
+.blur-wrap{position:relative;max-height:80px;overflow:hidden}
+.blur-wrap::after{content:’’;position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,var(–surface))}
+.paywall{margin:12px -20px -20px;padding:24px 20px;background:linear-gradient(to bottom,transparent,var(–surface) 18%);text-align:center;border-top:1px solid var(–border);border-radius:0 0 var(–radius) var(–radius)}
+.paywall-icon{font-size:30px;margin-bottom:8px}
+.paywall-title{font-family:var(–font-display);font-size:17px;font-weight:700;color:var(–text);margin-bottom:6px}
+.paywall-sub{font-size:13px;color:var(–text2);margin-bottom:16px}
+.paywall-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
-/* ── Layout ── */
-.layout { display: grid; grid-template-columns: 1fr min(680px, 100%) 1fr; min-height: 100vh; padding-top: 60px; }
-.layout-center { grid-column: 2; padding: 24px 16px 80px; }
+/* Auth modal */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s ease}
+.modal{background:var(–surface);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px;width:100%;max-width:420px;position:relative;animation:popIn .35s ease;max-height:90vh;overflow-y:auto}
+.modal-close{position:absolute;top:14px;right:14px;background:var(–surface2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(–text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.modal-close:hover{background:var(–surface3);color:var(–text)}
+.modal-logo{font-family:var(–font-display);font-size:26px;font-weight:900;color:var(–rose);text-align:center;margin-bottom:6px}
+.modal-sub{text-align:center;color:var(–text2);font-size:14px;margin-bottom:26px}
+.modal-form{display:flex;flex-direction:column;gap:14px}
+.form-label{font-size:13px;font-weight:500;color:var(–text2);margin-bottom:5px;display:block}
+.modal-switch{text-align:center;font-size:14px;color:var(–text2);margin-top:18px}
+.modal-switch button{background:none;border:none;color:var(–rose);cursor:pointer;font-weight:600;font-size:14px;font-family:var(–font-body)}
+.modal-tabs{display:flex;gap:4px;background:var(–surface2);border-radius:12px;padding:4px;margin-bottom:24px}
+.modal-tab{flex:1;padding:8px;border-radius:9px;border:none;background:transparent;color:var(–text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(–font-body)}
+.modal-tab.active{background:var(–rose-dim);color:var(–rose)}
 
-/* ── Post card ── */
-.post-card {
-background: var(–surface); border: 1px solid var(–border);
-border-radius: var(–radius); padding: 20px; margin-bottom: 12px;
-cursor: pointer; transition: all 0.25s ease;
-animation: fadeUp 0.4s ease both; position: relative; overflow: hidden;
-}
-.post-card::before {
-content: ‘’; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-background: linear-gradient(90deg, var(–rose), var(–violet));
-opacity: 0; transition: opacity 0.2s;
-}
-.post-card:hover { border-color: rgba(255,77,109,0.28); transform: translateY(-2px); box-shadow: var(–glow); }
-.post-card:hover::before { opacity: 1; }
+/* Notification */
+.notif-wrap{position:relative}
+.notif-btn{background:var(–surface2);border:1px solid var(–border);border-radius:50%;width:36px;height:36px;cursor:pointer;color:var(–text2);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative}
+.notif-btn:hover{background:var(–surface3);color:var(–text)}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(–rose);color:#fff;font-size:10px;font-weight:700;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(–bg)}
+.notif-panel{position:absolute;top:calc(100% + 10px);right:-8px;width:320px;background:var(–surface);border:1px solid var(–border);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.5);z-index:200;max-height:400px;overflow-y:auto;animation:fadeUp .2s ease}
+.notif-item{padding:12px 16px;border-bottom:1px solid var(–border);transition:background .2s;cursor:pointer}
+.notif-item:hover{background:var(–surface2)}
+.notif-item.unread{background:rgba(255,77,109,.05)}
+.notif-item:last-child{border-bottom:none}
+.notif-msg{font-size:13px;color:var(–text2);line-height:1.5;margin-bottom:3px}
+.notif-time{font-size:11px;color:var(–text3)}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(–rose);flex-shrink:0;margin-top:4px}
+.notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(–border)}
 
-.post-type-badge {
-display: inline-flex; align-items: center; gap: 5px;
-font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
-}
-.post-type-badge.confession { color: var(–rose); }
-.post-type-badge.advice     { color: #a78bfa; }
+/* Streak & Karma chips */
+.streak-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:50px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:var(–amber);font-size:12px;font-weight:700;cursor:pointer}
+.karma-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:50px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer}
 
-.post-title {
-font-family: var(–font-display); font-size: 18px; font-weight: 700;
-line-height: 1.35; color: var(–text); margin-bottom: 10px;
-}
-.post-preview {
-font-size: 14px; line-height: 1.7; color: var(–text2); margin-bottom: 16px;
-display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.post-meta {
-display: flex; align-items: center; gap: 10px;
-font-size: 13px; color: var(–text3); margin-bottom: 14px; flex-wrap: wrap;
-}
-.post-meta-dot { width: 3px; height: 3px; border-radius: 50%; background: var(–text3); flex-shrink: 0; }
-.anon-name { color: var(–text2); font-weight: 600; }
+/* Countdown timer */
+.hot-timer{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.25);font-size:12px;font-weight:700;color:var(–rose);animation:pulse 2s ease infinite}
 
-.post-reactions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.reaction-btn {
-display: flex; align-items: center; gap: 5px;
-padding: 6px 12px; border-radius: 50px;
-background: var(–surface2); border: 1px solid var(–border);
-cursor: pointer; font-size: 13px; font-weight: 500; color: var(–text2);
-transition: all 0.2s; font-family: var(–font-body);
-}
-.reaction-btn:hover  { background: var(–surface3); color: var(–text); transform: scale(1.06); }
-.reaction-btn.active { background: var(–rose-dim); border-color: rgba(255,77,109,0.35); color: var(–rose); }
-.comment-count { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(–text3); margin-left: auto; }
+/* Post detail */
+.post-detail-title{font-family:var(–font-display);font-size:clamp(22px,5vw,30px);font-weight:900;line-height:1.2;color:var(–text);margin-bottom:16px}
+.post-detail-content{font-size:16px;line-height:1.9;color:var(–text2);white-space:pre-wrap}
 
-/* ── Blur / paywall ── */
-.blur-wrap { position: relative; max-height: 80px; overflow: hidden; }
-.blur-wrap::after {
-content: ‘’; position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
-background: linear-gradient(transparent, var(–surface));
-}
-.paywall {
-margin: 12px -20px -20px; padding: 24px 20px;
-background: linear-gradient(to bottom, transparent, var(–surface) 18%);
-text-align: center;
-border-top: 1px solid var(–border);
-border-radius: 0 0 var(–radius) var(–radius);
-}
-.paywall-icon  { font-size: 30px; margin-bottom: 8px; }
-.paywall-title { font-family: var(–font-display); font-size: 17px; font-weight: 700; color: var(–text); margin-bottom: 6px; }
-.paywall-sub   { font-size: 13px; color: var(–text2); margin-bottom: 16px; }
-.paywall-btns  { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+/* Vote */
+.vote-section{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius);padding:20px;margin:24px 0}
+.vote-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(–text3);margin-bottom:16px}
+.vote-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vote-btn{padding:14px 12px;border-radius:12px;border:1px solid var(–border);background:var(–surface);cursor:pointer;text-align:center;font-family:var(–font-body);font-size:14px;font-weight:600;color:var(–text2);transition:all .2s;line-height:1.4}
+.vote-btn:hover{background:var(–surface3);color:var(–text)}
+.vote-btn.voted-a{background:var(–rose-dim);border-color:rgba(255,77,109,.4);color:var(–rose)}
+.vote-btn.voted-b{background:var(–violet-dim);border-color:rgba(124,58,237,.4);color:#a78bfa}
+.vote-bar-track{height:8px;border-radius:4px;background:var(–surface3);overflow:hidden;margin-top:14px;display:flex}
+.vote-bar-a{height:100%;background:linear-gradient(90deg,var(–rose),#c9184a);transition:width .6s ease}
+.vote-bar-b{height:100%;background:linear-gradient(90deg,var(–violet),#5b21b6);transition:width .6s ease}
+.vote-foot{display:flex;justify-content:space-between;font-size:12px;color:var(–text3);margin-top:6px}
 
-/* ── Auth modal ── */
-.modal-overlay {
-position: fixed; inset: 0; z-index: 1000;
-background: rgba(0,0,0,0.82); backdrop-filter: blur(10px);
-display: flex; align-items: center; justify-content: center;
-padding: 20px; animation: fadeUp 0.2s ease;
-}
-.modal {
-background: var(–surface); border: 1px solid rgba(255,255,255,0.1);
-border-radius: 24px; padding: 36px; width: 100%; max-width: 400px;
-position: relative; animation: popIn 0.35s ease;
-}
-.modal-close {
-position: absolute; top: 14px; right: 14px;
-background: var(–surface2); border: none; border-radius: 50%;
-width: 32px; height: 32px; cursor: pointer; color: var(–text2);
-font-size: 14px; display: flex; align-items: center; justify-content: center;
-transition: all 0.2s;
-}
-.modal-close:hover { background: var(–surface3); color: var(–text); }
-.modal-logo { font-family: var(–font-display); font-size: 26px; font-weight: 900; color: var(–rose); text-align: center; margin-bottom: 6px; }
-.modal-sub  { text-align: center; color: var(–text2); font-size: 14px; margin-bottom: 26px; }
-.modal-form { display: flex; flex-direction: column; gap: 14px; }
-.form-label { font-size: 13px; font-weight: 500; color: var(–text2); margin-bottom: 5px; display: block; }
-.modal-switch { text-align: center; font-size: 14px; color: var(–text2); margin-top: 18px; }
-.modal-switch button { background: none; border: none; color: var(–rose); cursor: pointer; font-weight: 600; font-size: 14px; font-family: var(–font-body); }
+/* Comments */
+.comment-input-row{display:flex;gap:12px;margin-bottom:24px;align-items:flex-start}
+.avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(–rose),var(–violet));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.avatar.sm{width:28px;height:28px;font-size:10px}
+.comment-card{padding:14px 16px;background:var(–surface2);border:1px solid var(–border);border-radius:12px;margin-bottom:10px;animation:slideIn .3s ease}
+.comment-card.best{border-color:rgba(20,184,166,.35)}
+.comment-author{font-size:13px;font-weight:600;color:var(–text)}
+.comment-time{font-size:12px;color:var(–text3)}
+.comment-body{font-size:14px;line-height:1.65;color:var(–text2);margin-top:6px}
+.comment-actions{display:flex;gap:12px;margin-top:8px}
+.c-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:var(–text3);background:none;border:none;cursor:pointer;transition:color .2s;font-family:var(–font-body)}
+.c-btn:hover{color:var(–rose)}
+.c-btn.upvoted{color:var(–rose)}
+.best-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(–teal);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
 
-/* ── Post detail ── */
-.post-detail-title {
-font-family: var(–font-display);
-font-size: clamp(22px,5vw,30px); font-weight: 900; line-height: 1.2;
-color: var(–text); margin-bottom: 16px;
-}
-.post-detail-content { font-size: 16px; line-height: 1.9; color: var(–text2); white-space: pre-wrap; }
+/* Story updates */
+.update-card{background:rgba(20,184,166,.04);border:1px solid rgba(20,184,166,.2);border-radius:12px;padding:12px 16px;margin-bottom:8px}
+.update-label{font-size:11px;color:var(–teal);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
 
-/* ── Vote ── */
-.vote-section {
-background: var(–surface2); border: 1px solid var(–border);
-border-radius: var(–radius); padding: 20px; margin: 24px 0;
-}
-.vote-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(–text3); margin-bottom: 16px; }
-.vote-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.vote-btn {
-padding: 14px 12px; border-radius: 12px; border: 1px solid var(–border);
-background: var(–surface); cursor: pointer; text-align: center;
-font-family: var(–font-body); font-size: 14px; font-weight: 600;
-color: var(–text2); transition: all 0.2s; line-height: 1.4;
-}
-.vote-btn:hover         { background: var(–surface3); color: var(–text); }
-.vote-btn.voted-a       { background: var(–rose-dim); border-color: rgba(255,77,109,0.4); color: var(–rose); }
-.vote-btn.voted-b       { background: var(–violet-dim); border-color: rgba(124,58,237,0.4); color: #a78bfa; }
-.vote-bar-track { height: 6px; border-radius: 3px; background: var(–surface3); overflow: hidden; margin-top: 14px; }
-.vote-bar-fill  { height: 100%; border-radius: 3px; background: linear-gradient(90deg,var(–rose),#c9184a); transition: width 0.6s ease; }
-.vote-foot { display: flex; justify-content: space-between; font-size: 12px; color: var(–text3); margin-top: 6px; }
+/* Section */
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-title{font-family:var(–font-display);font-size:22px;font-weight:700;color:var(–text)}
+.section-badge{padding:3px 10px;border-radius:50px;background:var(–rose-dim);color:var(–rose);font-size:12px;font-weight:700}
+.section-badge.violet{background:var(–violet-dim);color:#a78bfa}
+.section-badge.teal{background:rgba(20,184,166,.12);color:var(–teal)}
+.section-badge.amber{background:rgba(245,158,11,.12);color:var(–amber)}
 
-/* ── Comments ── */
-.comment-input-row { display: flex; gap: 12px; margin-bottom: 24px; align-items: flex-start; }
-.avatar {
-width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-background: linear-gradient(135deg, var(–rose), var(–violet));
-display: flex; align-items: center; justify-content: center;
-font-size: 12px; font-weight: 700; color: #fff;
-}
-.comment-card {
-padding: 14px 16px; background: var(–surface2); border: 1px solid var(–border);
-border-radius: 12px; margin-bottom: 10px; animation: slideIn 0.3s ease;
-}
-.comment-author { font-size: 13px; font-weight: 600; color: var(–text); }
-.comment-time   { font-size: 12px; color: var(–text3); }
-.comment-body   { font-size: 14px; line-height: 1.65; color: var(–text2); margin-top: 6px; }
-.comment-actions { display: flex; gap: 12px; margin-top: 8px; }
-.c-action {
-display: flex; align-items: center; gap: 4px;
-font-size: 12px; color: var(–text3); background: none; border: none;
-cursor: pointer; transition: color 0.2s; font-family: var(–font-body);
-}
-.c-action:hover { color: var(–rose); }
+/* Filter pills */
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:20px}
+.pills::-webkit-scrollbar{display:none}
+.pill{padding:7px 16px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(–border);background:var(–surface);color:var(–text2);transition:all .2s;white-space:nowrap;font-family:var(–font-body)}
+.pill:hover{border-color:rgba(255,77,109,.3);color:var(–rose)}
+.pill.active{background:var(–rose-dim);border-color:rgba(255,77,109,.4);color:var(–rose)}
+.pill.violet.active{background:var(–violet-dim);border-color:rgba(124,58,237,.4);color:#a78bfa}
 
-/* ── Section header ── */
-.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
-.section-title  { font-family: var(–font-display); font-size: 22px; font-weight: 700; color: var(–text); }
-.section-badge  { padding: 3px 10px; border-radius: 50px; background: var(–rose-dim); color: var(–rose); font-size: 12px; font-weight: 700; }
+/* Create prompt */
+.create-prompt-bar{background:linear-gradient(135deg,rgba(255,77,109,.07),rgba(124,58,237,.05));border:1px solid rgba(255,77,109,.14);border-radius:var(–radius);padding:16px 20px;margin-bottom:20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.create-prompt-bar:hover{border-color:rgba(255,77,109,.3)}
+.create-prompt-text{font-size:14px;color:var(–text3)}
 
-/* ── Filter pills ── */
-.pills { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; margin-bottom: 20px; }
-.pills::-webkit-scrollbar { display: none; }
-.pill {
-padding: 7px 16px; border-radius: 50px; font-size: 13px; font-weight: 500;
-cursor: pointer; border: 1px solid var(–border); background: var(–surface);
-color: var(–text2); transition: all 0.2s; white-space: nowrap; font-family: var(–font-body);
-}
-.pill:hover  { border-color: rgba(255,77,109,0.3); color: var(–rose); }
-.pill.active { background: var(–rose-dim); border-color: rgba(255,77,109,0.4); color: var(–rose); }
+/* Hero */
+.hero{text-align:center;padding:40px 0 32px;position:relative}
+.hero::before{content:’’;position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,109,.1),transparent 70%);pointer-events:none}
+.hero-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(–rose);margin-bottom:12px}
+.hero-title{font-family:var(–font-display);font-size:clamp(34px,9vw,58px);font-weight:900;line-height:1.08;background:linear-gradient(140deg,var(–text) 35%,var(–rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+.hero-sub{font-size:15px;color:var(–text2);max-width:360px;margin:0 auto 26px;line-height:1.65}
 
-/* ── Create prompt ── */
-.create-prompt-bar {
-background: linear-gradient(135deg, rgba(255,77,109,0.07), rgba(124,58,237,0.05));
-border: 1px solid rgba(255,77,109,0.14); border-radius: var(–radius);
-padding: 16px 20px; margin-bottom: 20px; cursor: pointer; transition: all 0.2s;
-display: flex; align-items: center; gap: 12px;
-}
-.create-prompt-bar:hover { border-color: rgba(255,77,109,0.3); }
-.create-prompt-text { font-size: 14px; color: var(–text3); }
+/* Profile stats */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-box{background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:16px;text-align:center}
+.stat-num{font-family:var(–font-display);font-size:28px;font-weight:900;color:var(–text)}
+.stat-lbl{font-size:12px;color:var(–text3);margin-top:4px}
 
-/* ── Hero ── */
-.hero {
-text-align: center; padding: 40px 0 32px; position: relative;
-}
-.hero::before {
-content: ‘’; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
-width: 320px; height: 320px; border-radius: 50%;
-background: radial-gradient(circle, rgba(255,77,109,0.1), transparent 70%);
-pointer-events: none;
-}
-.hero-eyebrow {
-font-size: 11px; font-weight: 700; text-transform: uppercase;
-letter-spacing: 0.18em; color: var(–rose); margin-bottom: 12px;
-}
-.hero-title {
-font-family: var(–font-display); font-size: clamp(34px,9vw,58px);
-font-weight: 900; line-height: 1.08;
-background: linear-gradient(140deg, var(–text) 35%, var(–rose));
--webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-margin-bottom: 14px;
-}
-.hero-sub { font-size: 15px; color: var(–text2); max-width: 360px; margin: 0 auto 26px; line-height: 1.65; }
+/* Badge chips */
+.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.badge-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;background:var(–surface2);border:1px solid var(–border);font-size:13px;font-weight:600;color:var(–text2)}
 
-/* ── Trending ── */
-.trending-num { font-family: var(–font-display); font-size: 34px; font-weight: 900; color: var(–border); line-height: 1; min-width: 42px; }
-.trending-num.top { color: rgba(255,77,109,0.22); }
+/* Pro */
+.pro-feature{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(–border)}
+.pro-feature:last-child{border-bottom:none}
 
-/* ── Back btn ── */
-.back-btn {
-display: inline-flex; align-items: center; gap: 7px;
-color: var(–text2); font-size: 14px; font-weight: 500;
-cursor: pointer; background: none; border: none; padding: 8px 0;
-margin-bottom: 20px; transition: color 0.2s; font-family: var(–font-body);
-}
-.back-btn:hover { color: var(–text); }
+/* Controversy meter */
+.controversy-bar{height:6px;border-radius:3px;background:var(–surface3);overflow:hidden;display:flex;margin-top:6px}
+.controversy-fill-a{height:100%;background:linear-gradient(90deg,var(–rose),#c9184a);transition:width .5s ease}
+.controversy-fill-b{height:100%;background:linear-gradient(90deg,var(–violet),#5b21b6);transition:width .5s ease}
 
-/* ── Utils ── */
-.divider   { height: 1px; background: var(–border); margin: 24px 0; }
-.error-msg { color: var(–rose); font-size: 13px; margin-top: 4px; }
-.spinner   { width: 20px; height: 20px; border: 2px solid var(–border); border-top-color: var(–rose); border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0; }
-.empty-state { text-align: center; padding: 60px 20px; color: var(–text3); }
-.empty-icon  { font-size: 46px; margin-bottom: 12px; }
-.empty-title { font-family: var(–font-display); font-size: 20px; color: var(–text2); margin-bottom: 8px; }
+/* Report modal */
+.reason-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(–border);background:var(–surface2);cursor:pointer;transition:all .2s;font-size:14px;color:var(–text2)}
+.reason-opt:hover{border-color:rgba(255,77,109,.3);color:var(–text)}
+.reason-opt.selected{background:var(–rose-dim);border-color:rgba(255,77,109,.4);color:var(–rose)}
 
-/* ── Toast ── */
-.toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column; gap: 10px; }
-.toast {
-padding: 13px 18px; border-radius: 12px;
-background: var(–surface2); border: 1px solid var(–border);
-font-size: 14px; color: var(–text);
-box-shadow: 0 8px 30px rgba(0,0,0,0.3);
-animation: fadeUp 0.3s ease; display: flex; align-items: center; gap: 10px; min-width: 220px;
-}
-.toast.success { border-color: rgba(20,184,166,0.4); }
-.toast.error   { border-color: rgba(255,77,109,0.4); }
+/* Admin */
+.admin-report{background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
 
-/* ── Config notice ── */
-.config-notice {
-background: rgba(245,158,11,0.09); border: 1px solid rgba(245,158,11,0.3);
-border-radius: 12px; padding: 14px 16px; margin-bottom: 20px;
-font-size: 13px; color: var(–amber); line-height: 1.6;
-}
-.config-notice code { background: rgba(245,158,11,0.15); padding: 1px 5px; border-radius: 4px; font-family: monospace; }
+/* Trending */
+.trending-num{font-family:var(–font-display);font-size:34px;font-weight:900;color:var(–border);line-height:1;min-width:42px}
+.trending-num.top{color:rgba(255,77,109,.22)}
 
-/* ── Verified badge (best answer) ── */
-.best-answer { border-color: rgba(20,184,166,0.35) !important; }
-.best-badge { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(–teal); margin-bottom: 8px; }
+/* Back */
+.back-btn{display:inline-flex;align-items:center;gap:7px;color:var(–text2);font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;padding:8px 0;margin-bottom:20px;transition:color .2s;font-family:var(–font-body)}
+.back-btn:hover{color:var(–text)}
 
-@media (max-width: 600px) {
-.nav { padding: 0 10px; }
-.layout-center { padding: 14px 10px 80px; }
-.modal { padding: 28px 18px; border-radius: 20px; }
-.vote-options { grid-template-columns: 1fr; }
-.post-card { padding: 16px; }
+/* Utils */
+.divider{height:1px;background:var(–border);margin:24px 0}
+.error-msg{color:var(–rose);font-size:13px;margin-top:4px}
+.success-msg{color:var(–teal);font-size:13px;margin-top:4px}
+.spinner{width:20px;height:20px;border:2px solid var(–border);border-top-color:var(–rose);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.empty-state{text-align:center;padding:60px 20px;color:var(–text3)}
+.empty-icon{font-size:46px;margin-bottom:12px}
+.empty-title{font-family:var(–font-display);font-size:20px;color:var(–text2);margin-bottom:8px}
+
+/* Toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{padding:13px 18px;border-radius:12px;background:var(–surface2);border:1px solid var(–border);font-size:14px;color:var(–text);box-shadow:0 8px 30px rgba(0,0,0,.35);animation:fadeUp .3s ease;display:flex;align-items:center;gap:10px;min-width:220px}
+.toast.success{border-color:rgba(20,184,166,.4)}
+.toast.error{border-color:rgba(255,77,109,.4)}
+
+/* Config notice */
+.config-notice{background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(–amber);line-height:1.6}
+.config-notice code{background:rgba(245,158,11,.15);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px}
+
+/* Verified */
+.verified-gate{background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center}
+
+/* Boost banner */
+.boost-banner{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(255,77,109,.08));border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(–amber);font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:10px}
+
+@media(max-width:600px){
+.nav{padding:0 8px;gap:6px}
+.layout-center{padding:12px 10px 80px}
+.modal{padding:24px 16px;border-radius:20px}
+.vote-options{grid-template-columns:1fr}
+.post-card{padding:16px}
+.stat-grid{grid-template-columns:repeat(3,1fr)}
+.notif-panel{width:280px;right:-50px}
 }
 </style>
 
 </head>
 <body>
 <div id="root"></div>
-
 <script type="text/babel">
-const { useState, useEffect, useRef, useCallback } = React;
+const { useState, useEffect, useRef, useCallback, Component } = React;
 
-/* ─── SUPABASE CONFIG ───────────────────────────────────────────────────────
-   Replace these two values with your Supabase project URL and anon key.
-   Find them at: https://supabase.com/dashboard → Settings → API
-─────────────────────────────────────────────────────────────────────────── */
-const SUPABASE_URL = 'https://YOUR_PROJECT_ID.supabase.co';
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
+/* ═══════════════════════════════════════════════════════════════
+CONFIG  —  replace these two values with your Supabase project
+═══════════════════════════════════════════════════════════════ */
+const SUPABASE_URL  = ‘https://YOUR_PROJECT_ID.supabase.co’;
+const SUPABASE_KEY  = ‘YOUR_SUPABASE_ANON_KEY’;
+const ADMIN_EMAIL   = ‘admin@yourdomain.com’;          // your admin email
+const HOT_TAKE_TTL  = 48 * 3600 * 1000;               // 48-hour hot takes
 
-const IS_CONFIGURED = !SUPABASE_URL.includes('YOUR_PROJECT_ID');
-const supabase = IS_CONFIGURED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const IS_CFG = !SUPABASE_URL.includes(‘YOUR_PROJECT_ID’);
+const supabase = IS_CFG ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
-/* ─── DEMO DATA ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════  DEMO DATA  */
 const DEMO_POSTS = [
-  {
-    id: '1', type: 'confession',
-    title: "I've been in love with my best friend's husband for 3 years",
-    content: "I know how this sounds. I hate myself for it.\n\nBut every time I see them together, something breaks inside me a little. He doesn't know. She doesn't know. I carry this alone every single day — smiling at their anniversary photos, congratulating them on their new home, holding it together while quietly unravelling inside.\n\nI've tried dating other people, therapy, even moving cities once. Nothing cuts through this feeling. Has anyone ever loved someone they absolutely cannot have and actually found a way to be okay?",
-    tags: ['situationship'], anonymous_name: 'Heart_4821',
-    created_at: new Date(Date.now() - 2*3600000).toISOString(),
-    reaction_counts: {'🔥':847,'😂':12,'😢':1203,'😡':45},
-    comment_count: 234, vote_a: 312, vote_b: 589
-  },
-  {
-    id: '2', type: 'advice',
-    title: "My boyfriend read all my messages — and said I'm overreacting when I confronted him",
-    content: "We've been together 2 years. Last week I caught him unlocking my phone and scrolling through my DMs. When I said something, he flipped it: claimed I'd 'given him reason to be suspicious' because I was texting my ex about returning a book.\n\nNo apology. Instead he listed every time I'd 'acted weird.' I feel violated and gaslit at the same time.\n\nHe says I'm being dramatic and that every couple does this. Am I wrong to feel the way I feel?",
-    tags: ['dating'], anonymous_name: 'Confess_7732',
-    created_at: new Date(Date.now() - 5*3600000).toISOString(),
-    reaction_counts: {'🔥':432,'😂':23,'😢':567,'😡':1890},
-    comment_count: 456, vote_a: 1203, vote_b: 87
-  },
-  {
-    id: '3', type: 'confession',
-    title: "I said yes to a marriage proposal I didn't mean",
-    content: "He cried. His whole family was there — parents, siblings, cousins with phones out. I panicked and said yes.\n\nThat was four months ago. I've been wearing a ring that feels like a lie every single day since. I do care about him deeply. Just not the way you're supposed to care about the person you're going to marry.\n\nI don't know how to undo this without completely destroying him. Every morning I wake up rehearsing a conversation I can't bring myself to have.",
-    tags: ['marriage','breakup'], anonymous_name: 'Heart_9023',
-    created_at: new Date(Date.now() - 24*3600000).toISOString(),
-    reaction_counts: {'🔥':2341,'😂':67,'😢':3102,'😡':234},
-    comment_count: 892, vote_a: 445, vote_b: 1876
-  },
-  {
-    id: '4', type: 'confession',
-    title: "After 8 years, I realized I don't actually like my partner. I just stayed.",
-    content: "We met at 22. I'm 30 now. I think I stayed because leaving at 28 felt impossible — new city, shared lease, shared friends, everyone's expectations.\n\nI don't dislike them. I just feel nothing. A warm, polite, domestic nothing.\n\nLast month someone across the office smiled at me during a meeting and I felt more alive in that one second than I have in years. I don't know what to do with that information.",
-    tags: ['breakup','dating'], anonymous_name: 'Confess_3341',
-    created_at: new Date(Date.now() - 3*86400000).toISOString(),
-    reaction_counts: {'🔥':5678,'😂':89,'😢':4321,'😡':123},
-    comment_count: 1203, vote_a: 876, vote_b: 2134
-  },
-  {
-    id: '5', type: 'advice',
-    title: "She said she loves me but isn't 'in love' with me. Is there any coming back from that?",
-    content: "Together 3.5 years. Last night she told me she loves me as a person but doesn't feel 'in love' anymore. She doesn't want to break up, but she doesn't know what she wants.\n\nI'm sitting here not knowing whether to fight for us or start grieving quietly.\n\nHas anyone actually come back from that specific conversation?",
-    tags: ['dating','situationship'], anonymous_name: 'Heart_6612',
-    created_at: new Date(Date.now() - 6*3600000).toISOString(),
-    reaction_counts: {'🔥':1234,'😂':34,'😢':2876,'😡':156},
-    comment_count: 678, vote_a: 543, vote_b: 987
-  },
+{ id:‘1’, type:‘confession’, title:“I’ve been in love with my best friend’s husband for 3 years”,
+content:“I know how this sounds. I hate myself for it.\n\nBut every time I see them together, something breaks inside me a little. He doesn’t know. She doesn’t know. I carry this alone every single day — smiling at their anniversary photos, congratulating them on their new home, holding it together while quietly unravelling inside.\n\nI’ve tried dating other people, therapy, even moving cities. Nothing cuts through this feeling.\n\nHas anyone ever loved someone they absolutely cannot have and found a way to actually be okay?”,
+tags:[‘situationship’], anonymous_name:‘Heart_4821’, created_at:new Date(Date.now()-2*3600000).toISOString(),
+reaction_counts:{‘🔥’:847,‘😂’:12,‘😢’:1203,‘😡’:45}, comment_count:234, vote_a:312, vote_b:589, user_id:‘u1’ },
+{ id:‘2’, type:‘advice’, title:“My boyfriend read all my messages and called me dramatic when I confronted him”,
+content:“We’ve been together 2 years. Last week I caught him unlocking my phone and scrolling my DMs. When I said something, he flipped it on me — claimed I’d ‘given him reason to be suspicious’ because I was texting my ex about returning a book.\n\nNo apology. He listed every time I ‘acted weird.’ I feel violated and gaslit simultaneously.\n\nHe says every couple does this. Am I wrong to feel the way I feel?”,
+tags:[‘dating’], anonymous_name:‘Confess_7732’, created_at:new Date(Date.now()-5*3600000).toISOString(),
+reaction_counts:{‘🔥’:432,‘😂’:23,‘😢’:567,‘😡’:1890}, comment_count:456, vote_a:1203, vote_b:87, user_id:‘u2’ },
+{ id:‘3’, type:‘confession’, title:“I said yes to a marriage proposal I didn’t mean”,
+content:“He cried. His whole family was there — parents, siblings, cousins with phones out. I panicked and said yes.\n\nThat was four months ago. I’ve been wearing a ring that feels like a lie every single day. I do care about him deeply. Just not the way you’re supposed to care about the person you’re going to marry.\n\nI don’t know how to undo this without destroying him.”,
+tags:[‘marriage’,‘breakup’], anonymous_name:‘Heart_9023’, created_at:new Date(Date.now()-24*3600000).toISOString(),
+reaction_counts:{‘🔥’:2341,‘😂’:67,‘😢’:3102,‘😡’:234}, comment_count:892, vote_a:445, vote_b:1876, user_id:‘u3’ },
+{ id:‘4’, type:‘hot_take’, title:“Unpopular opinion: staying in a relationship out of comfort is more honest than leaving”,
+content:“Everyone celebrates ‘having the courage to leave.’ But honestly? Choosing to stay — even when the butterflies are gone — is its own kind of maturity that nobody talks about.\n\nReal love isn’t a feeling. It’s a decision you make every morning even when you don’t feel it. Fight me.”,
+tags:[‘dating’], anonymous_name:‘Confess_3341’, created_at:new Date(Date.now()-3*3600000).toISOString(),
+reaction_counts:{‘🔥’:5678,‘😂’:89,‘😢’:421,‘😡’:1923}, comment_count:1203, vote_a:876, vote_b:2134, user_id:‘u4’ },
+{ id:‘5’, type:‘advice’, title:“She said she loves me but isn’t ‘in love’ with me. Is there any coming back?”,
+content:“Together 3.5 years. Last night she told me she loves me as a person but doesn’t feel ‘in love’ anymore. She doesn’t want to break up, but she doesn’t know what she wants.\n\nI’m sitting here not knowing whether to fight for us or start grieving quietly.\n\nHas anyone actually come back from that specific conversation?”,
+tags:[‘dating’,‘situationship’], anonymous_name:‘Heart_6612’, created_at:new Date(Date.now()-6*3600000).toISOString(),
+reaction_counts:{‘🔥’:1234,‘😂’:34,‘😢’:2876,‘😡’:156}, comment_count:678, vote_a:543, vote_b:987, user_id:‘u5’ },
 ];
-
 const DEMO_COMMENTS = {
-  '1': [
-    { id:'c1', anonymous_name:'Confess_5512', content:"The only thing that actually helped me was sustained, real distance. I moved countries eventually. Took two years to feel okay. You will survive this.", created_at: new Date(Date.now()-30*60000).toISOString(), upvotes:234 },
-    { id:'c2', anonymous_name:'Heart_8821', content:"You're not a bad person. Feelings don't follow rules. The fact that you're in pain about it says a lot about your character.", created_at: new Date(Date.now()-3600000).toISOString(), upvotes:567 },
-    { id:'c3', anonymous_name:'Confess_2201', content:"'Quietly dying inside' hit differently than anything I've read today. I lived this. I know. You will be okay.", created_at: new Date(Date.now()-7200000).toISOString(), upvotes:891 },
-  ],
-  '2': [
-    { id:'c4', anonymous_name:'Heart_3391', content:"What he did is textbook DARVO — Deny, Attack, Reverse Victim and Offender. The moment he made you the problem, the conversation became about control, not trust.", created_at: new Date(Date.now()-45*60000).toISOString(), upvotes:1203 },
-    { id:'c5', anonymous_name:'Confess_7718', content:"You are absolutely not overreacting. Privacy violation + gaslighting in one breath. That tells you everything.", created_at: new Date(Date.now()-90*60000).toISOString(), upvotes:876 },
-  ],
+‘1’:[
+{id:‘c1’,anonymous_name:‘Confess_5512’,content:“The only thing that helped was sustained, real distance. Moved countries eventually. Took two years to feel okay. You will survive this.”,created_at:new Date(Date.now()-30*60000).toISOString(),upvotes:234,user_id:‘u6’},
+{id:‘c2’,anonymous_name:‘Heart_8821’,content:“You’re not a bad person. Feelings don’t follow rules. The fact that you’re in pain about it says a lot about your character.”,created_at:new Date(Date.now()-3600000).toISOString(),upvotes:567,user_id:‘u7’},
+{id:‘c3’,anonymous_name:‘Confess_2201’,content:”‘Quietly unravelling inside’ hit different. I lived this. I know. You will be okay.”,created_at:new Date(Date.now()-7200000).toISOString(),upvotes:891,user_id:‘u8’},
+],
+‘2’:[
+{id:‘c4’,anonymous_name:‘Heart_3391’,content:“What he did is textbook DARVO — Deny, Attack, Reverse Victim and Offender. The moment he made you the problem, the conversation became about control, not trust.”,created_at:new Date(Date.now()-45*60000).toISOString(),upvotes:1203,user_id:‘u9’},
+{id:‘c5’,anonymous_name:‘Confess_7718’,content:“You are absolutely not overreacting. Privacy invasion + gaslighting in one breath tells you everything.”,created_at:new Date(Date.now()-90*60000).toISOString(),upvotes:876,user_id:‘u10’},
+],
 };
 
-/* ─── UTILS ─────────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════  UTILS  */
+const REACTIONS = [‘🔥’,‘😂’,‘😢’,‘😡’];
+const ALL_TAGS  = [‘cheating’,‘breakup’,‘dating’,‘marriage’,‘situationship’];
+const REASONS   = [‘Harmful content’,‘Harassment’,‘Spam’,‘Fake story’,‘Self-promotion’,‘Other’];
+
 function timeAgo(iso) {
-  const s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60)     return 'just now';
-  if (s < 3600)   return `${Math.floor(s/60)}m ago`;
-  if (s < 86400)  return `${Math.floor(s/3600)}h ago`;
-  return `${Math.floor(s/86400)}d ago`;
+const s=(Date.now()-new Date(iso).getTime())/1000;
+if(s<60) return ‘just now’;
+if(s<3600) return `${Math.floor(s/60)}m ago`;
+if(s<86400) return `${Math.floor(s/3600)}h ago`;
+return `${Math.floor(s/86400)}d ago`;
 }
 function makeAnonName() {
-  const pfx = ['Heart','Confess','Soul','Echo','Ache','Muse'];
-  return `${pfx[Math.floor(Math.random()*pfx.length)]}_${Math.floor(1000+Math.random()*9000)}`;
+const p=[‘Heart’,‘Confess’,‘Soul’,‘Echo’,‘Ache’,‘Muse’,‘Pulse’,‘Veil’];
+return `${p[Math.floor(Math.random()*p.length)]}_${Math.floor(1000+Math.random()*9000)}`;
 }
-const REACTIONS = ['🔥','😂','😢','😡'];
-const ALL_TAGS  = ['cheating','breakup','dating','marriage','situationship'];
 
-/* ─── TOAST ─────────────────────────────────────────────────────────────── */
-function ToastStack({ toasts }) {
-  return (
-    <div className="toast-wrap">
-      {toasts.map(t => (
-        <div key={t.id} className={`toast ${t.type||''}`}>
-          <span>{t.type==='success'?'✅':t.type==='error'?'❌':'💬'}</span>
-          {t.msg}
+// Reddit-style hot algorithm
+function feedScore(post) {
+const rx = Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0);
+const eng = rx + (post.comment_count||0)*2.5 + ((post.vote_a||0)+(post.vote_b||0))*1.5;
+const ageH = (Date.now()-new Date(post.created_at).getTime())/3600000;
+return eng / Math.pow(ageH+2, 1.8);
+}
+
+// Controversial: high votes, close to 50/50
+function controversialScore(post) {
+const total=(post.vote_a||0)+(post.vote_b||0);
+if(total<5) return 0;
+const diff=Math.abs((post.vote_a||0)-(post.vote_b||0));
+return Math.pow(total,1.5)/(diff+1);
+}
+
+// Karma from posts the user owns
+function calcKarma(myPosts) {
+return myPosts.reduce((k,p) =>
+k + Object.values(p.reaction_counts||{}).reduce((s,v)=>s+v,0)
++ (p.comment_count||0)
++ 10, 0);
+}
+
+// Badges
+function getBadges(karma, myPosts, streak) {
+const b=[];
+if(myPosts.length>=1)   b.push({icon:‘🌱’,label:‘First Confession’});
+if(karma>=50)           b.push({icon:‘⭐’,label:‘Rising Star’});
+if(karma>=250)          b.push({icon:‘🔥’,label:‘On Fire’});
+if(karma>=1000)         b.push({icon:‘👑’,label:‘Legend’});
+if(streak>=3)           b.push({icon:‘📅’,label:‘Dedicated’});
+if(streak>=7)           b.push({icon:‘🏆’,label:‘Week Warrior’});
+if(myPosts.some(p=>(p.comment_count||0)>=20)) b.push({icon:‘💬’,label:‘Conversation Starter’});
+if(myPosts.some(p=>Object.values(p.reaction_counts||{}).reduce((s,v)=>s+v,0)>=100)) b.push({icon:‘💥’,label:‘Viral’});
+return b;
+}
+
+// Streak (localStorage)
+function getStreak() {
+try { return JSON.parse(localStorage.getItem(‘hc_streak’)||’{“count”:0,“last”:””}’); }
+catch { return {count:0,last:’’}; }
+}
+function bumpStreak() {
+const today=new Date().toDateString();
+const d=getStreak();
+if(d.last===today) return d;
+const yest=new Date(Date.now()-86400000).toDateString();
+const nd={count:d.last===yest?d.count+1:1, last:today};
+localStorage.setItem(‘hc_streak’,JSON.stringify(nd));
+return nd;
+}
+
+// Hot-take countdown
+function hotTakeRemaining(createdAt) {
+const rem=new Date(createdAt).getTime()+HOT_TAKE_TTL-Date.now();
+if(rem<=0) return null;
+const h=Math.floor(rem/3600000);
+const m=Math.floor((rem%3600000)/60000);
+return `${h}h ${m}m`;
+}
+
+// Share as image (Canvas)
+function wrapCanvas(ctx,text,maxW) {
+const words=text.split(’ ‘), lines=[];
+let cur=’’;
+words.forEach(w=>{
+const t=cur?cur+’ ‘+w:w;
+ctx.measureText(t).width>maxW?(lines.push(cur),cur=w):(cur=t);
+});
+if(cur) lines.push(cur);
+return lines;
+}
+function shareAsImage(post) {
+const W=1200,H=630,canvas=document.createElement(‘canvas’);
+canvas.width=W; canvas.height=H;
+const ctx=canvas.getContext(‘2d’);
+ctx.fillStyle=’#0a0a0f’; ctx.fillRect(0,0,W,H);
+const g=ctx.createLinearGradient(0,0,W,H);
+g.addColorStop(0,‘rgba(255,77,109,0.18)’); g.addColorStop(1,‘rgba(124,58,237,0.12)’);
+ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+const gl=ctx.createLinearGradient(0,0,W,0);
+gl.addColorStop(0,’#ff4d6d’); gl.addColorStop(1,’#7c3aed’);
+ctx.fillStyle=gl; ctx.fillRect(0,0,W,5);
+ctx.strokeStyle=‘rgba(255,77,109,0.3)’; ctx.lineWidth=1.5;
+ctx.strokeRect(1,1,W-2,H-2);
+ctx.font=‘bold 24px Georgia,serif’; ctx.fillStyle=’#ff4d6d’;
+ctx.fillText(‘HeartConfia’, 60, 65);
+ctx.font=‘bold 13px sans-serif’; ctx.fillStyle=‘rgba(255,77,109,0.7)’;
+ctx.fillText(post.type.toUpperCase().replace(’_’,’ ‘), 60, 92);
+ctx.font=‘bold 46px Georgia,serif’; ctx.fillStyle=’#f0eef8’;
+const tLines=wrapCanvas(ctx,post.title,1080);
+tLines.slice(0,2).forEach((l,i)=>ctx.fillText(l,60,152+i*60));
+ctx.font=‘25px sans-serif’; ctx.fillStyle=’#9a96b4’;
+const startY=152+Math.min(tLines.length,2)*60+28;
+const cLines=wrapCanvas(ctx,post.content,1080);
+cLines.slice(0,3).forEach((l,i)=>ctx.fillText(l,60,startY+i*36));
+const rx=Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0);
+ctx.font=‘bold 18px sans-serif’; ctx.fillStyle=’#5e5a78’;
+ctx.fillText(`${rx.toLocaleString()} reactions  ·  ${(post.comment_count||0).toLocaleString()} comments  ·  @${post.anonymous_name}`,60,560);
+ctx.font=‘16px sans-serif’; ctx.fillStyle=’#3a3a5c’;
+ctx.fillText(‘heartconfia.com — anonymous relationship confessions’,60,600);
+canvas.toBlob(blob=>{
+const url=URL.createObjectURL(blob);
+const a=document.createElement(‘a’);
+a.href=url; a.download=`confession-${post.id}.png`; a.click();
+URL.revokeObjectURL(url);
+});
+}
+
+/* ═══════════════════════════════════════════════════════════════  ERROR BOUNDARY  */
+class ErrorBoundary extends Component {
+constructor(p){super(p);this.state={err:null}}
+static getDerivedStateFromError(e){return{err:e}}
+render(){
+if(this.state.err) return (
+<div style={{padding:40,textAlign:‘center’}}>
+<div style={{fontSize:40,marginBottom:16}}>💔</div>
+<div style={{fontFamily:‘var(–font-display)’,fontSize:20,color:‘var(–text)’,marginBottom:8}}>Something broke</div>
+<p style={{color:‘var(–text2)’,marginBottom:20,fontSize:14}}>{this.state.err.message}</p>
+<button className=“btn btn-primary” onClick={()=>window.location.reload()}>Reload app</button>
+</div>
+);
+return this.props.children;
+}
+}
+
+/* ═══════════════════════════════════════════════════════════════  TOAST  */
+function ToastStack({toasts}){
+return <div className="toast-wrap">{toasts.map(t=>(
+<div key={t.id} className={`toast ${t.type||''}`}>
+<span>{t.type===‘success’?‘✅’:t.type===‘error’?‘❌’:‘💬’}</span>{t.msg}
+</div>
+))}</div>;
+}
+
+/* ═══════════════════════════════════════════════════════════════  AUTH MODAL  */
+function AuthModal({initMode=‘login’,onClose,onAuth}){
+const [mode,setMode]=useState(initMode);
+const [email,setEmail]=useState(’’);
+const [pass,setPass]=useState(’’);
+const [loading,setLoading]=useState(false);
+const [err,setErr]=useState(’’);
+const [ok,setOk]=useState(’’);
+
+async function submit(){
+setErr(’’); setLoading(true);
+if(!IS_CFG){
+await new Promise(r=>setTimeout(r,700));
+onAuth({id:‘demo’,email,anonymous_name:makeAnonName()});
+setLoading(false); return;
+}
+try{
+if(mode===‘reset’){
+const{error:e}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+if(e) throw e;
+setOk(‘Password reset link sent! Check your inbox 📧’);
+} else if(mode===‘signup’){
+const{data,error:e}=await supabase.auth.signUp({email,password:pass});
+if(e) throw e;
+if(data.user){
+const name=makeAnonName();
+await supabase.from(‘users’).insert({id:data.user.id,email,anonymous_name:name});
+setOk(‘Almost there! Check your inbox to verify your account 💌’);
+}
+} else {
+const{data,error:e}=await supabase.auth.signInWithPassword({email,password:pass});
+if(e) throw e;
+const{data:prof}=await supabase.from(‘users’).select(’*’).eq(‘id’,data.user.id).single();
+onAuth({…data.user,anonymous_name:prof?.anonymous_name||makeAnonName()});
+}
+}catch(e){setErr(e.message);}
+setLoading(false);
+}
+function sw(m){setMode(m);setErr(’’);setOk(’’);}
+
+return (
+<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="modal">
+<button className="modal-close" onClick={onClose}>✕</button>
+<div className="modal-logo">💔 HeartConfia</div>
+<p className="modal-sub">{mode===‘login’?‘Your secrets are safe here.’:mode===‘signup’?‘Share anonymously. Feel less alone.’:‘Reset your password.’}</p>
+{mode!==‘reset’ && (
+<div className="modal-tabs">
+<button className={`modal-tab ${mode==='login'?'active':''}`} onClick={()=>sw(‘login’)}>Log in</button>
+<button className={`modal-tab ${mode==='signup'?'active':''}`} onClick={()=>sw(‘signup’)}>Sign up</button>
+</div>
+)}
+{ok ? <div style={{textAlign:‘center’,padding:‘20px 0’,color:‘var(–teal)’,fontSize:15,lineHeight:1.6}}>{ok}</div> : (
+<div className="modal-form">
+<div><label className="form-label">Email</label>
+<input className=“input” type=“email” placeholder=“your@email.com” value={email} onChange={e=>setEmail(e.target.value)}/></div>
+{mode!==‘reset’ && <div><label className="form-label">Password</label>
+<input className=“input” type=“password” placeholder=”••••••••” value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key===‘Enter’&&submit()}/></div>}
+{err && <p className="error-msg">{err}</p>}
+<button className=“btn btn-primary” onClick={submit} disabled={loading||!email||(mode!==‘reset’&&!pass)} style={{width:‘100%’,justifyContent:‘center’,padding:‘14px’}}>
+{loading?<span className="spinner"/>:mode===‘login’?‘Log in’:mode===‘signup’?‘Create account’:‘Send reset link’}
+</button>
+{mode===‘login’ && <button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,fontSize:13,cursor:‘pointer’,textAlign:‘center’,fontFamily:‘var(–font-body)’}} onClick={()=>sw(‘reset’)}>Forgot password?</button>}
+{mode===‘reset’ && <button className=“btn btn-ghost” style={{justifyContent:‘center’}} onClick={()=>sw(‘login’)}>← Back to login</button>}
+</div>
+)}
+</div>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  PAYWALL  */
+function Paywall({onSignup,onLogin}){
+return (
+<div className="paywall">
+<div className="paywall-icon">💔</div>
+<div className="paywall-title">Continue reading this confession</div>
+<p className="paywall-sub">Free account — your identity always stays anonymous.</p>
+<div className="paywall-btns">
+<button className="btn btn-primary" onClick={onSignup}>Sign up free</button>
+<button className="btn btn-secondary" onClick={onLogin}>Log in</button>
+</div>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  NOTIFICATION BELL  */
+function NotifBell({user}){
+const [notifs,setNotifs]=useState([]);
+const [open,setOpen]=useState(false);
+const ref=useRef();
+const unread=notifs.filter(n=>!n.read).length;
+
+useEffect(()=>{
+if(!supabase||!user) return;
+supabase.from(‘notifications’).select(’*’).eq(‘user_id’,user.id)
+.order(‘created_at’,{ascending:false}).limit(25)
+.then(({data})=>{if(data) setNotifs(data);});
+const ch=supabase.channel(`notifs-${user.id}`)
+.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘notifications’,filter:`user_id=eq.${user.id}`},
+p=>setNotifs(prev=>[p.new,…prev])).subscribe();
+return()=>supabase.removeChannel(ch);
+},[user?.id]);
+
+useEffect(()=>{
+function close(e){if(ref.current&&!ref.current.contains(e.target))setOpen(false);}
+document.addEventListener(‘mousedown’,close);
+return()=>document.removeEventListener(‘mousedown’,close);
+},[]);
+
+function toggleOpen(){
+setOpen(o=>!o);
+if(!open && unread>0){
+setNotifs(p=>p.map(n=>({…n,read:true})));
+if(supabase) supabase.from(‘notifications’).update({read:true}).eq(‘user_id’,user.id);
+}
+}
+
+const icons={comment:‘💬’,reaction:‘🔥’,vote:‘⚖️’,trending:‘🚀’,reply:‘↩’};
+
+return (
+<div className="notif-wrap" ref={ref}>
+<button className="notif-btn" onClick={toggleOpen}>
+🔔{unread>0&&<span className="notif-badge">{unread>9?‘9+’:unread}</span>}
+</button>
+{open&&(
+<div className="notif-panel">
+<div className="notif-header">
+<span style={{fontSize:14,fontWeight:600}}>Notifications</span>
+{unread>0&&<span style={{fontSize:12,color:‘var(–rose)’}}>All read</span>}
+</div>
+{notifs.length===0?(
+<div style={{padding:‘30px 16px’,textAlign:‘center’,color:‘var(–text3)’,fontSize:13}}>
+No notifications yet.<br/>Post a confession to get started.
+</div>
+):notifs.map(n=>(
+<div key={n.id} className={`notif-item ${n.read?'':'unread'}`}>
+<div style={{display:‘flex’,gap:10,alignItems:‘flex-start’}}>
+{!n.read&&<div className="notif-dot"/>}
+<div style={{flex:1}}>
+<div className="notif-msg">{icons[n.type]||‘📣’} {n.message}</div>
+<div className="notif-time">{timeAgo(n.created_at)}</div>
+</div>
+</div>
+</div>
+))}
+</div>
+)}
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  REPORT MODAL  */
+function ReportModal({postId,commentId,user,onClose,addToast}){
+const [reason,setReason]=useState(’’);
+const [done,setDone]=useState(false);
+async function submit(){
+if(supabase&&user&&user.id!==‘demo’)
+await supabase.from(‘reports’).insert({reporter_id:user.id,post_id:postId||null,comment_id:commentId||null,reason});
+setDone(true);
+setTimeout(()=>{addToast(‘Report submitted. We’ll review it shortly.’,‘success’);onClose();},1200);
+}
+return (
+<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="modal" style={{maxWidth:380}}>
+<button className="modal-close" onClick={onClose}>✕</button>
+<h3 style={{fontFamily:‘var(–font-display)’,fontSize:22,marginBottom:6}}>Report content</h3>
+<p style={{color:‘var(–text2)’,fontSize:14,marginBottom:20}}>Why are you reporting this?</p>
+{done?(
+<div style={{textAlign:‘center’,padding:‘20px 0’,color:‘var(–teal)’,fontSize:15}}>✅ Thanks, we’ll review it.</div>
+):(
+<>
+<div style={{display:‘flex’,flexDirection:‘column’,gap:8,marginBottom:20}}>
+{REASONS.map(r=>(
+<div key={r} className={`reason-opt ${reason===r?'selected':''}`} onClick={()=>setReason(r)}>
+{reason===r?‘●’:‘○’} {r}
+</div>
+))}
+</div>
+<button className=“btn btn-danger” onClick={submit} disabled={!reason} style={{width:‘100%’,justifyContent:‘center’,padding:‘12px’}}>
+Submit Report
+</button>
+</>
+)}
+</div>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  PRO MODAL  */
+function ProModal({onClose}){
+const features=[
+{icon:‘📊’,t:‘See full vote breakdown — who chose OP vs Partner’},
+{icon:‘🔔’,t:‘Instant email notifications when someone replies’},
+{icon:‘⚡’,t:‘Boost your confession to the top of the feed (24h)’},
+{icon:‘🔖’,t:‘Save confessions to a private reading list’},
+{icon:‘🎨’,t:‘Custom anonymous name & identity flair’},
+{icon:‘🚫’,t:‘No ads (when we eventually add them)’},
+];
+return (
+<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
+<div className="modal" style={{maxWidth:440}}>
+<button className="modal-close" onClick={onClose}>✕</button>
+<div style={{textAlign:‘center’,marginBottom:24}}>
+<div style={{fontSize:44,marginBottom:8}}>💎</div>
+<div style={{fontFamily:‘var(–font-display)’,fontSize:26,fontWeight:900,color:‘var(–text)’}}>HeartConfia Pro</div>
+<p style={{color:‘var(–text2)’,fontSize:14,marginTop:6}}>Go deeper. Stay anonymous. Feel more.</p>
+</div>
+<div style={{marginBottom:24}}>
+{features.map(f=>(
+<div key={f.t} className="pro-feature">
+<span style={{fontSize:22}}>{f.icon}</span>
+<span style={{fontSize:14,color:‘var(–text2)’}}>{f.t}</span>
+</div>
+))}
+</div>
+<div style={{textAlign:‘center’}}>
+<div style={{fontFamily:‘var(–font-display)’,fontSize:30,fontWeight:900,marginBottom:4}}>
+$4.99<span style={{fontSize:16,color:‘var(–text3)’,fontFamily:‘var(–font-body)’}}>/month</span>
+</div>
+<p style={{fontSize:12,color:‘var(–text3)’,marginBottom:14}}>or $39/year · Cancel anytime</p>
+<button className=“btn btn-violet” style={{width:‘100%’,justifyContent:‘center’,padding:‘14px’,fontSize:15}}>
+Upgrade to Pro 💎
+</button>
+<p style={{fontSize:12,color:‘var(–text3)’,marginTop:10}}>Your anonymity is always protected, Pro or not.</p>
+</div>
+</div>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  POST CARD  */
+function PostCard({post,user,onClick,onNeedAuth,delay=0}){
+const [reactions,setReactions]=useState(post.reaction_counts||{});
+const [mine,setMine]=useState(null);
+const [timer,setTimer]=useState(post.type===‘hot_take’?hotTakeRemaining(post.created_at):null);
+const [showReport,setShowReport]=useState(false);
+const [addToast]=useState(()=>()=>{});
+
+useEffect(()=>{
+if(post.type!==‘hot_take’) return;
+const iv=setInterval(()=>setTimer(hotTakeRemaining(post.created_at)),60000);
+return()=>clearInterval(iv);
+},[]);
+
+const isExpired = post.type===‘hot_take’ && !timer;
+
+async function react(e,type){
+e.stopPropagation();
+if(!user){onNeedAuth(‘signup’);return;}
+const prev=mine,r={…reactions};
+if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
+else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
+setReactions(r);
+if(supabase&&user.id!==‘demo’){
+if(prev) await supabase.from(‘reactions’).delete().match({post_id:post.id,user_id:user.id,type:prev});
+if(prev!==type){
+await supabase.from(‘reactions’).insert({post_id:post.id,user_id:user.id,type});
+// Notify post owner
+if(post.user_id&&post.user_id!==user.id)
+await supabase.from(‘notifications’).insert({user_id:post.user_id,type:‘reaction’,post_id:post.id,actor_name:user.anonymous_name,message:`@${user.anonymous_name} reacted ${type} to your confession`,read:false});
+}
+}
+}
+
+const totalRx=Object.values(reactions).reduce((s,v)=>s+v,0);
+const topRx=Object.entries(reactions).sort(([,a],[,b])=>b-a)[0];
+const isBoosted=post.boosted;
+
+return (
+<>
+<div className={`post-card ${isBoosted?'boosted':''} ${post.type==='hot_take'?'hot-take':''}`}
+onClick={onClick} style={{animationDelay:`${delay}s`}}>
+{isBoosted&&<div className="boost-banner">⚡ Boosted</div>}
+<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘flex-start’,marginBottom:10}}>
+<div style={{display:‘flex’,flexDirection:‘column’,gap:6}}>
+<span className={`post-type-badge ${post.type}`}>
+{post.type===‘confession’?‘💔 Confession’:post.type===‘advice’?‘💬 Seeking Advice’:‘🌶 Hot Take’}
+</span>
+{post.type===‘hot_take’&&(
+<span className="hot-timer">
+{isExpired?‘⏰ Expired’:‘⏱ ‘+timer+’ left’}
+</span>
+)}
+</div>
+<div style={{display:‘flex’,gap:6,flexWrap:‘wrap’,justifyContent:‘flex-end’,alignItems:‘center’}}>
+{post.tags?.slice(0,2).map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
+<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:16,padding:‘0 4px’}}
+onClick={e=>{e.stopPropagation();setShowReport(true);}}>⋯</button>
+</div>
+</div>
+<h2 className="post-title">{post.title}</h2>
+<div className="post-meta">
+<span className="anon-name">@{post.anonymous_name}</span>
+<span className="post-meta-dot"/>
+<span>{timeAgo(post.created_at)}</span>
+{totalRx>0&&<><span className="post-meta-dot"/><span>{topRx[0]} {totalRx.toLocaleString()}</span></>}
+</div>
+{user?(
+<p className="post-preview">{post.content}</p>
+):(
+<>
+<div className="blur-wrap"><p style={{fontSize:14,lineHeight:1.7,color:‘var(–text2)’}}>{post.content.slice(0,160)}…</p></div>
+<Paywall onSignup={()=>onNeedAuth(‘signup’)} onLogin={()=>onNeedAuth(‘login’)}/>
+</>
+)}
+{user&&(
+<div className="post-reactions">
+{REACTIONS.map(r=>(
+<button key={r} className={`reaction-btn ${mine===r?'active':''}`} onClick={e=>react(e,r)}>
+{r} <span>{(reactions[r]||0)>0?(reactions[r]||0).toLocaleString():’’}</span>
+</button>
+))}
+<div className="comment-count">💬 {(post.comment_count||0).toLocaleString()}</div>
+<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:13,marginLeft:‘auto’,fontFamily:‘var(–font-body)’,display:‘flex’,alignItems:‘center’,gap:4}}
+onClick={e=>{e.stopPropagation();shareAsImage(post);}}>
+↗ Share
+</button>
+</div>
+)}
+</div>
+{showReport&&<ReportModal postId={post.id} user={user} onClose={()=>setShowReport(false)} addToast={()=>{}}/>}
+</>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  VOTE SECTION  */
+function VoteSection({post,user,onNeedAuth}){
+const [vA,setVA]=useState(post.vote_a||0);
+const [vB,setVB]=useState(post.vote_b||0);
+const [voted,setVoted]=useState(null);
+const total=vA+vB;
+const pA=total>0?Math.round((vA/total)*100):50;
+
+async function vote(type){
+if(!user){onNeedAuth();return;}
+if(voted) return;
+type===‘A’?setVA(v=>v+1):setVB(v=>v+1);
+setVoted(type);
+if(supabase&&user.id!==‘demo’){
+await supabase.from(‘votes’).insert({post_id:post.id,user_id:user.id,vote_type:type});
+if(post.user_id&&post.user_id!==user.id)
+await supabase.from(‘notifications’).insert({user_id:post.user_id,type:‘vote’,post_id:post.id,actor_name:user.anonymous_name,message:`Someone voted on your confession — ${pA}% think you're right`,read:false});
+}
+}
+
+return (
+<div className="vote-section">
+<div className="vote-label">⚖️ Who is right?</div>
+<div className="vote-options">
+<button className={`vote-btn ${voted==='A'?'voted-a':''}`} onClick={()=>vote(‘A’)}>
+{voted===‘A’?‘✓ ‘:’’}OP is right
+<div style={{fontSize:22,fontFamily:‘var(–font-display)’,marginTop:4,color:voted===‘A’?‘var(–rose)’:‘var(–text3)’}}>{pA}%</div>
+</button>
+<button className={`vote-btn ${voted==='B'?'voted-b':''}`} onClick={()=>vote(‘B’)}>
+{voted===‘B’?‘✓ ‘:’’}Partner is right
+<div style={{fontSize:22,fontFamily:‘var(–font-display)’,marginTop:4,color:voted===‘B’?’#a78bfa’:‘var(–text3)’}}>{100-pA}%</div>
+</button>
+</div>
+<div className="vote-bar-track">
+<div className=“vote-bar-a” style={{width:`${pA}%`}}/>
+<div className=“vote-bar-b” style={{width:`${100-pA}%`}}/>
+</div>
+<div className="vote-foot">
+<span>{vA.toLocaleString()} for OP</span>
+<span>{total.toLocaleString()} votes total</span>
+<span>{vB.toLocaleString()} for Partner</span>
+</div>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  COMMENTS  */
+function Comments({postId,postOwnerId,user,onNeedAuth}){
+const [comments,setComments]=useState(DEMO_COMMENTS[postId]||[]);
+const [text,setText]=useState(’’);
+const [sending,setSending]=useState(false);
+const [upvoted,setUpvoted]=useState({});
+const [showReport,setShowReport]=useState(null);
+
+useEffect(()=>{
+if(!supabase) return;
+supabase.from(‘comments’).select(’*’).eq(‘post_id’,postId).order(‘upvotes’,{ascending:false})
+.then(({data})=>{if(data?.length) setComments(data);});
+const ch=supabase.channel(`comments-${postId}`)
+.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘comments’,filter:`post_id=eq.${postId}`},
+p=>setComments(prev=>[p.new,…prev])).subscribe();
+return()=>supabase.removeChannel(ch);
+},[postId]);
+
+async function post(){
+if(!user){onNeedAuth();return;}
+if(!text.trim()) return;
+setSending(true);
+const c={id:Date.now()+’’,anonymous_name:user.anonymous_name,content:text.trim(),created_at:new Date().toISOString(),upvotes:0,user_id:user.id};
+setComments(prev=>[c,…prev]);
+setText(’’);
+if(supabase&&user.id!==‘demo’){
+await supabase.from(‘comments’).insert({post_id:postId,user_id:user.id,content:c.content});
+if(postOwnerId&&postOwnerId!==user.id)
+await supabase.from(‘notifications’).insert({user_id:postOwnerId,type:‘comment’,post_id:postId,actor_name:user.anonymous_name,message:`@${user.anonymous_name} commented on your confession`,read:false});
+}
+setSending(false);
+}
+
+function upvote(cId){
+if(!user){onNeedAuth();return;}
+if(upvoted[cId]) return;
+setComments(p=>p.map(c=>c.id===cId?{…c,upvotes:(c.upvotes||0)+1}:c));
+setUpvoted(p=>({…p,[cId]:true}));
+}
+
+const sorted=[…comments].sort((a,b)=>{
+const topId=[…comments].sort((x,y)=>(y.upvotes||0)-(x.upvotes||0))[0]?.id;
+if(a.id===topId) return -1; if(b.id===topId) return 1;
+return (b.upvotes||0)-(a.upvotes||0);
+});
+const bestId=comments.length>2?[…comments].sort((a,b)=>(b.upvotes||0)-(a.upvotes||0))[0]?.id:null;
+
+return (
+<div>
+<div className="section-header" style={{marginBottom:16}}>
+<span className="section-title" style={{fontSize:18}}>Comments</span>
+<span className="section-badge">{comments.length}</span>
+</div>
+<div className="comment-input-row">
+<div className="avatar">{user?user.anonymous_name?.charAt(0):’?’}</div>
+<div style={{flex:1}}>
+<textarea className=“input” rows={3} style={{minHeight:76}}
+placeholder={user?`Reply as @${user.anonymous_name}…`:‘Log in to comment’}
+value={text} onChange={e=>setText(e.target.value)} disabled={!user}/>
+{user
+?<button className="btn btn-primary" style={{marginTop:8}} onClick={post} disabled={!text.trim()||sending}>
+{sending?<span className="spinner"/>:‘Post comment’}</button>
+:<button className="btn btn-secondary" style={{marginTop:8}} onClick={onNeedAuth}>Log in to comment</button>
+}
+</div>
+</div>
+{sorted.map(c=>(
+<div key={c.id} className={`comment-card ${c.id===bestId?'best':''}`}>
+{c.id===bestId&&<div className="best-badge">✅ Top answer</div>}
+<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘center’}}>
+<span className="comment-author">@{c.anonymous_name}</span>
+<div style={{display:‘flex’,gap:8,alignItems:‘center’}}>
+<span className="comment-time">{timeAgo(c.created_at)}</span>
+<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:14}} onClick={()=>setShowReport(c.id)}>⋯</button>
+</div>
+</div>
+<p className="comment-body">{c.content}</p>
+<div className="comment-actions">
+<button className={`c-btn ${upvoted[c.id]?'upvoted':''}`} onClick={()=>upvote(c.id)}>
+{upvoted[c.id]?‘❤️’:‘🤍’} {(c.upvotes||0).toLocaleString()}
+</button>
+<button className="c-btn">↩ Reply</button>
+</div>
+</div>
+))}
+{showReport&&<ReportModal commentId={showReport} user={user} onClose={()=>setShowReport(null)} addToast={()=>{}}/>}
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  STORY UPDATES  */
+function StoryUpdates({post,user}){
+const [updates,setUpdates]=useState([]);
+const [text,setText]=useState(’’);
+const [loading,setLoading]=useState(false);
+const isOwner=user&&user.id===post.user_id;
+
+useEffect(()=>{
+if(!supabase) return;
+supabase.from(‘post_updates’).select(’*’).eq(‘post_id’,post.id).order(‘created_at’,{ascending:true})
+.then(({data})=>{if(data) setUpdates(data);});
+},[post.id]);
+
+async function add(){
+if(!text.trim()) return;
+setLoading(true);
+const u={id:Date.now()+’’,content:text.trim(),created_at:new Date().toISOString()};
+setUpdates(p=>[…p,u]);
+setText(’’);
+if(supabase&&user.id!==‘demo’) await supabase.from(‘post_updates’).insert({post_id:post.id,user_id:user.id,content:text.trim()});
+setLoading(false);
+}
+
+if(!isOwner&&updates.length===0) return null;
+
+return (
+<div style={{marginBottom:20}}>
+<div style={{fontSize:12,fontWeight:700,textTransform:‘uppercase’,letterSpacing:’.1em’,color:‘var(–teal)’,marginBottom:12}}>
+📰 Updates from OP
+</div>
+{updates.map((u,i)=>(
+<div key={u.id} className="update-card">
+<div className="update-label">Update #{i+1} · {timeAgo(u.created_at)}</div>
+<p style={{fontSize:14,color:‘var(–text2)’,lineHeight:1.65}}>{u.content}</p>
+</div>
+))}
+{isOwner&&(
+<div style={{marginTop:12}}>
+<textarea className=“input” rows={3} style={{minHeight:76}} placeholder=“Add an update to your story… (only you can see this button)”
+value={text} onChange={e=>setText(e.target.value)}/>
+<button className="btn btn-teal" style={{marginTop:8}} onClick={add} disabled={!text.trim()||loading}>
+{loading?<span className="spinner"/>:‘📰 Post Update’}
+</button>
+</div>
+)}
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  POST DETAIL  */
+function PostDetail({post,user,onBack,onNeedAuth}){
+const [reactions,setReactions]=useState(post.reaction_counts||{});
+const [mine,setMine]=useState(null);
+
+if(!user) return (
+<div className="fade-up">
+<button className="back-btn" onClick={onBack}>← Back</button>
+<div className="card">
+<span className={`post-type-badge ${post.type}`}>{post.type===‘confession’?‘💔 Confession’:post.type===‘advice’?‘💬 Seeking Advice’:‘🌶 Hot Take’}</span>
+<h1 className="post-detail-title" style={{marginTop:10}}>{post.title}</h1>
+<div className="post-meta" style={{marginBottom:20}}>
+<span className="anon-name">@{post.anonymous_name}</span>
+<span className="post-meta-dot"/><span>{timeAgo(post.created_at)}</span>
+</div>
+<div className="blur-wrap" style={{maxHeight:110}}>
+<p className="post-detail-content">{post.content.slice(0,280)}…</p>
+</div>
+<Paywall onSignup={()=>onNeedAuth(‘signup’)} onLogin={()=>onNeedAuth(‘login’)}/>
+</div>
+</div>
+);
+
+function react(type){
+const prev=mine,r={…reactions};
+if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
+else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
+setReactions(r);
+}
+
+return (
+<div className="fade-up">
+<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘center’,marginBottom:4}}>
+<button className="back-btn" onClick={onBack} style={{margin:0}}>← Back to feed</button>
+<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:13,fontFamily:‘var(–font-body)’,display:‘flex’,alignItems:‘center’,gap:5}}
+onClick={()=>shareAsImage(post)}>↗ Share as image</button>
+</div>
+<div style={{marginBottom:14}} className="card">
+<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘flex-start’,marginBottom:14}}>
+<div style={{display:‘flex’,flexDirection:‘column’,gap:6}}>
+<span className={`post-type-badge ${post.type}`}>
+{post.type===‘confession’?‘💔 Confession’:post.type===‘advice’?‘💬 Seeking Advice’:‘🌶 Hot Take’}
+</span>
+{post.type===‘hot_take’&&(()=>{const t=hotTakeRemaining(post.created_at);return t?<span className="hot-timer">⏱ {t} left</span>:<span style={{fontSize:12,color:‘var(–text3)’}}>⏰ Expired</span>;})()}
+</div>
+<div style={{display:‘flex’,gap:6,flexWrap:‘wrap’,justifyContent:‘flex-end’}}>
+{post.tags?.map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
+</div>
+</div>
+<h1 className="post-detail-title">{post.title}</h1>
+<div className="post-meta" style={{marginBottom:20}}>
+<span className="anon-name">@{post.anonymous_name}</span>
+<span className="post-meta-dot"/><span>{timeAgo(post.created_at)}</span>
+<span className="post-meta-dot"/><span>💬 {(post.comment_count||0).toLocaleString()}</span>
+</div>
+<p className="post-detail-content">{post.content}</p>
+<div className="divider"/>
+<div className="post-reactions">
+{REACTIONS.map(r=>(
+<button key={r} className={`reaction-btn ${mine===r?'active':''}`} onClick={()=>react(r)}>
+{r} <span>{(reactions[r]||0).toLocaleString()}</span>
+</button>
+))}
+</div>
+</div>
+<StoryUpdates post={post} user={user}/>
+<VoteSection post={post} user={user} onNeedAuth={()=>onNeedAuth(‘signup’)}/>
+<Comments postId={post.id} postOwnerId={post.user_id} user={user} onNeedAuth={()=>onNeedAuth(‘signup’)}/>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  CREATE POST  */
+function CreatePost({user,onBack,onPost,addToast}){
+const [title,setTitle]=useState(’’);
+const [content,setContent]=useState(’’);
+const [type,setType]=useState(‘confession’);
+const [tags,setTags]=useState([]);
+const [loading,setLoading]=useState(false);
+
+function toggleTag(t){setTags(p=>p.includes(t)?p.filter(x=>x!==t):[…p,t].slice(0,3));}
+
+async function submit(){
+if(!title.trim()||!content.trim()){addToast(‘Please fill in title and story’,‘error’);return;}
+setLoading(true);
+const np={id:Date.now()+’’,title:title.trim(),content:content.trim(),type,tags,
+anonymous_name:user.anonymous_name,created_at:new Date().toISOString(),
+reaction_counts:{‘🔥’:0,‘😂’:0,‘😢’:0,‘😡’:0},comment_count:0,vote_a:0,vote_b:0,user_id:user.id};
+if(supabase&&user.id!==‘demo’){
+const{data,error}=await supabase.from(‘posts’).insert({title:np.title,content:np.content,type,tags,user_id:user.id}).select().single();
+if(error){addToast(error.message,‘error’);setLoading(false);return;}
+np.id=data.id;
+} else await new Promise(r=>setTimeout(r,600));
+const streak=bumpStreak();
+onPost(np);
+addToast(streak.count>1?`Posted! 🔥 ${streak.count}-day streak!`:‘Your confession was posted anonymously 💔’,‘success’);
+setLoading(false);
+}
+
+const typeOpts=[
+{id:‘confession’,icon:‘💔’,label:‘Confession’},
+{id:‘advice’,icon:‘💬’,label:‘Seeking Advice’},
+{id:‘hot_take’,icon:‘🌶’,label:‘Hot Take (48h)’},
+];
+
+return (
+<div className="fade-up">
+<button className="back-btn" onClick={onBack}>← Back</button>
+<div style={{marginBottom:24}}>
+<h1 style={{fontFamily:‘var(–font-display)’,fontSize:‘clamp(24px,6vw,32px)’,fontWeight:900,marginBottom:8}}>Share anonymously</h1>
+<p style={{color:‘var(–text2)’,fontSize:14}}>You’ll appear as <strong style={{color:‘var(–rose)’}}>@{user.anonymous_name}</strong></p>
+</div>
+<div className=“card” style={{display:‘flex’,flexDirection:‘column’,gap:18}}>
+<div>
+<label className="form-label">Post type</label>
+<div style={{display:‘flex’,gap:10,flexWrap:‘wrap’}}>
+{typeOpts.map(t=>(
+<button key={t.id} className={`btn ${type===t.id?'btn-primary':'btn-secondary'}`}
+onClick={()=>setType(t.id)} style={{flex:‘1 1 auto’,justifyContent:‘center’}}>
+{t.icon} {t.label}
+</button>
+))}
+</div>
+{type===‘hot_take’&&<p style={{fontSize:12,color:‘var(–amber)’,marginTop:8}}>⏱ Hot takes disappear from the feed after 48 hours. Debate fast.</p>}
+</div>
+<div>
+<label className="form-label">Title</label>
+<input className=“input” placeholder=“Give your story a title that stops the scroll…” value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/>
+<div style={{textAlign:‘right’,fontSize:12,color:‘var(–text3)’,marginTop:4}}>{title.length}/120</div>
+</div>
+<div>
+<label className="form-label">Your story</label>
+<textarea className=“input” rows={9} placeholder=“Share everything. Be honest. No one knows it’s you.” value={content} onChange={e=>setContent(e.target.value)}/>
+</div>
+<div>
+<label className="form-label">Tags <span style={{color:‘var(–text3)’}}>(up to 3)</span></label>
+<div style={{display:‘flex’,gap:8,flexWrap:‘wrap’}}>
+{ALL_TAGS.map(t=><button key={t} className={`pill ${tags.includes(t)?'active':''}`} onClick={()=>toggleTag(t)}>{t}</button>)}
+</div>
+</div>
+<button className=“btn btn-primary” onClick={submit} disabled={loading||!title.trim()||!content.trim()}
+style={{justifyContent:‘center’,padding:‘14px’,fontSize:15}}>
+{loading?<span className="spinner"/>:‘💔 Post anonymously’}
+</button>
+</div>
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  TRENDING  */
+function TrendingPage({posts,user,onOpen,onNeedAuth}){
+const [tab,setTab]=useState(‘hot’);
+let ranked;
+if(tab===‘hot’) ranked=[…posts].sort((a,b)=>feedScore(b)-feedScore(a));
+else if(tab===‘controversial’) ranked=[…posts].sort((a,b)=>controversialScore(b)-controversialScore(a)).filter(p=>(p.vote_a||0)+(p.vote_b||0)>0);
+else ranked=[…posts].sort((a,b)=>(b.comment_count||0)-(a.comment_count||0));
+
+return (
+<div>
+<div className="hero" style={{paddingTop:16}}>
+<div className="hero-eyebrow">📊 Charts</div>
+<h1 className="hero-title">Trending</h1>
+<p className="hero-sub">The most viral, debated and emotional confessions right now.</p>
+</div>
+<div className=“pills” style={{justifyContent:‘center’,marginBottom:24}}>
+{[{id:‘hot’,l:‘🔥 Hot’},{id:‘controversial’,l:‘⚡ Controversial’},{id:‘discussed’,l:‘💬 Most Discussed’}].map(t=>(
+<button key={t.id} className={`pill ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>{t.l}</button>
+))}
+</div>
+{ranked.map((post,i)=>{
+const pA=((post.vote_a||0)+( post.vote_b||0))>0?Math.round(((post.vote_a||0)/((post.vote_a||0)+(post.vote_b||0)))*100):50;
+return (
+<div key={post.id} className=“post-card” onClick={()=>onOpen(post)}
+style={{display:‘flex’,gap:16,alignItems:‘flex-start’,animationDelay:`${i*.05}s`}}>
+<div className={`trending-num ${i<3?'top':''}`}>#{i+1}</div>
+<div style={{flex:1}}>
+<div style={{display:‘flex’,justifyContent:‘space-between’,marginBottom:8,flexWrap:‘wrap’,gap:6}}>
+<span className={`post-type-badge ${post.type}`}>{post.type===‘confession’?‘💔’:post.type===‘advice’?‘💬’:‘🌶’} {post.type.replace(’_’,’ ’)}</span>
+<div style={{display:‘flex’,gap:6}}>
+{post.tags?.slice(0,1).map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
+</div>
+</div>
+<h3 className="post-title" style={{fontSize:16}}>{post.title}</h3>
+<div className="post-meta">
+<span>@{post.anonymous_name}</span>
+<span className="post-meta-dot"/>
+<span>💬 {(post.comment_count||0).toLocaleString()}</span>
+<span className="post-meta-dot"/>
+<span>🔥 {Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0).toLocaleString()}</span>
+{tab===‘controversial’&&<><span className="post-meta-dot"/><span style={{color:‘var(–rose)’}}>{pA}% / {100-pA}%</span></>}
+</div>
+{tab===‘controversial’&&(
+<div className="controversy-bar">
+<div className=“controversy-fill-a” style={{width:`${pA}%`}}/>
+<div className=“controversy-fill-b” style={{width:`${100-pA}%`}}/>
+</div>
+)}
+</div>
+</div>
+);
+})}
+</div>
+);
+}
+
+/* ═══════════════════════════════════════════════════════════════  PROFILE PAGE  */
+function ProfilePage({user,posts,onBack,addToast,onNeedAuth}){
+if(!user) return (
+<div style={{textAlign:‘center’,padding:‘80px 20px’}}>
+<div style={{fontSize:46,marginBottom:14}}>👤</div>
+<div className="section-title">Sign in to see your profile</div>
+<div style={{marginTop:20,display:‘flex’,gap:12,justifyContent:‘center’}}>
+<button className=“btn btn-primary” onClick={()=>onNeedAuth(‘signup’)}>Sign up free</button>
+<button className=“btn btn-secondary” onClick={()=>onNeedAuth(‘login’)}>Log in</button>
+</div>
+</div>
+);
+
+const myPosts=posts.filter(p=>p.user_id===user.id);
+const karma=calcKarma(myPosts);
+const streak=getStreak();
+const badges=getBadges(karma,myPosts,streak.count);
+const [showDelete,setShowDelete]=useState(false);
+const [delConfirm,setDelConfirm]=useState(’’);
+
+async function deleteAccount(){
+if(delConfirm!==‘DELETE’) return;
+if(supabase){
+await supabase.from(‘users’).delete().eq(‘id’,user.id);
+await supabase.auth.signOut();
+}
+localStorage.removeItem(‘hc_streak’);
+addToast(‘Account deleted. Take care of yourself. 💔’,‘info’);
+window.location.reload();
+}
+
+return (
+<div className="fade-up">
+<button className="back-btn" onClick={onBack}>← Back</button>
+<div style={{textAlign:‘center’,marginBottom:28}}>
+<div style={{width:64,height:64,borderRadius:‘50%’,background:‘linear-gradient(135deg,var(–rose),var(–violet))’,display:‘flex’,alignItems:‘center’,justifyContent:‘center’,fontSize:24,fontWeight:700,color:’#fff’,margin:‘0 auto 12px’}}>
+{user.anonymous_name?.charAt(0)}
+</div>
+<div style={{fontFamily:‘var(–font-display)’,fontSize:22,fontWeight:700}}>{user.anonymous_name}</div>
+<div style={{fontSize:13,color:‘var(–text3)’,marginTop:4}}>{user.email}</div>
+</div>
+
+```
+  <div className="stat-grid">
+    <div className="stat-box">
+      <div className="stat-num">{karma.toLocaleString()}</div>
+      <div className="stat-lbl">💜 Karma</div>
+    </div>
+    <div className="stat-box">
+      <div className="stat-num">{streak.count}</div>
+      <div className="stat-lbl">🔥 Streak</div>
+    </div>
+    <div className="stat-box">
+      <div className="stat-num">{myPosts.length}</div>
+      <div className="stat-lbl">📝 Posts</div>
+    </div>
+  </div>
+
+  {badges.length>0&&(
+    <div style={{marginBottom:24}}>
+      <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--text3)',marginBottom:12}}>Badges earned</div>
+      <div className="badge-row">
+        {badges.map(b=><div key={b.label} className="badge-chip">{b.icon} {b.label}</div>)}
+      </div>
+    </div>
+  )}
+
+  {myPosts.length>0&&(
+    <div style={{marginBottom:24}}>
+      <div className="section-header"><span className="section-title" style={{fontSize:18}}>My Confessions</span></div>
+      {myPosts.map(p=>(
+        <div key={p.id} className="card" style={{marginBottom:10}}>
+          <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,marginBottom:6}}>{p.title}</div>
+          <div className="post-meta">
+            <span>{timeAgo(p.created_at)}</span>
+            <span className="post-meta-dot"/>
+            <span>💬 {(p.comment_count||0)}</span>
+            <span className="post-meta-dot"/>
+            <span>🔥 {Object.values(p.reaction_counts||{}).reduce((s,v)=>s+v,0)}</span>
+          </div>
         </div>
       ))}
     </div>
-  );
-}
+  )}
 
-/* ─── AUTH MODAL ─────────────────────────────────────────────────────────── */
-function AuthModal({ initMode='login', onClose, onAuth }) {
-  const [mode, setMode]       = useState(initMode);
-  const [email, setEmail]     = useState('');
-  const [pass, setPass]       = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
-  const [done, setDone]       = useState('');
-
-  async function submit() {
-    setError(''); setLoading(true);
-    if (!IS_CONFIGURED) {
-      await new Promise(r => setTimeout(r, 700));
-      onAuth({ id:'demo', email, anonymous_name: makeAnonName() });
-      setLoading(false); return;
-    }
-    try {
-      if (mode === 'signup') {
-        const { data, error: e } = await supabase.auth.signUp({ email, password: pass });
-        if (e) throw e;
-        if (data.user) {
-          const name = makeAnonName();
-          await supabase.from('users').insert({ id: data.user.id, email, anonymous_name: name });
-          setDone('Check your inbox to verify your account! 💌');
-        }
-      } else {
-        const { data, error: e } = await supabase.auth.signInWithPassword({ email, password: pass });
-        if (e) throw e;
-        const { data: profile } = await supabase.from('users').select('*').eq('id', data.user.id).single();
-        onAuth({ ...data.user, anonymous_name: profile?.anonymous_name || makeAnonName() });
-      }
-    } catch (e) { setError(e.message); }
-    setLoading(false);
-  }
-
-  function switchMode(m) { setMode(m); setError(''); setDone(''); }
-
-  return (
-    <div className="modal-overlay" onClick={e => e.target===e.currentTarget && onClose()}>
-      <div className="modal">
-        <button className="modal-close" onClick={onClose}>✕</button>
-        <div className="modal-logo">💔 HeartConfia</div>
-        <p className="modal-sub">
-          {mode==='login' ? 'Welcome back. Your secrets are safe.' : 'Share anonymously. Feel less alone.'}
-        </p>
-        {done ? (
-          <div style={{textAlign:'center',padding:'20px 0',color:'var(--teal)',fontSize:15,lineHeight:1.6}}>{done}</div>
-        ) : (
-          <div className="modal-form">
-            <div>
-              <label className="form-label">Email address</label>
-              <input className="input" type="email" placeholder="your@email.com" value={email}
-                onChange={e => setEmail(e.target.value)} />
-            </div>
-            <div>
-              <label className="form-label">Password</label>
-              <input className="input" type="password" placeholder="••••••••" value={pass}
-                onChange={e => setPass(e.target.value)}
-                onKeyDown={e => e.key==='Enter' && submit()} />
-            </div>
-            {error && <p className="error-msg">{error}</p>}
-            <button className="btn btn-primary" onClick={submit} disabled={loading||!email||!pass}
-              style={{width:'100%',justifyContent:'center',padding:'14px'}}>
-              {loading ? <span className="spinner"/> : mode==='login' ? 'Log in' : 'Create account'}
-            </button>
-          </div>
-        )}
-        <div className="modal-switch">
-          {mode==='login'
-            ? <>Don't have an account? <button onClick={()=>switchMode('signup')}>Sign up free</button></>
-            : <>Already have an account? <button onClick={()=>switchMode('login')}>Log in</button></>
-          }
+  <div className="divider"/>
+  <div style={{marginBottom:12}}>
+    <div style={{fontSize:13,fontWeight:600,color:'var(--text2)',marginBottom:12}}>Account</div>
+    {!showDelete?(
+      <button className="btn btn-secondary" style={{color:'#ef4444',borderColor:'rgba(239,68,68,.3)'}} onClick={()=>setShowDelete(true)}>
+        🗑 Delete account & data (GDPR)
+      </button>
+    ):(
+      <div className="card" style={{borderColor:'rgba(239,68,68,.25)'}}>
+        <p style={{fontSize:14,color:'var(--text2)',marginBottom:12}}>This permanently deletes your account and all data. Type <strong>DELETE</strong> to confirm.</p>
+        <input className="input" placeholder="Type DELETE" value={delConfirm} onChange={e=>setDelConfirm(e.target.value)} style={{marginBottom:10}}/>
+        <div style={{display:'flex',gap:10}}>
+          <button className="btn btn-danger" onClick={deleteAccount} disabled={delConfirm!=='DELETE'}>Confirm delete</button>
+          <button className="btn btn-ghost" onClick={()=>{setShowDelete(false);setDelConfirm('');}}>Cancel</button>
         </div>
       </div>
-    </div>
-  );
+    )}
+  </div>
+</div>
+```
+
+);
 }
 
-/* ─── PAYWALL ────────────────────────────────────────────────────────────── */
-function Paywall({ onSignup, onLogin }) {
-  return (
-    <div className="paywall">
-      <div className="paywall-icon">💔</div>
-      <div className="paywall-title">Continue reading this confession</div>
-      <p className="paywall-sub">Free account required — your identity stays anonymous.</p>
-      <div className="paywall-btns">
-        <button className="btn btn-primary" onClick={onSignup}>Sign up free</button>
-        <button className="btn btn-secondary" onClick={onLogin}>Log in</button>
-      </div>
-    </div>
-  );
+/* ═══════════════════════════════════════════════════════════════  ADMIN PANEL  */
+function AdminPanel({user,addToast}){
+const [reports,setReports]=useState([]);
+const [loading,setLoading]=useState(true);
+
+useEffect(()=>{
+if(!supabase) return;
+supabase.from(‘reports’).select(’*,posts(title),comments(content)’).order(‘created_at’,{ascending:false})
+.then(({data})=>{if(data) setReports(data);setLoading(false);});
+},[]);
+
+async function dismiss(id){
+setReports(p=>p.filter(r=>r.id!==id));
+if(supabase) await supabase.from(‘reports’).delete().eq(‘id’,id);
+addToast(‘Report dismissed’,‘success’);
+}
+async function remove(report){
+if(supabase){
+if(report.post_id) await supabase.from(‘posts’).delete().eq(‘id’,report.post_id);
+if(report.comment_id) await supabase.from(‘comments’).delete().eq(‘id’,report.comment_id);
+await supabase.from(‘reports’).delete().eq(‘id’,report.id);
+}
+setReports(p=>p.filter(r=>r.id!==report.id));
+addToast(‘Content removed’,‘success’);
 }
 
-/* ─── POST CARD ──────────────────────────────────────────────────────────── */
-function PostCard({ post, user, onClick, onNeedAuth, delay=0 }) {
-  const [reactions, setReactions] = useState(post.reaction_counts || {});
-  const [mine, setMine]           = useState(null);
+return (
+<div className="fade-up">
+<button style={{background:‘none’,border:‘none’,color:‘var(–text2)’,cursor:‘pointer’,fontFamily:‘var(–font-body)’,fontSize:14,marginBottom:20,display:‘flex’,alignItems:‘center’,gap:7}} onClick={()=>window.history.back()}>← Back</button>
+<div style={{marginBottom:24}}>
+<h1 style={{fontFamily:‘var(–font-display)’,fontSize:28,fontWeight:900}}>Admin Panel</h1>
+<p style={{color:‘var(–text2)’,fontSize:14}}>Moderation queue · {reports.length} open reports</p>
+</div>
+{loading?<div style={{display:‘flex’,justifyContent:‘center’,padding:40}}><span className="spinner" style={{width:32,height:32}}/></div>
+:reports.length===0?(<div className="empty-state"><div className="empty-icon">✅</div><div className="empty-title">Queue clear</div><p>No pending reports.</p></div>)
+:reports.map(r=>(
+<div key={r.id} className="admin-report">
+<div style={{flex:1}}>
+<div style={{fontSize:12,color:‘var(–rose)’,fontWeight:700,marginBottom:6,textTransform:‘uppercase’}}>
+{r.reason}
+</div>
+<p style={{fontSize:14,color:‘var(–text2)’,marginBottom:6}}>
+{r.posts?.title||r.comments?.content||‘Content unavailable’}
+</p>
+<div style={{fontSize:12,color:‘var(–text3)’}}>{timeAgo(r.created_at)}</div>
+</div>
+<div style={{display:‘flex’,gap:8,flexShrink:0,flexDirection:‘column’}}>
+<button className=“btn btn-secondary” style={{padding:‘6px 12px’,fontSize:12}} onClick={()=>dismiss(r.id)}>Dismiss</button>
+<button className=“btn btn-danger” style={{padding:‘6px 12px’,fontSize:12}} onClick={()=>remove(r)}>Remove</button>
+</div>
+</div>
+))}
+</div>
+);
+}
 
-  async function react(e, type) {
-    e.stopPropagation();
-    if (!user) { onNeedAuth('signup'); return; }
-    const prev = mine;
-    const r = {...reactions};
-    if (prev===type) { r[type]=Math.max(0,(r[type]||1)-1); setMine(null); }
-    else { if(prev) r[prev]=Math.max(0,(r[prev]||1)-1); r[type]=(r[type]||0)+1; setMine(type); }
-    setReactions(r);
-    if (supabase && user.id!=='demo') {
-      if (prev) await supabase.from('reactions').delete().match({post_id:post.id,user_id:user.id,type:prev});
-      if (prev!==type) await supabase.from('reactions').insert({post_id:post.id,user_id:user.id,type});
-    }
-  }
+/* ═══════════════════════════════════════════════════════════════  MAIN APP  */
+function App(){
+const [user,setUser]=useState(null);
+const [page,setPage]=useState(‘home’);
+const [posts,setPosts]=useState(DEMO_POSTS);
+const [active,setActive]=useState(null);
+const [tagFilter,setTagFilter]=useState(‘all’);
+const [auth,setAuth]=useState(null);
+const [toasts,setToasts]=useState([]);
+const [loading,setLoading]=useState(false);
+const [showPro,setShowPro]=useState(false);
+const streak=getStreak();
 
-  const totalRx = Object.values(reactions).reduce((s,v)=>s+v,0);
-  const topRx   = Object.entries(reactions).sort(([,a],[,b])=>b-a)[0];
+function addToast(msg,type=‘info’){
+const id=Date.now();
+setToasts(p=>[…p,{id,msg,type}]);
+setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3600);
+}
 
-  return (
-    <div className="post-card" onClick={onClick} style={{animationDelay:`${delay}s`}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
-        <span className={`post-type-badge ${post.type}`}>
-          {post.type==='confession' ? '💔 Confession' : '💬 Seeking Advice'}
-        </span>
-        <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'flex-end'}}>
-          {post.tags?.slice(0,2).map(t=>(
-            <span key={t} className={`tag tag-${t}`}>{t}</span>
-          ))}
+/* Supabase session */
+useEffect(()=>{
+if(!supabase) return;
+supabase.auth.getSession().then(({data:{session}})=>{
+if(session?.user)
+supabase.from(‘users’).select(’*’).eq(‘id’,session.user.id).single()
+.then(({data})=>setUser({…session.user,anonymous_name:data?.anonymous_name}));
+});
+supabase.auth.onAuthStateChange(ev=>{if(ev===‘SIGNED_OUT’) setUser(null);});
+},[]);
+
+/* Load posts */
+useEffect(()=>{
+if(!supabase) return;
+setLoading(true);
+supabase.from(‘posts’).select(’*,users(anonymous_name)’).order(‘created_at’,{ascending:false}).limit(60)
+.then(({data})=>{
+if(data?.length) setPosts(data.map(p=>({…p,anonymous_name:p.users?.anonymous_name})));
+setLoading(false);
+});
+},[]);
+
+/* Realtime new posts */
+useEffect(()=>{
+if(!supabase) return;
+const ch=supabase.channel(‘feed-posts’)
+.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘posts’},async p=>{
+const{data:u}=await supabase.from(‘users’).select(‘anonymous_name’).eq(‘id’,p.new.user_id).single();
+setPosts(prev=>[{…p.new,anonymous_name:u?.anonymous_name,reaction_counts:{},comment_count:0,vote_a:0,vote_b:0},…prev]);
+}).subscribe();
+return()=>supabase.removeChannel(ch);
+},[]);
+
+function handleAuth(u){
+setUser(u); setAuth(null);
+bumpStreak();
+addToast(`Welcome, @${u.anonymous_name}! 💔`,‘success’);
+}
+function logout(){
+if(supabase) supabase.auth.signOut();
+setUser(null); setPage(‘home’);
+addToast(‘Logged out. Your secrets are safe.’,‘info’);
+}
+function openPost(post){setActive(post);setPage(‘detail’);window.scrollTo({top:0,behavior:‘smooth’});}
+function handleNewPost(post){setPosts(p=>[post,…p]);setPage(‘home’);}
+function needAuth(mode=‘signup’){setAuth(mode);}
+
+/* Feed filtering + ranking */
+function getFeed(){
+let f=page===‘confessions’?posts.filter(p=>p.type===‘confession’)
+:page===‘advice’?posts.filter(p=>p.type===‘advice’)
+:posts;
+if(tagFilter!==‘all’) f=f.filter(p=>p.tags?.includes(tagFilter));
+// Boosted posts first, then ranked
+const boosted=f.filter(p=>p.boosted);
+const rest=[…f.filter(p=>!p.boosted)].sort((a,b)=>feedScore(b)-feedScore(a));
+return […boosted,…rest];
+}
+
+const feed=getFeed();
+const isFeed=[‘home’,‘confessions’,‘advice’].includes(page);
+const titles={home:‘Latest Stories’,confessions:‘Confessions’,advice:‘Seeking Advice’};
+const isAdmin=user?.email===ADMIN_EMAIL;
+
+const navTabs=[
+{id:‘home’,label:‘Home’},
+{id:‘confessions’,label:‘Confessions’},
+{id:‘advice’,label:‘Advice’},
+{id:‘trending’,label:‘🔥 Trending’},
+{id:‘profile’,label:‘👤 Profile’},
+…(isAdmin?[{id:‘admin’,label:‘🛡 Admin’}]:[]),
+];
+
+return (
+<ErrorBoundary>
+{/* NAV */}
+<nav className="nav">
+<div className=“nav-logo” onClick={()=>{setPage(‘home’);setActive(null);}}>💔 HC</div>
+<div className="nav-tabs">
+{navTabs.map(tab=>(
+<button key={tab.id} className={`nav-tab ${page===tab.id?'active':''}`}
+onClick={()=>{setPage(tab.id);setActive(null);}}>
+{tab.label}
+</button>
+))}
+</div>
+<div style={{display:‘flex’,alignItems:‘center’,gap:8,flexShrink:0}}>
+{user&&streak.count>0&&(
+<div className=“streak-chip” onClick={()=>setPage(‘profile’)} title=“Your posting streak”>
+🔥{streak.count}
+</div>
+)}
+{user&&<NotifBell user={user}/>}
+{user?(
+<>
+<button className=“btn btn-primary” style={{padding:‘7px 12px’,fontSize:13}} onClick={()=>setPage(‘create’)}>+ Post</button>
+<button className=“btn btn-ghost” style={{fontSize:12,padding:‘6px 10px’}} onClick={logout}>Out</button>
+</>
+):(
+<>
+<button className=“btn btn-ghost” style={{fontSize:12}} onClick={()=>setAuth(‘login’)}>Login</button>
+<button className=“btn btn-primary” style={{padding:‘7px 12px’,fontSize:13}} onClick={()=>setAuth(‘signup’)}>Join free</button>
+</>
+)}
+</div>
+</nav>
+
+```
+  {/* MAIN */}
+  <div className="layout">
+    <div className="layout-center">
+
+      {/* CONFIG NOTICE */}
+      {!IS_CFG&&isFeed&&(
+        <div className="config-notice">
+          <strong>⚙️ Demo mode</strong> — replace <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> to connect your backend. Auth is simulated, feed algorithm is live.
         </div>
-      </div>
-
-      <h2 className="post-title">{post.title}</h2>
-
-      <div className="post-meta">
-        <span className="anon-name">@{post.anonymous_name}</span>
-        <span className="post-meta-dot"/>
-        <span>{timeAgo(post.created_at)}</span>
-        {totalRx>0 && <><span className="post-meta-dot"/><span>{topRx[0]} {totalRx.toLocaleString()}</span></>}
-      </div>
-
-      {user ? (
-        <p className="post-preview">{post.content}</p>
-      ) : (
-        <>
-          <div className="blur-wrap">
-            <p style={{fontSize:14,lineHeight:1.7,color:'var(--text2)'}}>{post.content.slice(0,160)}…</p>
-          </div>
-          <Paywall onSignup={()=>onNeedAuth('signup')} onLogin={()=>onNeedAuth('login')} />
-        </>
       )}
 
-      {user && (
-        <div className="post-reactions">
-          {REACTIONS.map(r=>(
-            <button key={r} className={`reaction-btn ${mine===r?'active':''}`} onClick={e=>react(e,r)}>
-              {r} <span>{(reactions[r]||0)>0?(reactions[r]||0).toLocaleString():''}</span>
-            </button>
-          ))}
-          <div className="comment-count">💬 {(post.comment_count||0).toLocaleString()}</div>
-        </div>
+      {/* DETAIL */}
+      {page==='detail'&&active&&(
+        <PostDetail post={active} user={user} onBack={()=>{setPage('home');setActive(null);}} onNeedAuth={needAuth}/>
       )}
-    </div>
-  );
-}
 
-/* ─── VOTE SECTION ───────────────────────────────────────────────────────── */
-function VoteSection({ post, user, onNeedAuth }) {
-  const [vA, setVA] = useState(post.vote_a||0);
-  const [vB, setVB] = useState(post.vote_b||0);
-  const [voted, setVoted] = useState(null);
-  const total = vA+vB;
-  const pctA  = total>0 ? Math.round((vA/total)*100) : 50;
-
-  async function vote(type) {
-    if (!user)  { onNeedAuth(); return; }
-    if (voted)  return;
-    type==='A' ? setVA(v=>v+1) : setVB(v=>v+1);
-    setVoted(type);
-    if (supabase && user.id!=='demo')
-      await supabase.from('votes').insert({post_id:post.id,user_id:user.id,vote_type:type});
-  }
-
-  return (
-    <div className="vote-section">
-      <div className="vote-label">⚖️ Who is right?</div>
-      <div className="vote-options">
-        <button className={`vote-btn ${voted==='A'?'voted-a':''}`} onClick={()=>vote('A')}>
-          {voted==='A'?'✓ ':''}OP is right
-          <div style={{fontSize:22,fontFamily:'var(--font-display)',marginTop:4,color:voted==='A'?'var(--rose)':'var(--text3)'}}>{pctA}%</div>
-        </button>
-        <button className={`vote-btn ${voted==='B'?'voted-b':''}`} onClick={()=>vote('B')}>
-          {voted==='B'?'✓ ':''}Partner is right
-          <div style={{fontSize:22,fontFamily:'var(--font-display)',marginTop:4,color:voted==='B'?'#a78bfa':'var(--text3)'}}>{100-pctA}%</div>
-        </button>
-      </div>
-      <div className="vote-bar-track">
-        <div className="vote-bar-fill" style={{width:`${pctA}%`}}/>
-      </div>
-      <div className="vote-foot">
-        <span>{vA.toLocaleString()} votes</span>
-        <span>{total.toLocaleString()} total</span>
-        <span>{vB.toLocaleString()} votes</span>
-      </div>
-    </div>
-  );
-}
-
-/* ─── COMMENTS ───────────────────────────────────────────────────────────── */
-function Comments({ postId, user, onNeedAuth }) {
-  const [comments, setComments] = useState(DEMO_COMMENTS[postId]||[]);
-  const [text, setText]         = useState('');
-  const [sending, setSending]   = useState(false);
-
-  useEffect(()=>{
-    if (!supabase) return;
-    supabase.from('comments').select('*').eq('post_id',postId).order('created_at',{ascending:false})
-      .then(({data})=>{ if(data?.length) setComments(data); });
-    const ch = supabase.channel(`comments-${postId}`)
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments',filter:`post_id=eq.${postId}`},
-        p=>setComments(prev=>[p.new,...prev]))
-      .subscribe();
-    return ()=>supabase.removeChannel(ch);
-  },[postId]);
-
-  async function post() {
-    if (!user) { onNeedAuth(); return; }
-    if (!text.trim()) return;
-    setSending(true);
-    const c = { id:Date.now()+'', anonymous_name:user.anonymous_name, content:text.trim(), created_at:new Date().toISOString(), upvotes:0 };
-    setComments(prev=>[c,...prev]);
-    setText('');
-    if (supabase && user.id!=='demo')
-      await supabase.from('comments').insert({post_id:postId,user_id:user.id,content:c.content});
-    setSending(false);
-  }
-
-  const bestId = comments.sort((a,b)=>(b.upvotes||0)-(a.upvotes||0))[0]?.id;
-
-  return (
-    <div>
-      <div className="section-header" style={{marginBottom:16}}>
-        <span className="section-title" style={{fontSize:18}}>Comments</span>
-        <span className="section-badge">{comments.length}</span>
-      </div>
-
-      <div className="comment-input-row">
-        <div className="avatar">{user?user.anonymous_name?.charAt(0):'?'}</div>
-        <div style={{flex:1}}>
-          <textarea className="input" rows={3} style={{minHeight:76}}
-            placeholder={user?`Share your thoughts as @${user.anonymous_name}…`:'Log in to comment'}
-            value={text} onChange={e=>setText(e.target.value)} disabled={!user}/>
-          {user
-            ? <button className="btn btn-primary" style={{marginTop:8}} onClick={post} disabled={!text.trim()||sending}>
-                {sending?<span className="spinner"/>:'Post comment'}
-              </button>
-            : <button className="btn btn-secondary" style={{marginTop:8}} onClick={onNeedAuth}>Log in to comment</button>
-          }
-        </div>
-      </div>
-
-      {[...comments].sort((a,b)=>{
-        if(a.id===bestId) return -1;
-        if(b.id===bestId) return 1;
-        return (b.upvotes||0)-(a.upvotes||0);
-      }).map(c=>(
-        <div key={c.id} className={`comment-card ${c.id===bestId&&comments.length>2?'best-answer':''}`}>
-          {c.id===bestId&&comments.length>2 && <div className="best-badge">✅ Top answer</div>}
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <span className="comment-author">@{c.anonymous_name}</span>
-            <span className="comment-time">{timeAgo(c.created_at)}</span>
-          </div>
-          <p className="comment-body">{c.content}</p>
-          <div className="comment-actions">
-            <button className="c-action">👍 {c.upvotes||0}</button>
-            <button className="c-action">↩ Reply</button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ─── POST DETAIL ────────────────────────────────────────────────────────── */
-function PostDetail({ post, user, onBack, onNeedAuth }) {
-  const [reactions, setReactions] = useState(post.reaction_counts||{});
-  const [mine, setMine]           = useState(null);
-
-  if (!user) return (
-    <div className="fade-up">
-      <button className="back-btn" onClick={onBack}>← Back</button>
-      <div className="card">
-        <span className={`post-type-badge ${post.type}`}>{post.type==='confession'?'💔 Confession':'💬 Seeking Advice'}</span>
-        <h1 className="post-detail-title" style={{marginTop:10}}>{post.title}</h1>
-        <div className="post-meta" style={{marginBottom:20}}>
-          <span className="anon-name">@{post.anonymous_name}</span>
-          <span className="post-meta-dot"/>
-          <span>{timeAgo(post.created_at)}</span>
-        </div>
-        <div className="blur-wrap" style={{maxHeight:100}}>
-          <p className="post-detail-content">{post.content.slice(0,240)}…</p>
-        </div>
-        <Paywall onSignup={()=>onNeedAuth('signup')} onLogin={()=>onNeedAuth('login')}/>
-      </div>
-    </div>
-  );
-
-  function react(type) {
-    const prev=mine, r={...reactions};
-    if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
-    else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
-    setReactions(r);
-  }
-
-  return (
-    <div className="fade-up">
-      <button className="back-btn" onClick={onBack}>← Back to feed</button>
-
-      <div className="card" style={{marginBottom:14}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}}>
-          <span className={`post-type-badge ${post.type}`}>{post.type==='confession'?'💔 Confession':'💬 Seeking Advice'}</span>
-          <div style={{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'flex-end'}}>
-            {post.tags?.map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
-          </div>
-        </div>
-        <h1 className="post-detail-title">{post.title}</h1>
-        <div className="post-meta" style={{marginBottom:20}}>
-          <span className="anon-name">@{post.anonymous_name}</span>
-          <span className="post-meta-dot"/>
-          <span>{timeAgo(post.created_at)}</span>
-          <span className="post-meta-dot"/>
-          <span>💬 {(post.comment_count||0).toLocaleString()} comments</span>
-        </div>
-        <p className="post-detail-content">{post.content}</p>
-        <div className="divider"/>
-        <div className="post-reactions">
-          {REACTIONS.map(r=>(
-            <button key={r} className={`reaction-btn ${mine===r?'active':''}`} onClick={()=>react(r)}>
-              {r} <span>{(reactions[r]||0).toLocaleString()}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <VoteSection post={post} user={user} onNeedAuth={()=>onNeedAuth('signup')}/>
-      <Comments postId={post.id} user={user} onNeedAuth={()=>onNeedAuth('signup')}/>
-    </div>
-  );
-}
-
-/* ─── CREATE POST ────────────────────────────────────────────────────────── */
-function CreatePost({ user, onBack, onPost, addToast }) {
-  const [title, setTitle]         = useState('');
-  const [content, setContent]     = useState('');
-  const [type, setType]           = useState('confession');
-  const [tags, setTags]           = useState([]);
-  const [loading, setLoading]     = useState(false);
-
-  function toggleTag(t) {
-    setTags(p=>p.includes(t)?p.filter(x=>x!==t):[...p,t].slice(0,3));
-  }
-
-  async function submit() {
-    if (!title.trim()||!content.trim()) { addToast('Please fill in title and story','error'); return; }
-    setLoading(true);
-    const np = {
-      id: Date.now()+'', title:title.trim(), content:content.trim(),
-      type, tags, anonymous_name: user.anonymous_name,
-      created_at: new Date().toISOString(),
-      reaction_counts:{'🔥':0,'😂':0,'😢':0,'😡':0},
-      comment_count:0, vote_a:0, vote_b:0, user_id:user.id
-    };
-    if (supabase && user.id!=='demo') {
-      const { data, error } = await supabase.from('posts')
-        .insert({title:np.title,content:np.content,type,tags,user_id:user.id})
-        .select().single();
-      if (error) { addToast(error.message,'error'); setLoading(false); return; }
-      np.id = data.id;
-    } else {
-      await new Promise(r=>setTimeout(r,600));
-    }
-    onPost(np);
-    addToast('Your confession was posted anonymously 💔','success');
-    setLoading(false);
-  }
-
-  return (
-    <div className="fade-up">
-      <button className="back-btn" onClick={onBack}>← Back</button>
-      <div style={{marginBottom:24}}>
-        <h1 style={{fontFamily:'var(--font-display)',fontSize:'clamp(24px,6vw,32px)',fontWeight:900,marginBottom:8}}>
-          Share anonymously
-        </h1>
-        <p style={{color:'var(--text2)',fontSize:14}}>
-          You'll appear as <strong style={{color:'var(--rose)'}}>@{user.anonymous_name}</strong>
-        </p>
-      </div>
-
-      <div className="card" style={{display:'flex',flexDirection:'column',gap:18}}>
-        {/* Type */}
+      {/* FEED */}
+      {isFeed&&(
         <div>
-          <label className="form-label">Post type</label>
-          <div style={{display:'flex',gap:10}}>
-            {['confession','advice'].map(t=>(
-              <button key={t} className={`btn ${type===t?'btn-primary':'btn-secondary'}`}
-                onClick={()=>setType(t)} style={{flex:1,justifyContent:'center'}}>
-                {t==='confession'?'💔 Confession':'💬 Seeking Advice'}
+          {page==='home'&&(
+            <div className="hero">
+              <div className="hero-eyebrow">anonymous · safe · real</div>
+              <h1 className="hero-title">HeartConfia</h1>
+              <p className="hero-sub">Share the stories you've never told anyone. No names. No judgment. Just hearts.</p>
+              {user?(
+                <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
+                  <button className="btn btn-primary" onClick={()=>setPage('create')}>💔 Share your confession</button>
+                  <button className="btn btn-secondary" onClick={()=>setShowPro(true)}>💎 Go Pro</button>
+                </div>
+              ):(
+                <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
+                  <button className="btn btn-primary" onClick={()=>setAuth('signup')}>Join anonymously</button>
+                  <button className="btn btn-secondary" onClick={()=>setAuth('login')}>Log in</button>
+                </div>
+              )}
+            </div>
+          )}
+          {page!=='home'&&(
+            <div className="section-header">
+              <h2 className="section-title">{titles[page]}</h2>
+              <span className="section-badge">{feed.length}</span>
+            </div>
+          )}
+          <div className="pills">
+            {['all',...ALL_TAGS].map(t=>(
+              <button key={t} className={`pill ${tagFilter===t?'active':''}`} onClick={()=>setTagFilter(t)}>
+                {t==='all'?'All stories':t}
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Title */}
-        <div>
-          <label className="form-label">Title</label>
-          <input className="input" placeholder="Give your story a title that makes people stop scrolling…"
-            value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/>
-          <div style={{textAlign:'right',fontSize:12,color:'var(--text3)',marginTop:4}}>{title.length}/120</div>
-        </div>
-
-        {/* Content */}
-        <div>
-          <label className="form-label">Your story</label>
-          <textarea className="input" rows={9}
-            placeholder="Share everything. Be honest. No one knows it's you."
-            value={content} onChange={e=>setContent(e.target.value)}/>
-        </div>
-
-        {/* Tags */}
-        <div>
-          <label className="form-label">Tags <span style={{color:'var(--text3)'}}>(up to 3)</span></label>
-          <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-            {ALL_TAGS.map(t=>(
-              <button key={t} className={`pill ${tags.includes(t)?'active':''}`} onClick={()=>toggleTag(t)}>{t}</button>
-            ))}
-          </div>
-        </div>
-
-        <button className="btn btn-primary" onClick={submit}
-          disabled={loading||!title.trim()||!content.trim()}
-          style={{justifyContent:'center',padding:'14px',fontSize:15}}>
-          {loading?<span className="spinner"/>:'💔 Post anonymously'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── TRENDING PAGE ──────────────────────────────────────────────────────── */
-function TrendingPage({ posts, user, onOpen, onNeedAuth }) {
-  const ranked = [...posts].sort((a,b)=>{
-    const sa = Object.values(a.reaction_counts||{}).reduce((s,v)=>s+v,0) + (a.comment_count||0)*2;
-    const sb = Object.values(b.reaction_counts||{}).reduce((s,v)=>s+v,0) + (b.comment_count||0)*2;
-    return sb-sa;
-  });
-
-  return (
-    <div>
-      <div className="hero" style={{paddingTop:16}}>
-        <div className="hero-eyebrow">🔥 Right Now</div>
-        <h1 className="hero-title">Trending</h1>
-        <p className="hero-sub">The most emotional, voted, and debated confessions today.</p>
-      </div>
-
-      {ranked.map((post,i)=>(
-        <div key={post.id} className="post-card" onClick={()=>onOpen(post)}
-          style={{display:'flex',gap:16,alignItems:'flex-start',animationDelay:`${i*0.05}s`}}>
-          <div className={`trending-num ${i<3?'top':''}`}>#{i+1}</div>
-          <div style={{flex:1}}>
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-              <span className={`post-type-badge ${post.type}`}>{post.type==='confession'?'💔':'💬'} {post.type}</span>
-              <div style={{display:'flex',gap:6}}>
-                {post.tags?.slice(0,1).map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
-              </div>
+          {user&&(
+            <div className="create-prompt-bar" onClick={()=>setPage('create')}>
+              <div className="avatar">{user.anonymous_name?.charAt(0)}</div>
+              <span className="create-prompt-text">Something's weighing on you. Share it as <strong style={{color:'var(--text2)'}}>@{user.anonymous_name}</strong>…</span>
             </div>
-            <h3 className="post-title" style={{fontSize:16}}>{post.title}</h3>
-            <div className="post-meta">
-              <span>@{post.anonymous_name}</span>
-              <span className="post-meta-dot"/>
-              <span>💬 {(post.comment_count||0).toLocaleString()}</span>
-              <span className="post-meta-dot"/>
-              <span>🔥 {Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0).toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ─── MAIN APP ───────────────────────────────────────────────────────────── */
-function App() {
-  const [user, setUser]           = useState(null);
-  const [page, setPage]           = useState('home');
-  const [posts, setPosts]         = useState(DEMO_POSTS);
-  const [active, setActive]       = useState(null);
-  const [tagFilter, setTagFilter] = useState('all');
-  const [auth, setAuth]           = useState(null);   // null | 'login' | 'signup'
-  const [toasts, setToasts]       = useState([]);
-  const [loading, setLoading]     = useState(false);
-
-  function addToast(msg, type='info') {
-    const id = Date.now();
-    setToasts(p=>[...p,{id,msg,type}]);
-    setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)), 3600);
-  }
-
-  /* Supabase session */
-  useEffect(()=>{
-    if (!supabase) return;
-    supabase.auth.getSession().then(({data:{session}})=>{
-      if (session?.user) {
-        supabase.from('users').select('*').eq('id',session.user.id).single()
-          .then(({data})=>setUser({...session.user,anonymous_name:data?.anonymous_name}));
-      }
-    });
-    supabase.auth.onAuthStateChange((ev)=>{ if(ev==='SIGNED_OUT') setUser(null); });
-  },[]);
-
-  /* Load posts */
-  useEffect(()=>{
-    if (!supabase) return;
-    setLoading(true);
-    supabase.from('posts').select('*,users(anonymous_name)').order('created_at',{ascending:false}).limit(50)
-      .then(({data})=>{
-        if (data?.length) setPosts(data.map(p=>({...p,anonymous_name:p.users?.anonymous_name})));
-        setLoading(false);
-      });
-  },[]);
-
-  /* Realtime new posts */
-  useEffect(()=>{
-    if (!supabase) return;
-    const ch = supabase.channel('new-posts')
-      .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},
-        async p=>{
-          const {data:u}=await supabase.from('users').select('anonymous_name').eq('id',p.new.user_id).single();
-          setPosts(prev=>[{...p.new,anonymous_name:u?.anonymous_name,reaction_counts:{},comment_count:0,vote_a:0,vote_b:0},...prev]);
-        })
-      .subscribe();
-    return ()=>supabase.removeChannel(ch);
-  },[]);
-
-  function handleAuth(u) {
-    setUser(u); setAuth(null);
-    addToast(`Welcome, @${u.anonymous_name}! 💔`,'success');
-  }
-  function logout() {
-    if(supabase) supabase.auth.signOut();
-    setUser(null); setPage('home');
-    addToast('Logged out. Your secrets are safe.','info');
-  }
-  function openPost(post) {
-    setActive(post); setPage('detail');
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
-  function handleNewPost(post) { setPosts(p=>[post,...p]); setPage('home'); }
-  function needAuth(mode='signup') { setAuth(mode); }
-
-  /* Filtered posts */
-  function filtered() {
-    let f = page==='confessions' ? posts.filter(p=>p.type==='confession')
-          : page==='advice'      ? posts.filter(p=>p.type==='advice')
-          : posts;
-    if (tagFilter!=='all') f=f.filter(p=>p.tags?.includes(tagFilter));
-    return f;
-  }
-
-  const feed = filtered();
-  const isFeed = ['home','confessions','advice'].includes(page);
-  const feedTitles = {home:'Latest Stories',confessions:'Confessions',advice:'Seeking Advice'};
-
-  return (
-    <>
-      {/* NAV */}
-      <nav className="nav">
-        <div className="nav-logo" onClick={()=>{setPage('home');setActive(null);}}>
-          💔 HeartConfia
-        </div>
-        <div className="nav-tabs">
-          {[
-            {id:'home',label:'Home'},
-            {id:'confessions',label:'Confessions'},
-            {id:'advice',label:'Advice'},
-            {id:'trending',label:'🔥 Trending'},
-          ].map(tab=>(
-            <button key={tab.id} className={`nav-tab ${page===tab.id?'active':''}`}
-              onClick={()=>{setPage(tab.id);setActive(null);}}>
-              {tab.label}
-            </button>
+          )}
+          {loading?(
+            <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><span className="spinner" style={{width:36,height:36}}/></div>
+          ):feed.length===0?(
+            <div className="empty-state"><div className="empty-icon">🕊️</div><div className="empty-title">Nothing here yet</div><p>Be the first to share.</p></div>
+          ):feed.map((post,i)=>(
+            <PostCard key={post.id} post={post} user={user}
+              onClick={()=>openPost(post)} onNeedAuth={needAuth} delay={Math.min(i*.05,.3)}/>
           ))}
         </div>
-        {user ? (
-          <div style={{display:'flex',alignItems:'center',gap:8,flexShrink:0}}>
-            <button className="btn btn-primary" style={{padding:'7px 14px',fontSize:13}} onClick={()=>setPage('create')}>+ Post</button>
-            <button className="btn btn-ghost" style={{fontSize:12}} onClick={logout}>@{user.anonymous_name?.split('_')[0]}</button>
-          </div>
-        ) : (
-          <div style={{display:'flex',gap:6,flexShrink:0}}>
-            <button className="btn btn-ghost" onClick={()=>setAuth('login')}>Login</button>
-            <button className="btn btn-primary" style={{padding:'7px 14px',fontSize:13}} onClick={()=>setAuth('signup')}>Join free</button>
-          </div>
-        )}
-      </nav>
+      )}
 
-      {/* MAIN */}
-      <div className="layout">
-        <div className="layout-center">
+      {/* TRENDING */}
+      {page==='trending'&&<TrendingPage posts={posts} user={user} onOpen={openPost} onNeedAuth={needAuth}/>}
 
-          {/* CONFIG NOTICE */}
-          {!IS_CONFIGURED && (page==='home'||isFeed) && (
-            <div className="config-notice">
-              <strong>⚙️ Supabase not connected.</strong> Replace <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> at the top of this file with your project credentials to enable auth, real posts & realtime. Demo data &amp; simulated auth are shown until then.
+      {/* CREATE */}
+      {page==='create'&&(
+        user
+          ?<CreatePost user={user} onBack={()=>setPage('home')} onPost={handleNewPost} addToast={addToast}/>
+          :<div style={{textAlign:'center',padding:'80px 20px'}}>
+            <div style={{fontSize:46,marginBottom:14}}>🔒</div>
+            <div className="section-title">Sign in to share your confession</div>
+            <div style={{marginTop:20,display:'flex',gap:12,justifyContent:'center'}}>
+              <button className="btn btn-primary" onClick={()=>setAuth('signup')}>Sign up free</button>
+              <button className="btn btn-secondary" onClick={()=>setAuth('login')}>Log in</button>
             </div>
-          )}
+          </div>
+      )}
 
-          {/* DETAIL */}
-          {page==='detail' && active && (
-            <PostDetail post={active} user={user}
-              onBack={()=>{setPage('home');setActive(null);}}
-              onNeedAuth={needAuth}/>
-          )}
+      {/* PROFILE */}
+      {page==='profile'&&<ProfilePage user={user} posts={posts} onBack={()=>setPage('home')} addToast={addToast} onNeedAuth={needAuth}/>}
 
-          {/* FEED */}
-          {isFeed && (
-            <div>
-              {page==='home' && (
-                <div className="hero">
-                  <div className="hero-eyebrow">anonymous · safe · real</div>
-                  <h1 className="hero-title">HeartConfia</h1>
-                  <p className="hero-sub">Share the stories you've never told anyone. No names. No judgment. Just hearts.</p>
-                  {user ? (
-                    <button className="btn btn-primary" onClick={()=>setPage('create')}>💔 Share your confession</button>
-                  ) : (
-                    <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
-                      <button className="btn btn-primary" onClick={()=>setAuth('signup')}>Join anonymously</button>
-                      <button className="btn btn-secondary" onClick={()=>setAuth('login')}>Log in</button>
-                    </div>
-                  )}
-                </div>
-              )}
+      {/* ADMIN */}
+      {page==='admin'&&isAdmin&&<AdminPanel user={user} addToast={addToast}/>}
 
-              {page!=='home' && (
-                <div className="section-header">
-                  <h2 className="section-title">{feedTitles[page]}</h2>
-                  <span className="section-badge">{feed.length}</span>
-                </div>
-              )}
+    </div>
+  </div>
 
-              {/* Filter pills */}
-              <div className="pills">
-                {['all',...ALL_TAGS].map(t=>(
-                  <button key={t} className={`pill ${tagFilter===t?'active':''}`} onClick={()=>setTagFilter(t)}>
-                    {t==='all'?'All stories':t}
-                  </button>
-                ))}
-              </div>
+  {/* MODALS */}
+  {auth&&<AuthModal initMode={auth} onClose={()=>setAuth(null)} onAuth={handleAuth}/>}
+  {showPro&&<ProModal onClose={()=>setShowPro(false)}/>}
+  <ToastStack toasts={toasts}/>
+</ErrorBoundary>
+```
 
-              {/* Create prompt */}
-              {user && (
-                <div className="create-prompt-bar" onClick={()=>setPage('create')}>
-                  <div className="avatar">{user.anonymous_name?.charAt(0)}</div>
-                  <span className="create-prompt-text">
-                    Something's weighing on you. Share it anonymously as <strong style={{color:'var(--text2)'}}>@{user.anonymous_name}</strong>…
-                  </span>
-                </div>
-              )}
-
-              {loading ? (
-                <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}>
-                  <span className="spinner" style={{width:36,height:36}}/>
-                </div>
-              ) : feed.length===0 ? (
-                <div className="empty-state">
-                  <div className="empty-icon">🕊️</div>
-                  <div className="empty-title">Nothing here yet</div>
-                  <p>Be the first to share.</p>
-                </div>
-              ) : (
-                feed.map((post,i)=>(
-                  <PostCard key={post.id} post={post} user={user}
-                    onClick={()=>openPost(post)}
-                    onNeedAuth={needAuth}
-                    delay={Math.min(i*0.05, 0.3)}/>
-                ))
-              )}
-            </div>
-          )}
-
-          {/* TRENDING */}
-          {page==='trending' && (
-            <TrendingPage posts={posts} user={user} onOpen={openPost} onNeedAuth={needAuth}/>
-          )}
-
-          {/* CREATE */}
-          {page==='create' && (
-            user
-              ? <CreatePost user={user} onBack={()=>setPage('home')} onPost={handleNewPost} addToast={addToast}/>
-              : <div style={{textAlign:'center',padding:'80px 20px'}}>
-                  <div style={{fontSize:46,marginBottom:14}}>🔒</div>
-                  <div className="section-title">Sign in to share your confession</div>
-                  <div style={{marginTop:20,display:'flex',gap:12,justifyContent:'center'}}>
-                    <button className="btn btn-primary" onClick={()=>setAuth('signup')}>Sign up free</button>
-                    <button className="btn btn-secondary" onClick={()=>setAuth('login')}>Log in</button>
-                  </div>
-                </div>
-          )}
-
-        </div>
-      </div>
-
-      {/* AUTH MODAL */}
-      {auth && <AuthModal initMode={auth} onClose={()=>setAuth(null)} onAuth={handleAuth}/>}
-
-      {/* TOASTS */}
-      <ToastStack toasts={toasts}/>
-    </>
-  );
+);
 }
 
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+ReactDOM.createRoot(document.getElementById(‘root’)).render(<App/>);
 </script>
 
 <!--
-════════════════════════════════════════════════════════════════════
-  SUPABASE SQL SCHEMA — paste into Supabase → SQL Editor → Run
-════════════════════════════════════════════════════════════════════
+╔══════════════════════════════════════════════════════════════════════╗
+║           SUPABASE SQL SCHEMA v2  —  paste into SQL Editor          ║
+╚══════════════════════════════════════════════════════════════════════╝
 
--- 1. Extensions
+-- Extensions
 create extension if not exists "uuid-ossp";
 
--- 2. Users (mirrors auth.users)
+-- Users
 create table public.users (
-  id            uuid references auth.users(id) on delete cascade primary key,
-  email         text not null,
+  id             uuid references auth.users(id) on delete cascade primary key,
+  email          text not null,
   anonymous_name text not null unique,
-  created_at    timestamptz default now()
+  is_pro         boolean default false,
+  created_at     timestamptz default now()
 );
 
--- 3. Posts
+-- Posts
 create table public.posts (
   id         uuid default uuid_generate_v4() primary key,
   user_id    uuid references public.users(id) on delete cascade not null,
   title      text not null,
   content    text not null,
-  type       text not null check (type in ('confession','advice')),
+  type       text not null check (type in ('confession','advice','hot_take')),
   tags       text[] default '{}',
+  boosted    boolean default false,
   created_at timestamptz default now()
 );
 
--- 4. Comments
+-- Comments
 create table public.comments (
   id         uuid default uuid_generate_v4() primary key,
   post_id    uuid references public.posts(id) on delete cascade not null,
@@ -1300,7 +1663,7 @@ create table public.comments (
   created_at timestamptz default now()
 );
 
--- 5. Reactions
+-- Reactions
 create table public.reactions (
   id         uuid default uuid_generate_v4() primary key,
   post_id    uuid references public.posts(id) on delete cascade not null,
@@ -1310,7 +1673,7 @@ create table public.reactions (
   unique(post_id, user_id, type)
 );
 
--- 6. Votes
+-- Votes
 create table public.votes (
   id         uuid default uuid_generate_v4() primary key,
   post_id    uuid references public.posts(id) on delete cascade not null,
@@ -1320,50 +1683,124 @@ create table public.votes (
   unique(post_id, user_id)
 );
 
--- 7. Row Level Security
-alter table public.users     enable row level security;
-alter table public.posts     enable row level security;
-alter table public.comments  enable row level security;
-alter table public.reactions enable row level security;
-alter table public.votes     enable row level security;
+-- Notifications (in-app)
+create table public.notifications (
+  id         uuid default uuid_generate_v4() primary key,
+  user_id    uuid references public.users(id) on delete cascade not null,
+  type       text not null,  -- 'comment' | 'reaction' | 'vote' | 'trending' | 'reply'
+  post_id    uuid references public.posts(id) on delete cascade,
+  actor_name text,
+  message    text not null,
+  read       boolean default false,
+  created_at timestamptz default now()
+);
 
--- 8. Policies
-create policy "Read users"        on public.users     for select using (true);
-create policy "Insert own user"   on public.users     for insert with check (auth.uid()=id);
+-- Reports
+create table public.reports (
+  id          uuid default uuid_generate_v4() primary key,
+  reporter_id uuid references public.users(id) on delete cascade not null,
+  post_id     uuid references public.posts(id) on delete cascade,
+  comment_id  uuid references public.comments(id) on delete cascade,
+  reason      text not null,
+  created_at  timestamptz default now()
+);
 
-create policy "Read posts"        on public.posts     for select using (true);
-create policy "Auth insert posts" on public.posts     for insert with check (auth.uid()=user_id);
+-- Post updates (OP continue the story)
+create table public.post_updates (
+  id         uuid default uuid_generate_v4() primary key,
+  post_id    uuid references public.posts(id) on delete cascade not null,
+  user_id    uuid references public.users(id) on delete cascade not null,
+  content    text not null,
+  created_at timestamptz default now()
+);
 
-create policy "Read comments"     on public.comments  for select using (true);
-create policy "Auth insert comm"  on public.comments  for insert with check (auth.uid()=user_id);
+-- RLS
+alter table public.users       enable row level security;
+alter table public.posts       enable row level security;
+alter table public.comments    enable row level security;
+alter table public.reactions   enable row level security;
+alter table public.votes       enable row level security;
+alter table public.notifications enable row level security;
+alter table public.reports     enable row level security;
+alter table public.post_updates enable row level security;
 
-create policy "Read reactions"    on public.reactions for select using (true);
-create policy "Own reactions"     on public.reactions for all   using (auth.uid()=user_id);
+-- Policies
+create policy "read users"       on public.users       for select using (true);
+create policy "insert own user"  on public.users       for insert with check (auth.uid()=id);
+create policy "update own user"  on public.users       for update using (auth.uid()=id);
+create policy "delete own user"  on public.users       for delete using (auth.uid()=id);
 
-create policy "Read votes"        on public.votes     for select using (true);
-create policy "Own votes"         on public.votes     for insert with check (auth.uid()=user_id);
+create policy "read posts"       on public.posts       for select using (true);
+create policy "insert post"      on public.posts       for insert with check (auth.uid()=user_id);
+create policy "delete own post"  on public.posts       for delete using (auth.uid()=user_id);
 
--- 9. Enable Realtime
+create policy "read comments"    on public.comments    for select using (true);
+create policy "insert comment"   on public.comments    for insert with check (auth.uid()=user_id);
+create policy "delete own comm"  on public.comments    for delete using (auth.uid()=user_id);
+
+create policy "read reactions"   on public.reactions   for select using (true);
+create policy "own reactions"    on public.reactions   for all   using (auth.uid()=user_id);
+
+create policy "read votes"       on public.votes       for select using (true);
+create policy "insert vote"      on public.votes       for insert with check (auth.uid()=user_id);
+
+create policy "own notifications" on public.notifications for select using (auth.uid()=user_id);
+create policy "insert notif"      on public.notifications for insert with check (auth.role()='authenticated');
+create policy "update own notif"  on public.notifications for update using (auth.uid()=user_id);
+
+create policy "insert report"    on public.reports     for insert with check (auth.uid()=reporter_id);
+create policy "admin read"       on public.reports     for select using (true);
+create policy "admin delete"     on public.reports     for delete using (true);
+
+create policy "read updates"     on public.post_updates for select using (true);
+create policy "insert update"    on public.post_updates for insert with check (auth.uid()=user_id);
+
+-- Realtime
 alter publication supabase_realtime add table public.comments;
 alter publication supabase_realtime add table public.posts;
 alter publication supabase_realtime add table public.reactions;
 alter publication supabase_realtime add table public.votes;
+alter publication supabase_realtime add table public.notifications;
 
--- 10. Supabase Auth settings (Dashboard → Authentication → Settings)
---   • Enable "Email" provider
---   • Enable "Confirm email" (email verification)
---   • Set Site URL to your deployed app domain
-
-════════════════════════════════════════════════════════════════════
-  DEPLOYMENT CHECKLIST
-════════════════════════════════════════════════════════════════════
-
-1. Create a Supabase project at https://supabase.com
-2. Run the SQL above in the SQL Editor
-3. Replace SUPABASE_URL and SUPABASE_KEY in this file
-4. Enable Email auth in Supabase Dashboard → Authentication
-5. Deploy this HTML file to Netlify / Vercel / GitHub Pages
-   (drag-and-drop the single file — no build step needed)
+-- ──────────────────────────────────────────────────────────────────────
+--  SUPABASE EDGE FUNCTION  — Email notifications on new comment
+--  Deploy with: supabase functions deploy notify-on-comment
+-- ──────────────────────────────────────────────────────────────────────
+-- // supabase/functions/notify-on-comment/index.ts
+-- import { serve } from "https://deno.land/std/http/server.ts"
+-- import { createClient } from "https://esm.sh/@supabase/supabase-js"
+-- serve(async (req) => {
+--   const { record } = await req.json()
+--   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+--   const { data: post } = await supabase.from('posts').select('*,users(email,anonymous_name)').eq('id', record.post_id).single()
+--   if (!post || post.user_id === record.user_id) return new Response('ok')
+--   // Send email via Resend / SendGrid / Postmark
+--   await fetch('https://api.resend.com/emails', {
+--     method: 'POST',
+--     headers: { 'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`, 'Content-Type': 'application/json' },
+--     body: JSON.stringify({
+--       from: 'HeartConfia <noreply@heartconfia.com>',
+--       to: post.users.email,
+--       subject: `Someone replied to your confession 💔`,
+--       html: `<p>@${record.anonymous_name} commented on <strong>${post.title}</strong></p><p>${record.content}</p><a href="https://heartconfia.com">View on HeartConfia</a>`
+--     })
+--   })
+--   return new Response('ok')
+-- })
+-- 
+-- -- Add this database trigger to fire the function:
+-- create or replace function notify_new_comment()
+-- returns trigger language plpgsql as $$
+-- begin
+--   perform net.http_post(url := 'https://YOUR_PROJECT.supabase.co/functions/v1/notify-on-comment',
+--     headers := '{"Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb,
+--     body := json_build_object('record', row_to_json(NEW))::jsonb);
+--   return NEW;
+-- end; $$;
+-- 
+-- create trigger on_comment_insert after insert on public.comments
+-- for each row execute function notify_new_comment();
+-- ──────────────────────────────────────────────────────────────────────
 
 -->
 
