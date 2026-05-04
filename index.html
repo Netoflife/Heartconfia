@@ -4,1805 +4,1154 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<!-- Open Graph / Social Sharing -->
-<meta property="og:title" content="HeartConfia — Anonymous Relationship Confessions"/>
-<meta property="og:description" content="Share the stories you've never told anyone. No names. No judgment. Just hearts."/>
-<meta property="og:type" content="website"/>
-<meta property="og:image" content="https://heartconfia.com/og.png"/>
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:title" content="HeartConfia"/>
-<meta name="twitter:description" content="Anonymous relationship confessions. Read, react, vote."/>
 <title>HeartConfia — Anonymous Relationship Confessions</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a26;--surface3:#22223a;
-  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
-  --text:#f0eef8;--text2:#9a96b4;--text3:#5e5a78;
-  --rose:#ff4d6d;--rose-dim:rgba(255,77,109,0.15);--rose-glow:rgba(255,77,109,0.3);
-  --violet:#7c3aed;--violet-dim:rgba(124,58,237,0.15);
-  --amber:#f59e0b;--teal:#14b8a6;--green:#22c55e;
-  --glow:0 0 40px rgba(255,77,109,0.12);
-  --radius:16px;
-  --font-display:'Playfair Display',serif;
-  --font-body:'DM Sans',sans-serif;
+  --bg:#0a0a0f;--s1:#12121a;--s2:#1a1a26;--s3:#22223a;
+  --bd:rgba(255,255,255,0.07);--bd2:rgba(255,255,255,0.13);
+  --tx:#f0eef8;--tx2:#9a96b4;--tx3:#5e5a78;
+  --rose:#ff4d6d;--rdim:rgba(255,77,109,0.15);--rglow:rgba(255,77,109,0.3);
+  --violet:#7c3aed;--vdim:rgba(124,58,237,0.15);
+  --amber:#f59e0b;--teal:#14b8a6;
+  --r:16px;--fd:'Playfair Display',serif;--fb:'DM Sans',sans-serif;
 }
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;overflow-x:hidden}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.3}
+body{background:var(--bg);color:var(--tx);font-family:var(--fb);min-height:100vh;overflow-x:hidden}
 #root{min-height:100vh}
-::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px}
-
-@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-@keyframes heartbeat{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}45%{transform:scale(1.15)}60%{transform:scale(1)}}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
-@keyframes popIn{0%{transform:scale(0.85);opacity:0}70%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-@keyframes countdownPulse{0%,100%{color:var(–rose)}50%{color:#c9184a}}
-
-.fade-up{animation:fadeUp .45s ease forwards}
-.pop-in{animation:popIn .3s ease forwards}
-
-/* Buttons */
-.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:50px;font-family:var(–font-body);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s ease;text-decoration:none;white-space:nowrap}
-.btn-primary{background:linear-gradient(135deg,var(–rose),#c9184a);color:#fff;box-shadow:0 4px 20px var(–rose-glow)}
-.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(255,77,109,.45)}
-.btn-secondary{background:var(–surface2);color:var(–text);border:1px solid var(–border)}
-.btn-secondary:hover{background:var(–surface3);border-color:var(–border2)}
-.btn-ghost{background:transparent;color:var(–text2);padding:8px 14px}
-.btn-ghost:hover{color:var(–text);background:var(–surface2)}
-.btn-violet{background:linear-gradient(135deg,var(–violet),#5b21b6);color:#fff;box-shadow:0 4px 20px rgba(124,58,237,.3)}
-.btn-violet:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(124,58,237,.45)}
-.btn-teal{background:linear-gradient(135deg,var(–teal),#0d9488);color:#fff;box-shadow:0 4px 16px rgba(20,184,166,.3)}
-.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff}
+@keyframes hb{0%,100%{transform:scale(1)}15%{transform:scale(1.28)}30%{transform:scale(1)}45%{transform:scale(1.12)}60%{transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes popIn{0%{transform:scale(0.87);opacity:0}70%{transform:scale(1.03)}100%{transform:scale(1);opacity:1}}
+@keyframes pulseR{0%,100%{color:var(--rose)}50%{color:#c9184a}}
+.fu{animation:fadeUp .4s ease both}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:50px;font-family:var(--fb);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.bp{background:linear-gradient(135deg,var(--rose),#c9184a);color:#fff;box-shadow:0 4px 18px var(--rglow)}
+.bp:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(255,77,109,.45)}
+.bs{background:var(--s2);color:var(--tx);border:1px solid var(--bd)}
+.bs:hover{background:var(--s3);border-color:var(--bd2)}
+.bg{background:transparent;color:var(--tx2);padding:8px 14px}
+.bg:hover{color:var(--tx);background:var(--s2)}
+.bv{background:linear-gradient(135deg,var(--violet),#5b21b6);color:#fff;box-shadow:0 4px 18px rgba(124,58,237,.3)}
+.bt{background:linear-gradient(135deg,var(--teal),#0d9488);color:#fff}
 .btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
-
-/* Inputs */
-.input{width:100%;padding:12px 16px;background:var(–surface2);border:1px solid var(–border);border-radius:12px;color:var(–text);font-family:var(–font-body);font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
-.input:focus{border-color:var(–rose);box-shadow:0 0 0 3px rgba(255,77,109,.12)}
-.input::placeholder{color:var(–text3)}
-textarea.input{resize:vertical;min-height:120px;line-height:1.65}
-
-/* Cards */
-.card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:20px;transition:border-color .2s,box-shadow .2s}
-.card:hover{border-color:rgba(255,77,109,.2);box-shadow:var(–glow)}
-
-/* Tags */
+.inp{width:100%;padding:12px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:var(--fb);font-size:15px;outline:none;transition:border-color .2s,box-shadow .2s}
+.inp:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(255,77,109,.12)}
+.inp::placeholder{color:var(--tx3)}
+textarea.inp{resize:vertical;min-height:120px;line-height:1.65}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:20px;transition:border-color .2s,box-shadow .2s}
 .tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-.tag-cheating{background:rgba(239,68,68,.12);color:#ef4444}
-.tag-breakup{background:var(–rose-dim);color:var(–rose)}
-.tag-dating{background:var(–violet-dim);color:#a78bfa}
-.tag-marriage{background:rgba(20,184,166,.12);color:var(–teal)}
-.tag-situationship{background:rgba(245,158,11,.12);color:var(–amber)}
-.tag-hot{background:rgba(255,77,109,.2);color:var(–rose);animation:countdownPulse 2s ease infinite}
-
-/* Nav */
-.nav{position:fixed;top:0;left:0;right:0;height:60px;z-index:100;background:rgba(10,10,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(–border);display:flex;align-items:center;padding:0 14px;gap:10px}
-.nav-logo{font-family:var(–font-display);font-size:19px;font-weight:900;color:var(–rose);text-shadow:0 0 28px rgba(255,77,109,.45);cursor:pointer;flex-shrink:0;user-select:none;display:inline-flex;align-items:center;gap:5px;animation:heartbeat 3.5s ease-in-out infinite}
-.nav-tabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
-.nav-tabs::-webkit-scrollbar{display:none}
-.nav-tab{padding:6px 12px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;color:var(–text2);transition:all .2s;border:none;background:transparent;white-space:nowrap;font-family:var(–font-body)}
-.nav-tab:hover{color:var(–text);background:var(–surface2)}
-.nav-tab.active{color:var(–rose);background:var(–rose-dim)}
-
-/* Layout */
-.layout{display:grid;grid-template-columns:1fr min(700px,100%) 1fr;min-height:100vh;padding-top:60px}
-.layout-center{grid-column:2;padding:24px 16px 80px}
-
-/* Post card */
-.post-card{background:var(–surface);border:1px solid var(–border);border-radius:var(–radius);padding:20px;margin-bottom:12px;cursor:pointer;transition:all .25s ease;animation:fadeUp .4s ease both;position:relative;overflow:hidden}
-.post-card::before{content:’’;position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(–rose),var(–violet));opacity:0;transition:opacity .2s}
-.post-card:hover{border-color:rgba(255,77,109,.28);transform:translateY(-2px);box-shadow:var(–glow)}
-.post-card:hover::before{opacity:1}
-.post-card.boosted{border-color:rgba(245,158,11,.3)!important}
-.post-card.boosted::before{opacity:1;background:linear-gradient(90deg,var(–amber),var(–rose))!important}
-.post-card.hot-take{border-color:rgba(255,77,109,.25)!important}
-
-.post-type-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
-.post-type-badge.confession{color:var(–rose)}
-.post-type-badge.advice{color:#a78bfa}
-.post-type-badge.hot_take{color:var(–amber);animation:countdownPulse 2s ease infinite}
-
-.post-title{font-family:var(–font-display);font-size:18px;font-weight:700;line-height:1.35;color:var(–text);margin-bottom:10px}
-.post-preview{font-size:14px;line-height:1.7;color:var(–text2);margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.post-meta{display:flex;align-items:center;gap:10px;font-size:13px;color:var(–text3);margin-bottom:14px;flex-wrap:wrap}
-.post-meta-dot{width:3px;height:3px;border-radius:50%;background:var(–text3);flex-shrink:0}
-.anon-name{color:var(–text2);font-weight:600}
-
-/* Reactions */
-.post-reactions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.reaction-btn{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:50px;background:var(–surface2);border:1px solid var(–border);cursor:pointer;font-size:13px;font-weight:500;color:var(–text2);transition:all .2s;font-family:var(–font-body)}
-.reaction-btn:hover{background:var(–surface3);color:var(–text);transform:scale(1.06)}
-.reaction-btn.active{background:var(–rose-dim);border-color:rgba(255,77,109,.35);color:var(–rose)}
-.comment-count{display:flex;align-items:center;gap:5px;font-size:13px;color:var(–text3)}
-
-/* Blur / Paywall */
-.blur-wrap{position:relative;max-height:80px;overflow:hidden}
-.blur-wrap::after{content:’’;position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,var(–surface))}
-.paywall{margin:12px -20px -20px;padding:24px 20px;background:linear-gradient(to bottom,transparent,var(–surface) 18%);text-align:center;border-top:1px solid var(–border);border-radius:0 0 var(–radius) var(–radius)}
-.paywall-icon{font-size:30px;margin-bottom:8px}
-.paywall-title{font-family:var(–font-display);font-size:17px;font-weight:700;color:var(–text);margin-bottom:6px}
-.paywall-sub{font-size:13px;color:var(–text2);margin-bottom:16px}
-.paywall-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-
-/* Auth modal */
-.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s ease}
-.modal{background:var(–surface);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:36px;width:100%;max-width:420px;position:relative;animation:popIn .35s ease;max-height:90vh;overflow-y:auto}
-.modal-close{position:absolute;top:14px;right:14px;background:var(–surface2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(–text2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
-.modal-close:hover{background:var(–surface3);color:var(–text)}
-.modal-logo{font-family:var(–font-display);font-size:26px;font-weight:900;color:var(–rose);text-align:center;margin-bottom:6px}
-.modal-sub{text-align:center;color:var(–text2);font-size:14px;margin-bottom:26px}
-.modal-form{display:flex;flex-direction:column;gap:14px}
-.form-label{font-size:13px;font-weight:500;color:var(–text2);margin-bottom:5px;display:block}
-.modal-switch{text-align:center;font-size:14px;color:var(–text2);margin-top:18px}
-.modal-switch button{background:none;border:none;color:var(–rose);cursor:pointer;font-weight:600;font-size:14px;font-family:var(–font-body)}
-.modal-tabs{display:flex;gap:4px;background:var(–surface2);border-radius:12px;padding:4px;margin-bottom:24px}
-.modal-tab{flex:1;padding:8px;border-radius:9px;border:none;background:transparent;color:var(–text2);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(–font-body)}
-.modal-tab.active{background:var(–rose-dim);color:var(–rose)}
-
-/* Notification */
-.notif-wrap{position:relative}
-.notif-btn{background:var(–surface2);border:1px solid var(–border);border-radius:50%;width:36px;height:36px;cursor:pointer;color:var(–text2);font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .2s;position:relative}
-.notif-btn:hover{background:var(–surface3);color:var(–text)}
-.notif-badge{position:absolute;top:-4px;right:-4px;background:var(–rose);color:#fff;font-size:10px;font-weight:700;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(–bg)}
-.notif-panel{position:absolute;top:calc(100% + 10px);right:-8px;width:320px;background:var(–surface);border:1px solid var(–border);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.5);z-index:200;max-height:400px;overflow-y:auto;animation:fadeUp .2s ease}
-.notif-item{padding:12px 16px;border-bottom:1px solid var(–border);transition:background .2s;cursor:pointer}
-.notif-item:hover{background:var(–surface2)}
-.notif-item.unread{background:rgba(255,77,109,.05)}
-.notif-item:last-child{border-bottom:none}
-.notif-msg{font-size:13px;color:var(–text2);line-height:1.5;margin-bottom:3px}
-.notif-time{font-size:11px;color:var(–text3)}
-.notif-dot{width:7px;height:7px;border-radius:50%;background:var(–rose);flex-shrink:0;margin-top:4px}
-.notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(–border)}
-
-/* Streak & Karma chips */
-.streak-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:50px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:var(–amber);font-size:12px;font-weight:700;cursor:pointer}
-.karma-chip{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:50px;background:rgba(124,58,237,.12);border:1px solid rgba(124,58,237,.25);color:#a78bfa;font-size:12px;font-weight:700;cursor:pointer}
-
-/* Countdown timer */
-.hot-timer{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.25);font-size:12px;font-weight:700;color:var(–rose);animation:pulse 2s ease infinite}
-
-/* Post detail */
-.post-detail-title{font-family:var(–font-display);font-size:clamp(22px,5vw,30px);font-weight:900;line-height:1.2;color:var(–text);margin-bottom:16px}
-.post-detail-content{font-size:16px;line-height:1.9;color:var(–text2);white-space:pre-wrap}
-
-/* Vote */
-.vote-section{background:var(–surface2);border:1px solid var(–border);border-radius:var(–radius);padding:20px;margin:24px 0}
-.vote-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(–text3);margin-bottom:16px}
-.vote-options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.vote-btn{padding:14px 12px;border-radius:12px;border:1px solid var(–border);background:var(–surface);cursor:pointer;text-align:center;font-family:var(–font-body);font-size:14px;font-weight:600;color:var(–text2);transition:all .2s;line-height:1.4}
-.vote-btn:hover{background:var(–surface3);color:var(–text)}
-.vote-btn.voted-a{background:var(–rose-dim);border-color:rgba(255,77,109,.4);color:var(–rose)}
-.vote-btn.voted-b{background:var(–violet-dim);border-color:rgba(124,58,237,.4);color:#a78bfa}
-.vote-bar-track{height:8px;border-radius:4px;background:var(–surface3);overflow:hidden;margin-top:14px;display:flex}
-.vote-bar-a{height:100%;background:linear-gradient(90deg,var(–rose),#c9184a);transition:width .6s ease}
-.vote-bar-b{height:100%;background:linear-gradient(90deg,var(–violet),#5b21b6);transition:width .6s ease}
-.vote-foot{display:flex;justify-content:space-between;font-size:12px;color:var(–text3);margin-top:6px}
-
-/* Comments */
-.comment-input-row{display:flex;gap:12px;margin-bottom:24px;align-items:flex-start}
-.avatar{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(–rose),var(–violet));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
-.avatar.sm{width:28px;height:28px;font-size:10px}
-.comment-card{padding:14px 16px;background:var(–surface2);border:1px solid var(–border);border-radius:12px;margin-bottom:10px;animation:slideIn .3s ease}
-.comment-card.best{border-color:rgba(20,184,166,.35)}
-.comment-author{font-size:13px;font-weight:600;color:var(–text)}
-.comment-time{font-size:12px;color:var(–text3)}
-.comment-body{font-size:14px;line-height:1.65;color:var(–text2);margin-top:6px}
-.comment-actions{display:flex;gap:12px;margin-top:8px}
-.c-btn{display:flex;align-items:center;gap:4px;font-size:12px;color:var(–text3);background:none;border:none;cursor:pointer;transition:color .2s;font-family:var(–font-body)}
-.c-btn:hover{color:var(–rose)}
-.c-btn.upvoted{color:var(–rose)}
-.best-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(–teal);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
-
-/* Story updates */
-.update-card{background:rgba(20,184,166,.04);border:1px solid rgba(20,184,166,.2);border-radius:12px;padding:12px 16px;margin-bottom:8px}
-.update-label{font-size:11px;color:var(–teal);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
-
-/* Section */
-.section-header{display:flex;align-items:center;gap:12px;margin-bottom:20px}
-.section-title{font-family:var(–font-display);font-size:22px;font-weight:700;color:var(–text)}
-.section-badge{padding:3px 10px;border-radius:50px;background:var(–rose-dim);color:var(–rose);font-size:12px;font-weight:700}
-.section-badge.violet{background:var(–violet-dim);color:#a78bfa}
-.section-badge.teal{background:rgba(20,184,166,.12);color:var(–teal)}
-.section-badge.amber{background:rgba(245,158,11,.12);color:var(–amber)}
-
-/* Filter pills */
+.tc{background:rgba(239,68,68,.12);color:#ef4444}
+.tb{background:var(--rdim);color:var(--rose)}
+.td{background:var(--vdim);color:#a78bfa}
+.tm{background:rgba(20,184,166,.12);color:var(--teal)}
+.ts{background:rgba(245,158,11,.12);color:var(--amber)}
+.nav{position:fixed;top:0;left:0;right:0;height:60px;z-index:100;background:rgba(10,10,15,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 14px;gap:10px}
+.nlogo{font-family:var(--fd);font-size:20px;font-weight:900;color:var(--rose);cursor:pointer;flex-shrink:0;user-select:none;animation:hb 3.5s ease-in-out infinite;display:inline-block}
+.ntabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.ntabs::-webkit-scrollbar{display:none}
+.ntab{padding:6px 13px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);transition:all .2s;border:none;background:transparent;white-space:nowrap;font-family:var(--fb)}
+.ntab:hover{color:var(--tx);background:var(--s2)}
+.ntab.on{color:var(--rose);background:var(--rdim)}
+.lay{display:grid;grid-template-columns:1fr min(700px,100%) 1fr;min-height:100vh;padding-top:60px}
+.lc{grid-column:2;padding:24px 16px 80px}
+.pc{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:20px;margin-bottom:12px;cursor:pointer;transition:all .25s;animation:fadeUp .4s ease both;position:relative;overflow:hidden}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--rose),var(--violet));opacity:0;transition:opacity .2s}
+.pc:hover{border-color:rgba(255,77,109,.28);transform:translateY(-2px);box-shadow:0 0 40px rgba(255,77,109,.12)}
+.pc:hover::before{opacity:1}
+.ptb{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em}
+.ptb.confession{color:var(--rose)}.ptb.advice{color:#a78bfa}.ptb.hot_take{color:var(--amber);animation:pulseR 2s ease infinite}
+.ptitle{font-family:var(--fd);font-size:18px;font-weight:700;line-height:1.35;color:var(--tx);margin-bottom:10px}
+.pprev{font-size:14px;line-height:1.7;color:var(--tx2);margin-bottom:16px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pmeta{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--tx3);margin-bottom:14px;flex-wrap:wrap}
+.pdot{width:3px;height:3px;border-radius:50%;background:var(--tx3);flex-shrink:0}
+.aname{color:var(--tx2);font-weight:600}
+.rxrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rxb{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:50px;background:var(--s2);border:1px solid var(--bd);cursor:pointer;font-size:13px;font-weight:500;color:var(--tx2);transition:all .2s;font-family:var(--fb)}
+.rxb:hover{background:var(--s3);color:var(--tx);transform:scale(1.06)}
+.rxb.on{background:var(--rdim);border-color:rgba(255,77,109,.35);color:var(--rose)}
+.blw{position:relative;max-height:80px;overflow:hidden}
+.blw::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,var(--s1))}
+.pw{margin:12px -20px -20px;padding:24px 20px;background:linear-gradient(to bottom,transparent,var(--s1) 18%);text-align:center;border-top:1px solid var(--bd);border-radius:0 0 var(--r) var(--r)}
+.mov{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp .2s ease}
+.mod{background:var(--s1);border:1px solid var(--bd2);border-radius:24px;padding:36px;width:100%;max-width:420px;position:relative;animation:popIn .3s ease;max-height:90vh;overflow-y:auto}
+.mclose{position:absolute;top:14px;right:14px;background:var(--s2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--tx2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.mclose:hover{background:var(--s3);color:var(--tx)}
+.flbl{font-size:13px;font-weight:500;color:var(--tx2);margin-bottom:5px;display:block}
+.mswitch{text-align:center;font-size:14px;color:var(--tx2);margin-top:16px}
+.mswitch button{background:none;border:none;color:var(--rose);cursor:pointer;font-weight:600;font-size:14px;font-family:var(--fb)}
+.mtabs{display:flex;gap:4px;background:var(--s2);border-radius:12px;padding:4px;margin-bottom:22px}
+.mtab{flex:1;padding:8px;border-radius:9px;border:none;background:transparent;color:var(--tx2);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;font-family:var(--fb)}
+.mtab.on{background:var(--rdim);color:var(--rose)}
+.vbox{background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);padding:20px;margin:24px 0}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vbtn{padding:14px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--s1);cursor:pointer;text-align:center;font-family:var(--fb);font-size:14px;font-weight:600;color:var(--tx2);transition:all .2s;line-height:1.4}
+.vbtn:hover{background:var(--s3);color:var(--tx)}
+.vbtn.va{background:var(--rdim);border-color:rgba(255,77,109,.4);color:var(--rose)}
+.vbtn.vb{background:var(--vdim);border-color:rgba(124,58,237,.4);color:#a78bfa}
+.vtrack{height:8px;border-radius:4px;background:var(--s3);overflow:hidden;margin-top:14px;display:flex}
+.vfa{height:100%;background:linear-gradient(90deg,var(--rose),#c9184a);transition:width .6s ease}
+.vfb{height:100%;background:linear-gradient(90deg,var(--violet),#5b21b6);transition:width .6s ease}
+.vfoot{display:flex;justify-content:space-between;font-size:12px;color:var(--tx3);margin-top:6px}
+.crow{display:flex;gap:12px;margin-bottom:24px;align-items:flex-start}
+.ava{width:36px;height:36px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--rose),var(--violet));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.cc{padding:14px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;margin-bottom:10px;animation:fadeUp .3s ease}
+.cc.best{border-color:rgba(20,184,166,.35)}
+.bbadge{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--teal);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
+.cact{display:flex;gap:12px;margin-top:8px}
+.cactb{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--tx3);background:none;border:none;cursor:pointer;transition:color .2s;font-family:var(--fb)}
+.cactb:hover,.cactb.on{color:var(--rose)}
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.st{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--tx)}
+.sbadge{padding:3px 10px;border-radius:50px;background:var(--rdim);color:var(--rose);font-size:12px;font-weight:700}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:20px}
 .pills::-webkit-scrollbar{display:none}
-.pill{padding:7px 16px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(–border);background:var(–surface);color:var(–text2);transition:all .2s;white-space:nowrap;font-family:var(–font-body)}
-.pill:hover{border-color:rgba(255,77,109,.3);color:var(–rose)}
-.pill.active{background:var(–rose-dim);border-color:rgba(255,77,109,.4);color:var(–rose)}
-.pill.violet.active{background:var(–violet-dim);border-color:rgba(124,58,237,.4);color:#a78bfa}
-
-/* Create prompt */
-.create-prompt-bar{background:linear-gradient(135deg,rgba(255,77,109,.07),rgba(124,58,237,.05));border:1px solid rgba(255,77,109,.14);border-radius:var(–radius);padding:16px 20px;margin-bottom:20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
-.create-prompt-bar:hover{border-color:rgba(255,77,109,.3)}
-.create-prompt-text{font-size:14px;color:var(–text3)}
-
-/* Hero */
+.pill{padding:7px 16px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--bd);background:var(--s1);color:var(--tx2);transition:all .2s;white-space:nowrap;font-family:var(--fb)}
+.pill:hover{border-color:rgba(255,77,109,.3);color:var(--rose)}
+.pill.on{background:var(--rdim);border-color:rgba(255,77,109,.4);color:var(--rose)}
+.cpbar{background:linear-gradient(135deg,rgba(255,77,109,.07),rgba(124,58,237,.05));border:1px solid rgba(255,77,109,.15);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px}
+.cpbar:hover{border-color:rgba(255,77,109,.3)}
 .hero{text-align:center;padding:40px 0 32px;position:relative}
-.hero::before{content:’’;position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,109,.1),transparent 70%);pointer-events:none}
-.hero-eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(–rose);margin-bottom:12px}
-.hero-title{font-family:var(–font-display);font-size:clamp(34px,9vw,58px);font-weight:900;line-height:1.08;background:linear-gradient(140deg,var(–text) 35%,var(–rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
-.hero-sub{font-size:15px;color:var(–text2);max-width:360px;margin:0 auto 26px;line-height:1.65}
-
-/* Profile stats */
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
-.stat-box{background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:16px;text-align:center}
-.stat-num{font-family:var(–font-display);font-size:28px;font-weight:900;color:var(–text)}
-.stat-lbl{font-size:12px;color:var(–text3);margin-top:4px}
-
-/* Badge chips */
-.badge-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
-.badge-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;background:var(–surface2);border:1px solid var(–border);font-size:13px;font-weight:600;color:var(–text2)}
-
-/* Pro */
-.pro-feature{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(–border)}
-.pro-feature:last-child{border-bottom:none}
-
-/* Controversy meter */
-.controversy-bar{height:6px;border-radius:3px;background:var(–surface3);overflow:hidden;display:flex;margin-top:6px}
-.controversy-fill-a{height:100%;background:linear-gradient(90deg,var(–rose),#c9184a);transition:width .5s ease}
-.controversy-fill-b{height:100%;background:linear-gradient(90deg,var(–violet),#5b21b6);transition:width .5s ease}
-
-/* Report modal */
-.reason-opt{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(–border);background:var(–surface2);cursor:pointer;transition:all .2s;font-size:14px;color:var(–text2)}
-.reason-opt:hover{border-color:rgba(255,77,109,.3);color:var(–text)}
-.reason-opt.selected{background:var(–rose-dim);border-color:rgba(255,77,109,.4);color:var(–rose)}
-
-/* Admin */
-.admin-report{background:var(–surface2);border:1px solid var(–border);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
-
-/* Trending */
-.trending-num{font-family:var(–font-display);font-size:34px;font-weight:900;color:var(–border);line-height:1;min-width:42px}
-.trending-num.top{color:rgba(255,77,109,.22)}
-
-/* Back */
-.back-btn{display:inline-flex;align-items:center;gap:7px;color:var(–text2);font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;padding:8px 0;margin-bottom:20px;transition:color .2s;font-family:var(–font-body)}
-.back-btn:hover{color:var(–text)}
-
-/* Utils */
-.divider{height:1px;background:var(–border);margin:24px 0}
-.error-msg{color:var(–rose);font-size:13px;margin-top:4px}
-.success-msg{color:var(–teal);font-size:13px;margin-top:4px}
-.spinner{width:20px;height:20px;border:2px solid var(–border);border-top-color:var(–rose);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-.empty-state{text-align:center;padding:60px 20px;color:var(–text3)}
-.empty-icon{font-size:46px;margin-bottom:12px}
-.empty-title{font-family:var(–font-display);font-size:20px;color:var(–text2);margin-bottom:8px}
-
-/* Toast */
-.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
-.toast{padding:13px 18px;border-radius:12px;background:var(–surface2);border:1px solid var(–border);font-size:14px;color:var(–text);box-shadow:0 8px 30px rgba(0,0,0,.35);animation:fadeUp .3s ease;display:flex;align-items:center;gap:10px;min-width:220px}
-.toast.success{border-color:rgba(20,184,166,.4)}
-.toast.error{border-color:rgba(255,77,109,.4)}
-
-/* Config notice */
-.config-notice{background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(–amber);line-height:1.6}
-.config-notice code{background:rgba(245,158,11,.15);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px}
-
-/* Verified */
-.verified-gate{background:rgba(20,184,166,.08);border:1px solid rgba(20,184,166,.25);border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;align-items:center}
-
-/* Boost banner */
-.boost-banner{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(255,77,109,.08));border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:8px 14px;font-size:12px;color:var(–amber);font-weight:600;display:inline-flex;align-items:center;gap:6px;margin-bottom:10px}
-
-@media(max-width:600px){
-.nav{padding:0 8px;gap:6px}
-.layout-center{padding:12px 10px 80px}
-.modal{padding:24px 16px;border-radius:20px}
-.vote-options{grid-template-columns:1fr}
-.post-card{padding:16px}
-.stat-grid{grid-template-columns:repeat(3,1fr)}
-.notif-panel{width:280px;right:-50px}
-}
+.hero::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(255,77,109,.1),transparent 70%);pointer-events:none}
+.hey{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--rose);margin-bottom:12px}
+.htitle{font-family:var(--fd);font-size:clamp(34px,9vw,56px);font-weight:900;line-height:1.08;background:linear-gradient(140deg,var(--tx) 35%,var(--rose));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:14px}
+.hsub{font-size:15px;color:var(--tx2);max-width:360px;margin:0 auto 26px;line-height:1.65}
+.statg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.statb{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px;text-align:center}
+.statn{font-family:var(--fd);font-size:28px;font-weight:900;color:var(--tx)}
+.statl{font-size:12px;color:var(--tx3);margin-top:4px}
+.bdrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px}
+.bdc{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:50px;background:var(--s2);border:1px solid var(--bd);font-size:13px;font-weight:600;color:var(--tx2)}
+.trn{font-family:var(--fd);font-size:34px;font-weight:900;color:var(--bd);line-height:1;min-width:42px}
+.trn.top{color:rgba(255,77,109,.22)}
+.bkbtn{display:inline-flex;align-items:center;gap:7px;color:var(--tx2);font-size:14px;font-weight:500;cursor:pointer;background:none;border:none;padding:8px 0;margin-bottom:20px;transition:color .2s;font-family:var(--fb)}
+.bkbtn:hover{color:var(--tx)}
+.div{height:1px;background:var(--bd);margin:24px 0}
+.err{color:var(--rose);font-size:13px;margin-top:4px}
+.ok{color:var(--teal);font-size:13px;margin-top:4px}
+.spin{width:20px;height:20px;border:2px solid var(--bd);border-top-color:var(--rose);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.empty{text-align:center;padding:60px 20px;color:var(--tx3)}
+.empi{font-size:46px;margin-bottom:12px}
+.empt{font-family:var(--fd);font-size:20px;color:var(--tx2);margin-bottom:8px}
+.twrap{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{padding:13px 18px;border-radius:12px;background:var(--s2);border:1px solid var(--bd);font-size:14px;color:var(--tx);box-shadow:0 8px 30px rgba(0,0,0,.35);animation:fadeUp .3s ease;display:flex;align-items:center;gap:10px;min-width:220px}
+.toast.suc{border-color:rgba(20,184,166,.4)}.toast.er{border-color:rgba(255,77,109,.4)}
+.cnote{background:rgba(245,158,11,.09);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--amber);line-height:1.6}
+.cnote code{background:rgba(245,158,11,.15);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px}
+.notifwrap{position:relative}
+.nbtn{background:var(--s2);border:1px solid var(--bd);border-radius:50%;width:36px;height:36px;cursor:pointer;color:var(--tx2);font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;transition:all .2s}
+.nbtn:hover{background:var(--s3);color:var(--tx)}
+.nbadge{position:absolute;top:-4px;right:-4px;background:var(--rose);color:#fff;font-size:10px;font-weight:700;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+.npanel{position:absolute;top:calc(100% + 10px);right:0;width:300px;background:var(--s1);border:1px solid var(--bd);border-radius:16px;box-shadow:0 16px 48px rgba(0,0,0,.5);z-index:200;max-height:380px;overflow-y:auto;animation:fadeUp .2s ease}
+.nitem{padding:12px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .2s}
+.nitem:hover{background:var(--s2)}
+.nitem.unread{background:rgba(255,77,109,.05)}
+.nmsg{font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:3px}
+.ntime{font-size:11px;color:var(--tx3)}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex-shrink:0;margin-top:5px}
+.streakc{display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:50px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:var(--amber);font-size:12px;font-weight:700;cursor:pointer}
+.hottimer{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.25);font-size:12px;font-weight:700;color:var(--rose)}
+.repopt{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;transition:all .2s;font-size:14px;color:var(--tx2)}
+.repopt:hover{border-color:rgba(255,77,109,.3);color:var(--tx)}
+.repopt.sel{background:var(--rdim);border-color:rgba(255,77,109,.4);color:var(--rose)}
+.prof{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--bd)}
+.prof:last-child{border-bottom:none}
+.adm{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.upcard{background:rgba(20,184,166,.04);border:1px solid rgba(20,184,166,.2);border-radius:12px;padding:12px 16px;margin-bottom:8px}
+.uplbl{font-size:11px;color:var(--teal);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
+@media(max-width:600px){.nav{padding:0 8px;gap:6px}.lc{padding:12px 10px 80px}.mod{padding:22px 14px;border-radius:18px}.vgrid{grid-template-columns:1fr}.statg{gap:8px}.npanel{width:260px;right:-80px}}
 </style>
-
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useEffect, useRef, useCallback, Component } = React;
-
-/* ═══════════════════════════════════════════════════════════════
-CONFIG  —  replace these two values with your Supabase project
-═══════════════════════════════════════════════════════════════ */
-const SUPABASE_URL  = ‘https://rihritdkzvmqoeckleud.supabase.co';
-const SUPABASE_KEY  = ‘eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaHJpdGRrenZtcW9lY2tsZXVkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Nzc2MTkzNiwiZXhwIjoyMDkzMzM3OTM2fQ.0ilDhS6FLoiOk2faVMGue8dj94qziF9E2G4Aue5iBm4’;
-const ADMIN_EMAIL   = ‘netlifesocial@gmail.com’;          // your admin email
-const HOT_TAKE_TTL  = 48 * 3600 * 1000;               // 48-hour hot takes
-
-const IS_CFG = !SUPABASE_URL.includes(‘YOUR_PROJECT_ID’);
-const supabase = IS_CFG ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
-/* ═══════════════════════════════════════════════════════════════  DEMO DATA  */
-const DEMO_POSTS = [
-{ id:‘1’, type:‘confession’, title:“I’ve been in love with my best friend’s husband for 3 years”,
-content:“I know how this sounds. I hate myself for it.\n\nBut every time I see them together, something breaks inside me a little. He doesn’t know. She doesn’t know. I carry this alone every single day — smiling at their anniversary photos, congratulating them on their new home, holding it together while quietly unravelling inside.\n\nI’ve tried dating other people, therapy, even moving cities. Nothing cuts through this feeling.\n\nHas anyone ever loved someone they absolutely cannot have and found a way to actually be okay?”,
-tags:[‘situationship’], anonymous_name:‘Heart_4821’, created_at:new Date(Date.now()-2*3600000).toISOString(),
-reaction_counts:{‘🔥’:847,‘😂’:12,‘😢’:1203,‘😡’:45}, comment_count:234, vote_a:312, vote_b:589, user_id:‘u1’ },
-{ id:‘2’, type:‘advice’, title:“My boyfriend read all my messages and called me dramatic when I confronted him”,
-content:“We’ve been together 2 years. Last week I caught him unlocking my phone and scrolling my DMs. When I said something, he flipped it on me — claimed I’d ‘given him reason to be suspicious’ because I was texting my ex about returning a book.\n\nNo apology. He listed every time I ‘acted weird.’ I feel violated and gaslit simultaneously.\n\nHe says every couple does this. Am I wrong to feel the way I feel?”,
-tags:[‘dating’], anonymous_name:‘Confess_7732’, created_at:new Date(Date.now()-5*3600000).toISOString(),
-reaction_counts:{‘🔥’:432,‘😂’:23,‘😢’:567,‘😡’:1890}, comment_count:456, vote_a:1203, vote_b:87, user_id:‘u2’ },
-{ id:‘3’, type:‘confession’, title:“I said yes to a marriage proposal I didn’t mean”,
-content:“He cried. His whole family was there — parents, siblings, cousins with phones out. I panicked and said yes.\n\nThat was four months ago. I’ve been wearing a ring that feels like a lie every single day. I do care about him deeply. Just not the way you’re supposed to care about the person you’re going to marry.\n\nI don’t know how to undo this without destroying him.”,
-tags:[‘marriage’,‘breakup’], anonymous_name:‘Heart_9023’, created_at:new Date(Date.now()-24*3600000).toISOString(),
-reaction_counts:{‘🔥’:2341,‘😂’:67,‘😢’:3102,‘😡’:234}, comment_count:892, vote_a:445, vote_b:1876, user_id:‘u3’ },
-{ id:‘4’, type:‘hot_take’, title:“Unpopular opinion: staying in a relationship out of comfort is more honest than leaving”,
-content:“Everyone celebrates ‘having the courage to leave.’ But honestly? Choosing to stay — even when the butterflies are gone — is its own kind of maturity that nobody talks about.\n\nReal love isn’t a feeling. It’s a decision you make every morning even when you don’t feel it. Fight me.”,
-tags:[‘dating’], anonymous_name:‘Confess_3341’, created_at:new Date(Date.now()-3*3600000).toISOString(),
-reaction_counts:{‘🔥’:5678,‘😂’:89,‘😢’:421,‘😡’:1923}, comment_count:1203, vote_a:876, vote_b:2134, user_id:‘u4’ },
-{ id:‘5’, type:‘advice’, title:“She said she loves me but isn’t ‘in love’ with me. Is there any coming back?”,
-content:“Together 3.5 years. Last night she told me she loves me as a person but doesn’t feel ‘in love’ anymore. She doesn’t want to break up, but she doesn’t know what she wants.\n\nI’m sitting here not knowing whether to fight for us or start grieving quietly.\n\nHas anyone actually come back from that specific conversation?”,
-tags:[‘dating’,‘situationship’], anonymous_name:‘Heart_6612’, created_at:new Date(Date.now()-6*3600000).toISOString(),
-reaction_counts:{‘🔥’:1234,‘😂’:34,‘😢’:2876,‘😡’:156}, comment_count:678, vote_a:543, vote_b:987, user_id:‘u5’ },
-];
-const DEMO_COMMENTS = {
-‘1’:[
-{id:‘c1’,anonymous_name:‘Confess_5512’,content:“The only thing that helped was sustained, real distance. Moved countries eventually. Took two years to feel okay. You will survive this.”,created_at:new Date(Date.now()-30*60000).toISOString(),upvotes:234,user_id:‘u6’},
-{id:‘c2’,anonymous_name:‘Heart_8821’,content:“You’re not a bad person. Feelings don’t follow rules. The fact that you’re in pain about it says a lot about your character.”,created_at:new Date(Date.now()-3600000).toISOString(),upvotes:567,user_id:‘u7’},
-{id:‘c3’,anonymous_name:‘Confess_2201’,content:”‘Quietly unravelling inside’ hit different. I lived this. I know. You will be okay.”,created_at:new Date(Date.now()-7200000).toISOString(),upvotes:891,user_id:‘u8’},
-],
-‘2’:[
-{id:‘c4’,anonymous_name:‘Heart_3391’,content:“What he did is textbook DARVO — Deny, Attack, Reverse Victim and Offender. The moment he made you the problem, the conversation became about control, not trust.”,created_at:new Date(Date.now()-45*60000).toISOString(),upvotes:1203,user_id:‘u9’},
-{id:‘c5’,anonymous_name:‘Confess_7718’,content:“You are absolutely not overreacting. Privacy invasion + gaslighting in one breath tells you everything.”,created_at:new Date(Date.now()-90*60000).toISOString(),upvotes:876,user_id:‘u10’},
-],
-};
-
-/* ═══════════════════════════════════════════════════════════════  UTILS  */
-const REACTIONS = [‘🔥’,‘😂’,‘😢’,‘😡’];
-const ALL_TAGS  = [‘cheating’,‘breakup’,‘dating’,‘marriage’,‘situationship’];
-const REASONS   = [‘Harmful content’,‘Harassment’,‘Spam’,‘Fake story’,‘Self-promotion’,‘Other’];
-
-function timeAgo(iso) {
-const s=(Date.now()-new Date(iso).getTime())/1000;
-if(s<60) return ‘just now’;
-if(s<3600) return `${Math.floor(s/60)}m ago`;
-if(s<86400) return `${Math.floor(s/3600)}h ago`;
-return `${Math.floor(s/86400)}d ago`;
-}
-function makeAnonName() {
-const p=[‘Heart’,‘Confess’,‘Soul’,‘Echo’,‘Ache’,‘Muse’,‘Pulse’,‘Veil’];
-return `${p[Math.floor(Math.random()*p.length)]}_${Math.floor(1000+Math.random()*9000)}`;
-}
-
-// Reddit-style hot algorithm
-function feedScore(post) {
-const rx = Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0);
-const eng = rx + (post.comment_count||0)*2.5 + ((post.vote_a||0)+(post.vote_b||0))*1.5;
-const ageH = (Date.now()-new Date(post.created_at).getTime())/3600000;
-return eng / Math.pow(ageH+2, 1.8);
-}
-
-// Controversial: high votes, close to 50/50
-function controversialScore(post) {
-const total=(post.vote_a||0)+(post.vote_b||0);
-if(total<5) return 0;
-const diff=Math.abs((post.vote_a||0)-(post.vote_b||0));
-return Math.pow(total,1.5)/(diff+1);
-}
-
-// Karma from posts the user owns
-function calcKarma(myPosts) {
-return myPosts.reduce((k,p) =>
-k + Object.values(p.reaction_counts||{}).reduce((s,v)=>s+v,0)
-+ (p.comment_count||0)
-+ 10, 0);
-}
-
-// Badges
-function getBadges(karma, myPosts, streak) {
-const b=[];
-if(myPosts.length>=1)   b.push({icon:‘🌱’,label:‘First Confession’});
-if(karma>=50)           b.push({icon:‘⭐’,label:‘Rising Star’});
-if(karma>=250)          b.push({icon:‘🔥’,label:‘On Fire’});
-if(karma>=1000)         b.push({icon:‘👑’,label:‘Legend’});
-if(streak>=3)           b.push({icon:‘📅’,label:‘Dedicated’});
-if(streak>=7)           b.push({icon:‘🏆’,label:‘Week Warrior’});
-if(myPosts.some(p=>(p.comment_count||0)>=20)) b.push({icon:‘💬’,label:‘Conversation Starter’});
-if(myPosts.some(p=>Object.values(p.reaction_counts||{}).reduce((s,v)=>s+v,0)>=100)) b.push({icon:‘💥’,label:‘Viral’});
-return b;
-}
-
-// Streak (localStorage)
-function getStreak() {
-try { return JSON.parse(localStorage.getItem(‘hc_streak’)||’{“count”:0,“last”:””}’); }
-catch { return {count:0,last:’’}; }
-}
-function bumpStreak() {
-const today=new Date().toDateString();
-const d=getStreak();
-if(d.last===today) return d;
-const yest=new Date(Date.now()-86400000).toDateString();
-const nd={count:d.last===yest?d.count+1:1, last:today};
-localStorage.setItem(‘hc_streak’,JSON.stringify(nd));
-return nd;
-}
-
-// Hot-take countdown
-function hotTakeRemaining(createdAt) {
-const rem=new Date(createdAt).getTime()+HOT_TAKE_TTL-Date.now();
-if(rem<=0) return null;
-const h=Math.floor(rem/3600000);
-const m=Math.floor((rem%3600000)/60000);
-return `${h}h ${m}m`;
-}
-
-// Share as image (Canvas)
-function wrapCanvas(ctx,text,maxW) {
-const words=text.split(’ ‘), lines=[];
-let cur=’’;
-words.forEach(w=>{
-const t=cur?cur+’ ‘+w:w;
-ctx.measureText(t).width>maxW?(lines.push(cur),cur=w):(cur=t);
-});
-if(cur) lines.push(cur);
-return lines;
-}
-function shareAsImage(post) {
-const W=1200,H=630,canvas=document.createElement(‘canvas’);
-canvas.width=W; canvas.height=H;
-const ctx=canvas.getContext(‘2d’);
-ctx.fillStyle=’#0a0a0f’; ctx.fillRect(0,0,W,H);
-const g=ctx.createLinearGradient(0,0,W,H);
-g.addColorStop(0,‘rgba(255,77,109,0.18)’); g.addColorStop(1,‘rgba(124,58,237,0.12)’);
-ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-const gl=ctx.createLinearGradient(0,0,W,0);
-gl.addColorStop(0,’#ff4d6d’); gl.addColorStop(1,’#7c3aed’);
-ctx.fillStyle=gl; ctx.fillRect(0,0,W,5);
-ctx.strokeStyle=‘rgba(255,77,109,0.3)’; ctx.lineWidth=1.5;
-ctx.strokeRect(1,1,W-2,H-2);
-ctx.font=‘bold 24px Georgia,serif’; ctx.fillStyle=’#ff4d6d’;
-ctx.fillText(‘HeartConfia’, 60, 65);
-ctx.font=‘bold 13px sans-serif’; ctx.fillStyle=‘rgba(255,77,109,0.7)’;
-ctx.fillText(post.type.toUpperCase().replace(’_’,’ ‘), 60, 92);
-ctx.font=‘bold 46px Georgia,serif’; ctx.fillStyle=’#f0eef8’;
-const tLines=wrapCanvas(ctx,post.title,1080);
-tLines.slice(0,2).forEach((l,i)=>ctx.fillText(l,60,152+i*60));
-ctx.font=‘25px sans-serif’; ctx.fillStyle=’#9a96b4’;
-const startY=152+Math.min(tLines.length,2)*60+28;
-const cLines=wrapCanvas(ctx,post.content,1080);
-cLines.slice(0,3).forEach((l,i)=>ctx.fillText(l,60,startY+i*36));
-const rx=Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0);
-ctx.font=‘bold 18px sans-serif’; ctx.fillStyle=’#5e5a78’;
-ctx.fillText(`${rx.toLocaleString()} reactions  ·  ${(post.comment_count||0).toLocaleString()} comments  ·  @${post.anonymous_name}`,60,560);
-ctx.font=‘16px sans-serif’; ctx.fillStyle=’#3a3a5c’;
-ctx.fillText(‘heartconfia.com — anonymous relationship confessions’,60,600);
-canvas.toBlob(blob=>{
-const url=URL.createObjectURL(blob);
-const a=document.createElement(‘a’);
-a.href=url; a.download=`confession-${post.id}.png`; a.click();
-URL.revokeObjectURL(url);
-});
-}
-
-/* ═══════════════════════════════════════════════════════════════  ERROR BOUNDARY  */
-class ErrorBoundary extends Component {
-constructor(p){super(p);this.state={err:null}}
-static getDerivedStateFromError(e){return{err:e}}
-render(){
-if(this.state.err) return (
-<div style={{padding:40,textAlign:‘center’}}>
-<div style={{fontSize:40,marginBottom:16}}>💔</div>
-<div style={{fontFamily:‘var(–font-display)’,fontSize:20,color:‘var(–text)’,marginBottom:8}}>Something broke</div>
-<p style={{color:‘var(–text2)’,marginBottom:20,fontSize:14}}>{this.state.err.message}</p>
-<button className=“btn btn-primary” onClick={()=>window.location.reload()}>Reload app</button>
-</div>
-);
-return this.props.children;
-}
-}
-
-/* ═══════════════════════════════════════════════════════════════  TOAST  */
-function ToastStack({toasts}){
-return <div className="toast-wrap">{toasts.map(t=>(
-<div key={t.id} className={`toast ${t.type||''}`}>
-<span>{t.type===‘success’?‘✅’:t.type===‘error’?‘❌’:‘💬’}</span>{t.msg}
-</div>
-))}</div>;
-}
-
-/* ═══════════════════════════════════════════════════════════════  AUTH MODAL  */
-function AuthModal({initMode=‘login’,onClose,onAuth}){
-const [mode,setMode]=useState(initMode);
-const [email,setEmail]=useState(’’);
-const [pass,setPass]=useState(’’);
-const [loading,setLoading]=useState(false);
-const [err,setErr]=useState(’’);
-const [ok,setOk]=useState(’’);
-
-async function submit(){
-setErr(’’); setLoading(true);
-if(!IS_CFG){
-await new Promise(r=>setTimeout(r,700));
-onAuth({id:‘demo’,email,anonymous_name:makeAnonName()});
-setLoading(false); return;
-}
-try{
-if(mode===‘reset’){
-const{error:e}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
-if(e) throw e;
-setOk(‘Password reset link sent! Check your inbox 📧’);
-} else if(mode===‘signup’){
-const{data,error:e}=await supabase.auth.signUp({email,password:pass});
-if(e) throw e;
-if(data.user){
-const name=makeAnonName();
-await supabase.from(‘users’).insert({id:data.user.id,email,anonymous_name:name});
-setOk(‘Almost there! Check your inbox to verify your account 💌’);
-}
-} else {
-const{data,error:e}=await supabase.auth.signInWithPassword({email,password:pass});
-if(e) throw e;
-const{data:prof}=await supabase.from(‘users’).select(’*’).eq(‘id’,data.user.id).single();
-onAuth({…data.user,anonymous_name:prof?.anonymous_name||makeAnonName()});
-}
-}catch(e){setErr(e.message);}
-setLoading(false);
-}
-function sw(m){setMode(m);setErr(’’);setOk(’’);}
-
-return (
-<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
-<div className="modal">
-<button className="modal-close" onClick={onClose}>✕</button>
-<div className="modal-logo">💔 HeartConfia</div>
-<p className="modal-sub">{mode===‘login’?‘Your secrets are safe here.’:mode===‘signup’?‘Share anonymously. Feel less alone.’:‘Reset your password.’}</p>
-{mode!==‘reset’ && (
-<div className="modal-tabs">
-<button className={`modal-tab ${mode==='login'?'active':''}`} onClick={()=>sw(‘login’)}>Log in</button>
-<button className={`modal-tab ${mode==='signup'?'active':''}`} onClick={()=>sw(‘signup’)}>Sign up</button>
-</div>
-)}
-{ok ? <div style={{textAlign:‘center’,padding:‘20px 0’,color:‘var(–teal)’,fontSize:15,lineHeight:1.6}}>{ok}</div> : (
-<div className="modal-form">
-<div><label className="form-label">Email</label>
-<input className=“input” type=“email” placeholder=“your@email.com” value={email} onChange={e=>setEmail(e.target.value)}/></div>
-{mode!==‘reset’ && <div><label className="form-label">Password</label>
-<input className=“input” type=“password” placeholder=”••••••••” value={pass} onChange={e=>setPass(e.target.value)} onKeyDown={e=>e.key===‘Enter’&&submit()}/></div>}
-{err && <p className="error-msg">{err}</p>}
-<button className=“btn btn-primary” onClick={submit} disabled={loading||!email||(mode!==‘reset’&&!pass)} style={{width:‘100%’,justifyContent:‘center’,padding:‘14px’}}>
-{loading?<span className="spinner"/>:mode===‘login’?‘Log in’:mode===‘signup’?‘Create account’:‘Send reset link’}
-</button>
-{mode===‘login’ && <button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,fontSize:13,cursor:‘pointer’,textAlign:‘center’,fontFamily:‘var(–font-body)’}} onClick={()=>sw(‘reset’)}>Forgot password?</button>}
-{mode===‘reset’ && <button className=“btn btn-ghost” style={{justifyContent:‘center’}} onClick={()=>sw(‘login’)}>← Back to login</button>}
-</div>
-)}
-</div>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  PAYWALL  */
-function Paywall({onSignup,onLogin}){
-return (
-<div className="paywall">
-<div className="paywall-icon">💔</div>
-<div className="paywall-title">Continue reading this confession</div>
-<p className="paywall-sub">Free account — your identity always stays anonymous.</p>
-<div className="paywall-btns">
-<button className="btn btn-primary" onClick={onSignup}>Sign up free</button>
-<button className="btn btn-secondary" onClick={onLogin}>Log in</button>
-</div>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  NOTIFICATION BELL  */
-function NotifBell({user}){
-const [notifs,setNotifs]=useState([]);
-const [open,setOpen]=useState(false);
-const ref=useRef();
-const unread=notifs.filter(n=>!n.read).length;
-
-useEffect(()=>{
-if(!supabase||!user) return;
-supabase.from(‘notifications’).select(’*’).eq(‘user_id’,user.id)
-.order(‘created_at’,{ascending:false}).limit(25)
-.then(({data})=>{if(data) setNotifs(data);});
-const ch=supabase.channel(`notifs-${user.id}`)
-.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘notifications’,filter:`user_id=eq.${user.id}`},
-p=>setNotifs(prev=>[p.new,…prev])).subscribe();
-return()=>supabase.removeChannel(ch);
-},[user?.id]);
-
-useEffect(()=>{
-function close(e){if(ref.current&&!ref.current.contains(e.target))setOpen(false);}
-document.addEventListener(‘mousedown’,close);
-return()=>document.removeEventListener(‘mousedown’,close);
-},[]);
-
-function toggleOpen(){
-setOpen(o=>!o);
-if(!open && unread>0){
-setNotifs(p=>p.map(n=>({…n,read:true})));
-if(supabase) supabase.from(‘notifications’).update({read:true}).eq(‘user_id’,user.id);
-}
-}
-
-const icons={comment:‘💬’,reaction:‘🔥’,vote:‘⚖️’,trending:‘🚀’,reply:‘↩’};
-
-return (
-<div className="notif-wrap" ref={ref}>
-<button className="notif-btn" onClick={toggleOpen}>
-🔔{unread>0&&<span className="notif-badge">{unread>9?‘9+’:unread}</span>}
-</button>
-{open&&(
-<div className="notif-panel">
-<div className="notif-header">
-<span style={{fontSize:14,fontWeight:600}}>Notifications</span>
-{unread>0&&<span style={{fontSize:12,color:‘var(–rose)’}}>All read</span>}
-</div>
-{notifs.length===0?(
-<div style={{padding:‘30px 16px’,textAlign:‘center’,color:‘var(–text3)’,fontSize:13}}>
-No notifications yet.<br/>Post a confession to get started.
-</div>
-):notifs.map(n=>(
-<div key={n.id} className={`notif-item ${n.read?'':'unread'}`}>
-<div style={{display:‘flex’,gap:10,alignItems:‘flex-start’}}>
-{!n.read&&<div className="notif-dot"/>}
-<div style={{flex:1}}>
-<div className="notif-msg">{icons[n.type]||‘📣’} {n.message}</div>
-<div className="notif-time">{timeAgo(n.created_at)}</div>
-</div>
-</div>
-</div>
-))}
-</div>
-)}
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  REPORT MODAL  */
-function ReportModal({postId,commentId,user,onClose,addToast}){
-const [reason,setReason]=useState(’’);
-const [done,setDone]=useState(false);
-async function submit(){
-if(supabase&&user&&user.id!==‘demo’)
-await supabase.from(‘reports’).insert({reporter_id:user.id,post_id:postId||null,comment_id:commentId||null,reason});
-setDone(true);
-setTimeout(()=>{addToast(‘Report submitted. We’ll review it shortly.’,‘success’);onClose();},1200);
-}
-return (
-<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
-<div className="modal" style={{maxWidth:380}}>
-<button className="modal-close" onClick={onClose}>✕</button>
-<h3 style={{fontFamily:‘var(–font-display)’,fontSize:22,marginBottom:6}}>Report content</h3>
-<p style={{color:‘var(–text2)’,fontSize:14,marginBottom:20}}>Why are you reporting this?</p>
-{done?(
-<div style={{textAlign:‘center’,padding:‘20px 0’,color:‘var(–teal)’,fontSize:15}}>✅ Thanks, we’ll review it.</div>
-):(
-<>
-<div style={{display:‘flex’,flexDirection:‘column’,gap:8,marginBottom:20}}>
-{REASONS.map(r=>(
-<div key={r} className={`reason-opt ${reason===r?'selected':''}`} onClick={()=>setReason(r)}>
-{reason===r?‘●’:‘○’} {r}
-</div>
-))}
-</div>
-<button className=“btn btn-danger” onClick={submit} disabled={!reason} style={{width:‘100%’,justifyContent:‘center’,padding:‘12px’}}>
-Submit Report
-</button>
-</>
-)}
-</div>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  PRO MODAL  */
-function ProModal({onClose}){
-const features=[
-{icon:‘📊’,t:‘See full vote breakdown — who chose OP vs Partner’},
-{icon:‘🔔’,t:‘Instant email notifications when someone replies’},
-{icon:‘⚡’,t:‘Boost your confession to the top of the feed (24h)’},
-{icon:‘🔖’,t:‘Save confessions to a private reading list’},
-{icon:‘🎨’,t:‘Custom anonymous name & identity flair’},
-{icon:‘🚫’,t:‘No ads (when we eventually add them)’},
-];
-return (
-<div className=“modal-overlay” onClick={e=>e.target===e.currentTarget&&onClose()}>
-<div className="modal" style={{maxWidth:440}}>
-<button className="modal-close" onClick={onClose}>✕</button>
-<div style={{textAlign:‘center’,marginBottom:24}}>
-<div style={{fontSize:44,marginBottom:8}}>💎</div>
-<div style={{fontFamily:‘var(–font-display)’,fontSize:26,fontWeight:900,color:‘var(–text)’}}>HeartConfia Pro</div>
-<p style={{color:‘var(–text2)’,fontSize:14,marginTop:6}}>Go deeper. Stay anonymous. Feel more.</p>
-</div>
-<div style={{marginBottom:24}}>
-{features.map(f=>(
-<div key={f.t} className="pro-feature">
-<span style={{fontSize:22}}>{f.icon}</span>
-<span style={{fontSize:14,color:‘var(–text2)’}}>{f.t}</span>
-</div>
-))}
-</div>
-<div style={{textAlign:‘center’}}>
-<div style={{fontFamily:‘var(–font-display)’,fontSize:30,fontWeight:900,marginBottom:4}}>
-$4.99<span style={{fontSize:16,color:‘var(–text3)’,fontFamily:‘var(–font-body)’}}>/month</span>
-</div>
-<p style={{fontSize:12,color:‘var(–text3)’,marginBottom:14}}>or $39/year · Cancel anytime</p>
-<button className=“btn btn-violet” style={{width:‘100%’,justifyContent:‘center’,padding:‘14px’,fontSize:15}}>
-Upgrade to Pro 💎
-</button>
-<p style={{fontSize:12,color:‘var(–text3)’,marginTop:10}}>Your anonymity is always protected, Pro or not.</p>
-</div>
-</div>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  POST CARD  */
-function PostCard({post,user,onClick,onNeedAuth,delay=0}){
-const [reactions,setReactions]=useState(post.reaction_counts||{});
-const [mine,setMine]=useState(null);
-const [timer,setTimer]=useState(post.type===‘hot_take’?hotTakeRemaining(post.created_at):null);
-const [showReport,setShowReport]=useState(false);
-const [addToast]=useState(()=>()=>{});
-
-useEffect(()=>{
-if(post.type!==‘hot_take’) return;
-const iv=setInterval(()=>setTimer(hotTakeRemaining(post.created_at)),60000);
-return()=>clearInterval(iv);
-},[]);
-
-const isExpired = post.type===‘hot_take’ && !timer;
-
-async function react(e,type){
-e.stopPropagation();
-if(!user){onNeedAuth(‘signup’);return;}
-const prev=mine,r={…reactions};
-if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
-else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
-setReactions(r);
-if(supabase&&user.id!==‘demo’){
-if(prev) await supabase.from(‘reactions’).delete().match({post_id:post.id,user_id:user.id,type:prev});
-if(prev!==type){
-await supabase.from(‘reactions’).insert({post_id:post.id,user_id:user.id,type});
-// Notify post owner
-if(post.user_id&&post.user_id!==user.id)
-await supabase.from(‘notifications’).insert({user_id:post.user_id,type:‘reaction’,post_id:post.id,actor_name:user.anonymous_name,message:`@${user.anonymous_name} reacted ${type} to your confession`,read:false});
-}
-}
-}
-
-const totalRx=Object.values(reactions).reduce((s,v)=>s+v,0);
-const topRx=Object.entries(reactions).sort(([,a],[,b])=>b-a)[0];
-const isBoosted=post.boosted;
-
-return (
-<>
-<div className={`post-card ${isBoosted?'boosted':''} ${post.type==='hot_take'?'hot-take':''}`}
-onClick={onClick} style={{animationDelay:`${delay}s`}}>
-{isBoosted&&<div className="boost-banner">⚡ Boosted</div>}
-<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘flex-start’,marginBottom:10}}>
-<div style={{display:‘flex’,flexDirection:‘column’,gap:6}}>
-<span className={`post-type-badge ${post.type}`}>
-{post.type===‘confession’?‘💔 Confession’:post.type===‘advice’?‘💬 Seeking Advice’:‘🌶 Hot Take’}
-</span>
-{post.type===‘hot_take’&&(
-<span className="hot-timer">
-{isExpired?‘⏰ Expired’:‘⏱ ‘+timer+’ left’}
-</span>
-)}
-</div>
-<div style={{display:‘flex’,gap:6,flexWrap:‘wrap’,justifyContent:‘flex-end’,alignItems:‘center’}}>
-{post.tags?.slice(0,2).map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
-<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:16,padding:‘0 4px’}}
-onClick={e=>{e.stopPropagation();setShowReport(true);}}>⋯</button>
-</div>
-</div>
-<h2 className="post-title">{post.title}</h2>
-<div className="post-meta">
-<span className="anon-name">@{post.anonymous_name}</span>
-<span className="post-meta-dot"/>
-<span>{timeAgo(post.created_at)}</span>
-{totalRx>0&&<><span className="post-meta-dot"/><span>{topRx[0]} {totalRx.toLocaleString()}</span></>}
-</div>
-{user?(
-<p className="post-preview">{post.content}</p>
-):(
-<>
-<div className="blur-wrap"><p style={{fontSize:14,lineHeight:1.7,color:‘var(–text2)’}}>{post.content.slice(0,160)}…</p></div>
-<Paywall onSignup={()=>onNeedAuth(‘signup’)} onLogin={()=>onNeedAuth(‘login’)}/>
-</>
-)}
-{user&&(
-<div className="post-reactions">
-{REACTIONS.map(r=>(
-<button key={r} className={`reaction-btn ${mine===r?'active':''}`} onClick={e=>react(e,r)}>
-{r} <span>{(reactions[r]||0)>0?(reactions[r]||0).toLocaleString():’’}</span>
-</button>
-))}
-<div className="comment-count">💬 {(post.comment_count||0).toLocaleString()}</div>
-<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:13,marginLeft:‘auto’,fontFamily:‘var(–font-body)’,display:‘flex’,alignItems:‘center’,gap:4}}
-onClick={e=>{e.stopPropagation();shareAsImage(post);}}>
-↗ Share
-</button>
-</div>
-)}
-</div>
-{showReport&&<ReportModal postId={post.id} user={user} onClose={()=>setShowReport(false)} addToast={()=>{}}/>}
-</>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  VOTE SECTION  */
-function VoteSection({post,user,onNeedAuth}){
-const [vA,setVA]=useState(post.vote_a||0);
-const [vB,setVB]=useState(post.vote_b||0);
-const [voted,setVoted]=useState(null);
-const total=vA+vB;
-const pA=total>0?Math.round((vA/total)*100):50;
-
-async function vote(type){
-if(!user){onNeedAuth();return;}
-if(voted) return;
-type===‘A’?setVA(v=>v+1):setVB(v=>v+1);
-setVoted(type);
-if(supabase&&user.id!==‘demo’){
-await supabase.from(‘votes’).insert({post_id:post.id,user_id:user.id,vote_type:type});
-if(post.user_id&&post.user_id!==user.id)
-await supabase.from(‘notifications’).insert({user_id:post.user_id,type:‘vote’,post_id:post.id,actor_name:user.anonymous_name,message:`Someone voted on your confession — ${pA}% think you're right`,read:false});
-}
-}
-
-return (
-<div className="vote-section">
-<div className="vote-label">⚖️ Who is right?</div>
-<div className="vote-options">
-<button className={`vote-btn ${voted==='A'?'voted-a':''}`} onClick={()=>vote(‘A’)}>
-{voted===‘A’?‘✓ ‘:’’}OP is right
-<div style={{fontSize:22,fontFamily:‘var(–font-display)’,marginTop:4,color:voted===‘A’?‘var(–rose)’:‘var(–text3)’}}>{pA}%</div>
-</button>
-<button className={`vote-btn ${voted==='B'?'voted-b':''}`} onClick={()=>vote(‘B’)}>
-{voted===‘B’?‘✓ ‘:’’}Partner is right
-<div style={{fontSize:22,fontFamily:‘var(–font-display)’,marginTop:4,color:voted===‘B’?’#a78bfa’:‘var(–text3)’}}>{100-pA}%</div>
-</button>
-</div>
-<div className="vote-bar-track">
-<div className=“vote-bar-a” style={{width:`${pA}%`}}/>
-<div className=“vote-bar-b” style={{width:`${100-pA}%`}}/>
-</div>
-<div className="vote-foot">
-<span>{vA.toLocaleString()} for OP</span>
-<span>{total.toLocaleString()} votes total</span>
-<span>{vB.toLocaleString()} for Partner</span>
-</div>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  COMMENTS  */
-function Comments({postId,postOwnerId,user,onNeedAuth}){
-const [comments,setComments]=useState(DEMO_COMMENTS[postId]||[]);
-const [text,setText]=useState(’’);
-const [sending,setSending]=useState(false);
-const [upvoted,setUpvoted]=useState({});
-const [showReport,setShowReport]=useState(null);
-
-useEffect(()=>{
-if(!supabase) return;
-supabase.from(‘comments’).select(’*’).eq(‘post_id’,postId).order(‘upvotes’,{ascending:false})
-.then(({data})=>{if(data?.length) setComments(data);});
-const ch=supabase.channel(`comments-${postId}`)
-.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘comments’,filter:`post_id=eq.${postId}`},
-p=>setComments(prev=>[p.new,…prev])).subscribe();
-return()=>supabase.removeChannel(ch);
-},[postId]);
-
-async function post(){
-if(!user){onNeedAuth();return;}
-if(!text.trim()) return;
-setSending(true);
-const c={id:Date.now()+’’,anonymous_name:user.anonymous_name,content:text.trim(),created_at:new Date().toISOString(),upvotes:0,user_id:user.id};
-setComments(prev=>[c,…prev]);
-setText(’’);
-if(supabase&&user.id!==‘demo’){
-await supabase.from(‘comments’).insert({post_id:postId,user_id:user.id,content:c.content});
-if(postOwnerId&&postOwnerId!==user.id)
-await supabase.from(‘notifications’).insert({user_id:postOwnerId,type:‘comment’,post_id:postId,actor_name:user.anonymous_name,message:`@${user.anonymous_name} commented on your confession`,read:false});
-}
-setSending(false);
-}
-
-function upvote(cId){
-if(!user){onNeedAuth();return;}
-if(upvoted[cId]) return;
-setComments(p=>p.map(c=>c.id===cId?{…c,upvotes:(c.upvotes||0)+1}:c));
-setUpvoted(p=>({…p,[cId]:true}));
-}
-
-const sorted=[…comments].sort((a,b)=>{
-const topId=[…comments].sort((x,y)=>(y.upvotes||0)-(x.upvotes||0))[0]?.id;
-if(a.id===topId) return -1; if(b.id===topId) return 1;
-return (b.upvotes||0)-(a.upvotes||0);
-});
-const bestId=comments.length>2?[…comments].sort((a,b)=>(b.upvotes||0)-(a.upvotes||0))[0]?.id:null;
-
-return (
-<div>
-<div className="section-header" style={{marginBottom:16}}>
-<span className="section-title" style={{fontSize:18}}>Comments</span>
-<span className="section-badge">{comments.length}</span>
-</div>
-<div className="comment-input-row">
-<div className="avatar">{user?user.anonymous_name?.charAt(0):’?’}</div>
-<div style={{flex:1}}>
-<textarea className=“input” rows={3} style={{minHeight:76}}
-placeholder={user?`Reply as @${user.anonymous_name}…`:‘Log in to comment’}
-value={text} onChange={e=>setText(e.target.value)} disabled={!user}/>
-{user
-?<button className="btn btn-primary" style={{marginTop:8}} onClick={post} disabled={!text.trim()||sending}>
-{sending?<span className="spinner"/>:‘Post comment’}</button>
-:<button className="btn btn-secondary" style={{marginTop:8}} onClick={onNeedAuth}>Log in to comment</button>
-}
-</div>
-</div>
-{sorted.map(c=>(
-<div key={c.id} className={`comment-card ${c.id===bestId?'best':''}`}>
-{c.id===bestId&&<div className="best-badge">✅ Top answer</div>}
-<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘center’}}>
-<span className="comment-author">@{c.anonymous_name}</span>
-<div style={{display:‘flex’,gap:8,alignItems:‘center’}}>
-<span className="comment-time">{timeAgo(c.created_at)}</span>
-<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:14}} onClick={()=>setShowReport(c.id)}>⋯</button>
-</div>
-</div>
-<p className="comment-body">{c.content}</p>
-<div className="comment-actions">
-<button className={`c-btn ${upvoted[c.id]?'upvoted':''}`} onClick={()=>upvote(c.id)}>
-{upvoted[c.id]?‘❤️’:‘🤍’} {(c.upvotes||0).toLocaleString()}
-</button>
-<button className="c-btn">↩ Reply</button>
-</div>
-</div>
-))}
-{showReport&&<ReportModal commentId={showReport} user={user} onClose={()=>setShowReport(null)} addToast={()=>{}}/>}
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  STORY UPDATES  */
-function StoryUpdates({post,user}){
-const [updates,setUpdates]=useState([]);
-const [text,setText]=useState(’’);
-const [loading,setLoading]=useState(false);
-const isOwner=user&&user.id===post.user_id;
-
-useEffect(()=>{
-if(!supabase) return;
-supabase.from(‘post_updates’).select(’*’).eq(‘post_id’,post.id).order(‘created_at’,{ascending:true})
-.then(({data})=>{if(data) setUpdates(data);});
-},[post.id]);
-
-async function add(){
-if(!text.trim()) return;
-setLoading(true);
-const u={id:Date.now()+’’,content:text.trim(),created_at:new Date().toISOString()};
-setUpdates(p=>[…p,u]);
-setText(’’);
-if(supabase&&user.id!==‘demo’) await supabase.from(‘post_updates’).insert({post_id:post.id,user_id:user.id,content:text.trim()});
-setLoading(false);
-}
-
-if(!isOwner&&updates.length===0) return null;
-
-return (
-<div style={{marginBottom:20}}>
-<div style={{fontSize:12,fontWeight:700,textTransform:‘uppercase’,letterSpacing:’.1em’,color:‘var(–teal)’,marginBottom:12}}>
-📰 Updates from OP
-</div>
-{updates.map((u,i)=>(
-<div key={u.id} className="update-card">
-<div className="update-label">Update #{i+1} · {timeAgo(u.created_at)}</div>
-<p style={{fontSize:14,color:‘var(–text2)’,lineHeight:1.65}}>{u.content}</p>
-</div>
-))}
-{isOwner&&(
-<div style={{marginTop:12}}>
-<textarea className=“input” rows={3} style={{minHeight:76}} placeholder=“Add an update to your story… (only you can see this button)”
-value={text} onChange={e=>setText(e.target.value)}/>
-<button className="btn btn-teal" style={{marginTop:8}} onClick={add} disabled={!text.trim()||loading}>
-{loading?<span className="spinner"/>:‘📰 Post Update’}
-</button>
-</div>
-)}
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  POST DETAIL  */
-function PostDetail({post,user,onBack,onNeedAuth}){
-const [reactions,setReactions]=useState(post.reaction_counts||{});
-const [mine,setMine]=useState(null);
-
-if(!user) return (
-<div className="fade-up">
-<button className="back-btn" onClick={onBack}>← Back</button>
-<div className="card">
-<span className={`post-type-badge ${post.type}`}>{post.type===‘confession’?‘💔 Confession’:post.type===‘advice’?‘💬 Seeking Advice’:‘🌶 Hot Take’}</span>
-<h1 className="post-detail-title" style={{marginTop:10}}>{post.title}</h1>
-<div className="post-meta" style={{marginBottom:20}}>
-<span className="anon-name">@{post.anonymous_name}</span>
-<span className="post-meta-dot"/><span>{timeAgo(post.created_at)}</span>
-</div>
-<div className="blur-wrap" style={{maxHeight:110}}>
-<p className="post-detail-content">{post.content.slice(0,280)}…</p>
-</div>
-<Paywall onSignup={()=>onNeedAuth(‘signup’)} onLogin={()=>onNeedAuth(‘login’)}/>
-</div>
-</div>
-);
-
-function react(type){
-const prev=mine,r={…reactions};
-if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
-else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
-setReactions(r);
-}
-
-return (
-<div className="fade-up">
-<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘center’,marginBottom:4}}>
-<button className="back-btn" onClick={onBack} style={{margin:0}}>← Back to feed</button>
-<button style={{background:‘none’,border:‘none’,color:‘var(–text3)’,cursor:‘pointer’,fontSize:13,fontFamily:‘var(–font-body)’,display:‘flex’,alignItems:‘center’,gap:5}}
-onClick={()=>shareAsImage(post)}>↗ Share as image</button>
-</div>
-<div style={{marginBottom:14}} className="card">
-<div style={{display:‘flex’,justifyContent:‘space-between’,alignItems:‘flex-start’,marginBottom:14}}>
-<div style={{display:‘flex’,flexDirection:‘column’,gap:6}}>
-<span className={`post-type-badge ${post.type}`}>
-{post.type===‘confession’?‘💔 Confession’:post.type===‘advice’?‘💬 Seeking Advice’:‘🌶 Hot Take’}
-</span>
-{post.type===‘hot_take’&&(()=>{const t=hotTakeRemaining(post.created_at);return t?<span className="hot-timer">⏱ {t} left</span>:<span style={{fontSize:12,color:‘var(–text3)’}}>⏰ Expired</span>;})()}
-</div>
-<div style={{display:‘flex’,gap:6,flexWrap:‘wrap’,justifyContent:‘flex-end’}}>
-{post.tags?.map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
-</div>
-</div>
-<h1 className="post-detail-title">{post.title}</h1>
-<div className="post-meta" style={{marginBottom:20}}>
-<span className="anon-name">@{post.anonymous_name}</span>
-<span className="post-meta-dot"/><span>{timeAgo(post.created_at)}</span>
-<span className="post-meta-dot"/><span>💬 {(post.comment_count||0).toLocaleString()}</span>
-</div>
-<p className="post-detail-content">{post.content}</p>
-<div className="divider"/>
-<div className="post-reactions">
-{REACTIONS.map(r=>(
-<button key={r} className={`reaction-btn ${mine===r?'active':''}`} onClick={()=>react(r)}>
-{r} <span>{(reactions[r]||0).toLocaleString()}</span>
-</button>
-))}
-</div>
-</div>
-<StoryUpdates post={post} user={user}/>
-<VoteSection post={post} user={user} onNeedAuth={()=>onNeedAuth(‘signup’)}/>
-<Comments postId={post.id} postOwnerId={post.user_id} user={user} onNeedAuth={()=>onNeedAuth(‘signup’)}/>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  CREATE POST  */
-function CreatePost({user,onBack,onPost,addToast}){
-const [title,setTitle]=useState(’’);
-const [content,setContent]=useState(’’);
-const [type,setType]=useState(‘confession’);
-const [tags,setTags]=useState([]);
-const [loading,setLoading]=useState(false);
-
-function toggleTag(t){setTags(p=>p.includes(t)?p.filter(x=>x!==t):[…p,t].slice(0,3));}
-
-async function submit(){
-if(!title.trim()||!content.trim()){addToast(‘Please fill in title and story’,‘error’);return;}
-setLoading(true);
-const np={id:Date.now()+’’,title:title.trim(),content:content.trim(),type,tags,
-anonymous_name:user.anonymous_name,created_at:new Date().toISOString(),
-reaction_counts:{‘🔥’:0,‘😂’:0,‘😢’:0,‘😡’:0},comment_count:0,vote_a:0,vote_b:0,user_id:user.id};
-if(supabase&&user.id!==‘demo’){
-const{data,error}=await supabase.from(‘posts’).insert({title:np.title,content:np.content,type,tags,user_id:user.id}).select().single();
-if(error){addToast(error.message,‘error’);setLoading(false);return;}
-np.id=data.id;
-} else await new Promise(r=>setTimeout(r,600));
-const streak=bumpStreak();
-onPost(np);
-addToast(streak.count>1?`Posted! 🔥 ${streak.count}-day streak!`:‘Your confession was posted anonymously 💔’,‘success’);
-setLoading(false);
-}
-
-const typeOpts=[
-{id:‘confession’,icon:‘💔’,label:‘Confession’},
-{id:‘advice’,icon:‘💬’,label:‘Seeking Advice’},
-{id:‘hot_take’,icon:‘🌶’,label:‘Hot Take (48h)’},
-];
-
-return (
-<div className="fade-up">
-<button className="back-btn" onClick={onBack}>← Back</button>
-<div style={{marginBottom:24}}>
-<h1 style={{fontFamily:‘var(–font-display)’,fontSize:‘clamp(24px,6vw,32px)’,fontWeight:900,marginBottom:8}}>Share anonymously</h1>
-<p style={{color:‘var(–text2)’,fontSize:14}}>You’ll appear as <strong style={{color:‘var(–rose)’}}>@{user.anonymous_name}</strong></p>
-</div>
-<div className=“card” style={{display:‘flex’,flexDirection:‘column’,gap:18}}>
-<div>
-<label className="form-label">Post type</label>
-<div style={{display:‘flex’,gap:10,flexWrap:‘wrap’}}>
-{typeOpts.map(t=>(
-<button key={t.id} className={`btn ${type===t.id?'btn-primary':'btn-secondary'}`}
-onClick={()=>setType(t.id)} style={{flex:‘1 1 auto’,justifyContent:‘center’}}>
-{t.icon} {t.label}
-</button>
-))}
-</div>
-{type===‘hot_take’&&<p style={{fontSize:12,color:‘var(–amber)’,marginTop:8}}>⏱ Hot takes disappear from the feed after 48 hours. Debate fast.</p>}
-</div>
-<div>
-<label className="form-label">Title</label>
-<input className=“input” placeholder=“Give your story a title that stops the scroll…” value={title} onChange={e=>setTitle(e.target.value)} maxLength={120}/>
-<div style={{textAlign:‘right’,fontSize:12,color:‘var(–text3)’,marginTop:4}}>{title.length}/120</div>
-</div>
-<div>
-<label className="form-label">Your story</label>
-<textarea className=“input” rows={9} placeholder=“Share everything. Be honest. No one knows it’s you.” value={content} onChange={e=>setContent(e.target.value)}/>
-</div>
-<div>
-<label className="form-label">Tags <span style={{color:‘var(–text3)’}}>(up to 3)</span></label>
-<div style={{display:‘flex’,gap:8,flexWrap:‘wrap’}}>
-{ALL_TAGS.map(t=><button key={t} className={`pill ${tags.includes(t)?'active':''}`} onClick={()=>toggleTag(t)}>{t}</button>)}
-</div>
-</div>
-<button className=“btn btn-primary” onClick={submit} disabled={loading||!title.trim()||!content.trim()}
-style={{justifyContent:‘center’,padding:‘14px’,fontSize:15}}>
-{loading?<span className="spinner"/>:‘💔 Post anonymously’}
-</button>
-</div>
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  TRENDING  */
-function TrendingPage({posts,user,onOpen,onNeedAuth}){
-const [tab,setTab]=useState(‘hot’);
-let ranked;
-if(tab===‘hot’) ranked=[…posts].sort((a,b)=>feedScore(b)-feedScore(a));
-else if(tab===‘controversial’) ranked=[…posts].sort((a,b)=>controversialScore(b)-controversialScore(a)).filter(p=>(p.vote_a||0)+(p.vote_b||0)>0);
-else ranked=[…posts].sort((a,b)=>(b.comment_count||0)-(a.comment_count||0));
-
-return (
-<div>
-<div className="hero" style={{paddingTop:16}}>
-<div className="hero-eyebrow">📊 Charts</div>
-<h1 className="hero-title">Trending</h1>
-<p className="hero-sub">The most viral, debated and emotional confessions right now.</p>
-</div>
-<div className=“pills” style={{justifyContent:‘center’,marginBottom:24}}>
-{[{id:‘hot’,l:‘🔥 Hot’},{id:‘controversial’,l:‘⚡ Controversial’},{id:‘discussed’,l:‘💬 Most Discussed’}].map(t=>(
-<button key={t.id} className={`pill ${tab===t.id?'active':''}`} onClick={()=>setTab(t.id)}>{t.l}</button>
-))}
-</div>
-{ranked.map((post,i)=>{
-const pA=((post.vote_a||0)+( post.vote_b||0))>0?Math.round(((post.vote_a||0)/((post.vote_a||0)+(post.vote_b||0)))*100):50;
-return (
-<div key={post.id} className=“post-card” onClick={()=>onOpen(post)}
-style={{display:‘flex’,gap:16,alignItems:‘flex-start’,animationDelay:`${i*.05}s`}}>
-<div className={`trending-num ${i<3?'top':''}`}>#{i+1}</div>
-<div style={{flex:1}}>
-<div style={{display:‘flex’,justifyContent:‘space-between’,marginBottom:8,flexWrap:‘wrap’,gap:6}}>
-<span className={`post-type-badge ${post.type}`}>{post.type===‘confession’?‘💔’:post.type===‘advice’?‘💬’:‘🌶’} {post.type.replace(’_’,’ ’)}</span>
-<div style={{display:‘flex’,gap:6}}>
-{post.tags?.slice(0,1).map(t=><span key={t} className={`tag tag-${t}`}>{t}</span>)}
-</div>
-</div>
-<h3 className="post-title" style={{fontSize:16}}>{post.title}</h3>
-<div className="post-meta">
-<span>@{post.anonymous_name}</span>
-<span className="post-meta-dot"/>
-<span>💬 {(post.comment_count||0).toLocaleString()}</span>
-<span className="post-meta-dot"/>
-<span>🔥 {Object.values(post.reaction_counts||{}).reduce((s,v)=>s+v,0).toLocaleString()}</span>
-{tab===‘controversial’&&<><span className="post-meta-dot"/><span style={{color:‘var(–rose)’}}>{pA}% / {100-pA}%</span></>}
-</div>
-{tab===‘controversial’&&(
-<div className="controversy-bar">
-<div className=“controversy-fill-a” style={{width:`${pA}%`}}/>
-<div className=“controversy-fill-b” style={{width:`${100-pA}%`}}/>
-</div>
-)}
-</div>
-</div>
-);
-})}
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  PROFILE PAGE  */
-function ProfilePage({user,posts,onBack,addToast,onNeedAuth}){
-if(!user) return (
-<div style={{textAlign:‘center’,padding:‘80px 20px’}}>
-<div style={{fontSize:46,marginBottom:14}}>👤</div>
-<div className="section-title">Sign in to see your profile</div>
-<div style={{marginTop:20,display:‘flex’,gap:12,justifyContent:‘center’}}>
-<button className=“btn btn-primary” onClick={()=>onNeedAuth(‘signup’)}>Sign up free</button>
-<button className=“btn btn-secondary” onClick={()=>onNeedAuth(‘login’)}>Log in</button>
-</div>
-</div>
-);
-
-const myPosts=posts.filter(p=>p.user_id===user.id);
-const karma=calcKarma(myPosts);
-const streak=getStreak();
-const badges=getBadges(karma,myPosts,streak.count);
-const [showDelete,setShowDelete]=useState(false);
-const [delConfirm,setDelConfirm]=useState(’’);
-
-async function deleteAccount(){
-if(delConfirm!==‘DELETE’) return;
-if(supabase){
-await supabase.from(‘users’).delete().eq(‘id’,user.id);
-await supabase.auth.signOut();
-}
-localStorage.removeItem(‘hc_streak’);
-addToast(‘Account deleted. Take care of yourself. 💔’,‘info’);
-window.location.reload();
-}
-
-return (
-<div className="fade-up">
-<button className="back-btn" onClick={onBack}>← Back</button>
-<div style={{textAlign:‘center’,marginBottom:28}}>
-<div style={{width:64,height:64,borderRadius:‘50%’,background:‘linear-gradient(135deg,var(–rose),var(–violet))’,display:‘flex’,alignItems:‘center’,justifyContent:‘center’,fontSize:24,fontWeight:700,color:’#fff’,margin:‘0 auto 12px’}}>
-{user.anonymous_name?.charAt(0)}
-</div>
-<div style={{fontFamily:‘var(–font-display)’,fontSize:22,fontWeight:700}}>{user.anonymous_name}</div>
-<div style={{fontSize:13,color:‘var(–text3)’,marginTop:4}}>{user.email}</div>
-</div>
-
-```
-  <div className="stat-grid">
-    <div className="stat-box">
-      <div className="stat-num">{karma.toLocaleString()}</div>
-      <div className="stat-lbl">💜 Karma</div>
-    </div>
-    <div className="stat-box">
-      <div className="stat-num">{streak.count}</div>
-      <div className="stat-lbl">🔥 Streak</div>
-    </div>
-    <div className="stat-box">
-      <div className="stat-num">{myPosts.length}</div>
-      <div className="stat-lbl">📝 Posts</div>
-    </div>
-  </div>
-
-  {badges.length>0&&(
-    <div style={{marginBottom:24}}>
-      <div style={{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--text3)',marginBottom:12}}>Badges earned</div>
-      <div className="badge-row">
-        {badges.map(b=><div key={b.label} className="badge-chip">{b.icon} {b.label}</div>)}
-      </div>
-    </div>
-  )}
-
-  {myPosts.length>0&&(
-    <div style={{marginBottom:24}}>
-      <div className="section-header"><span className="section-title" style={{fontSize:18}}>My Confessions</span></div>
-      {myPosts.map(p=>(
-        <div key={p.id} className="card" style={{marginBottom:10}}>
-          <div style={{fontFamily:'var(--font-display)',fontSize:15,fontWeight:700,marginBottom:6}}>{p.title}</div>
-          <div className="post-meta">
-            <span>{timeAgo(p.created_at)}</span>
-            <span className="post-meta-dot"/>
-            <span>💬 {(p.comment_count||0)}</span>
-            <span className="post-meta-dot"/>
-            <span>🔥 {Object.values(p.reaction_counts||{}).reduce((s,v)=>s+v,0)}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  )}
-
-  <div className="divider"/>
-  <div style={{marginBottom:12}}>
-    <div style={{fontSize:13,fontWeight:600,color:'var(--text2)',marginBottom:12}}>Account</div>
-    {!showDelete?(
-      <button className="btn btn-secondary" style={{color:'#ef4444',borderColor:'rgba(239,68,68,.3)'}} onClick={()=>setShowDelete(true)}>
-        🗑 Delete account & data (GDPR)
-      </button>
-    ):(
-      <div className="card" style={{borderColor:'rgba(239,68,68,.25)'}}>
-        <p style={{fontSize:14,color:'var(--text2)',marginBottom:12}}>This permanently deletes your account and all data. Type <strong>DELETE</strong> to confirm.</p>
-        <input className="input" placeholder="Type DELETE" value={delConfirm} onChange={e=>setDelConfirm(e.target.value)} style={{marginBottom:10}}/>
-        <div style={{display:'flex',gap:10}}>
-          <button className="btn btn-danger" onClick={deleteAccount} disabled={delConfirm!=='DELETE'}>Confirm delete</button>
-          <button className="btn btn-ghost" onClick={()=>{setShowDelete(false);setDelConfirm('');}}>Cancel</button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
-```
-
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  ADMIN PANEL  */
-function AdminPanel({user,addToast}){
-const [reports,setReports]=useState([]);
-const [loading,setLoading]=useState(true);
-
-useEffect(()=>{
-if(!supabase) return;
-supabase.from(‘reports’).select(’*,posts(title),comments(content)’).order(‘created_at’,{ascending:false})
-.then(({data})=>{if(data) setReports(data);setLoading(false);});
-},[]);
-
-async function dismiss(id){
-setReports(p=>p.filter(r=>r.id!==id));
-if(supabase) await supabase.from(‘reports’).delete().eq(‘id’,id);
-addToast(‘Report dismissed’,‘success’);
-}
-async function remove(report){
-if(supabase){
-if(report.post_id) await supabase.from(‘posts’).delete().eq(‘id’,report.post_id);
-if(report.comment_id) await supabase.from(‘comments’).delete().eq(‘id’,report.comment_id);
-await supabase.from(‘reports’).delete().eq(‘id’,report.id);
-}
-setReports(p=>p.filter(r=>r.id!==report.id));
-addToast(‘Content removed’,‘success’);
-}
-
-return (
-<div className="fade-up">
-<button style={{background:‘none’,border:‘none’,color:‘var(–text2)’,cursor:‘pointer’,fontFamily:‘var(–font-body)’,fontSize:14,marginBottom:20,display:‘flex’,alignItems:‘center’,gap:7}} onClick={()=>window.history.back()}>← Back</button>
-<div style={{marginBottom:24}}>
-<h1 style={{fontFamily:‘var(–font-display)’,fontSize:28,fontWeight:900}}>Admin Panel</h1>
-<p style={{color:‘var(–text2)’,fontSize:14}}>Moderation queue · {reports.length} open reports</p>
-</div>
-{loading?<div style={{display:‘flex’,justifyContent:‘center’,padding:40}}><span className="spinner" style={{width:32,height:32}}/></div>
-:reports.length===0?(<div className="empty-state"><div className="empty-icon">✅</div><div className="empty-title">Queue clear</div><p>No pending reports.</p></div>)
-:reports.map(r=>(
-<div key={r.id} className="admin-report">
-<div style={{flex:1}}>
-<div style={{fontSize:12,color:‘var(–rose)’,fontWeight:700,marginBottom:6,textTransform:‘uppercase’}}>
-{r.reason}
-</div>
-<p style={{fontSize:14,color:‘var(–text2)’,marginBottom:6}}>
-{r.posts?.title||r.comments?.content||‘Content unavailable’}
-</p>
-<div style={{fontSize:12,color:‘var(–text3)’}}>{timeAgo(r.created_at)}</div>
-</div>
-<div style={{display:‘flex’,gap:8,flexShrink:0,flexDirection:‘column’}}>
-<button className=“btn btn-secondary” style={{padding:‘6px 12px’,fontSize:12}} onClick={()=>dismiss(r.id)}>Dismiss</button>
-<button className=“btn btn-danger” style={{padding:‘6px 12px’,fontSize:12}} onClick={()=>remove(r)}>Remove</button>
-</div>
-</div>
-))}
-</div>
-);
-}
-
-/* ═══════════════════════════════════════════════════════════════  MAIN APP  */
-function App(){
-const [user,setUser]=useState(null);
-const [page,setPage]=useState(‘home’);
-const [posts,setPosts]=useState(DEMO_POSTS);
-const [active,setActive]=useState(null);
-const [tagFilter,setTagFilter]=useState(‘all’);
-const [auth,setAuth]=useState(null);
-const [toasts,setToasts]=useState([]);
-const [loading,setLoading]=useState(false);
-const [showPro,setShowPro]=useState(false);
-const streak=getStreak();
-
-function addToast(msg,type=‘info’){
-const id=Date.now();
-setToasts(p=>[…p,{id,msg,type}]);
-setTimeout(()=>setToasts(p=>p.filter(t=>t.id!==id)),3600);
-}
-
-/* Supabase session */
-useEffect(()=>{
-if(!supabase) return;
-supabase.auth.getSession().then(({data:{session}})=>{
-if(session?.user)
-supabase.from(‘users’).select(’*’).eq(‘id’,session.user.id).single()
-.then(({data})=>setUser({…session.user,anonymous_name:data?.anonymous_name}));
-});
-supabase.auth.onAuthStateChange(ev=>{if(ev===‘SIGNED_OUT’) setUser(null);});
-},[]);
-
-/* Load posts */
-useEffect(()=>{
-if(!supabase) return;
-setLoading(true);
-supabase.from(‘posts’).select(’*,users(anonymous_name)’).order(‘created_at’,{ascending:false}).limit(60)
-.then(({data})=>{
-if(data?.length) setPosts(data.map(p=>({…p,anonymous_name:p.users?.anonymous_name})));
-setLoading(false);
-});
-},[]);
-
-/* Realtime new posts */
-useEffect(()=>{
-if(!supabase) return;
-const ch=supabase.channel(‘feed-posts’)
-.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘posts’},async p=>{
-const{data:u}=await supabase.from(‘users’).select(‘anonymous_name’).eq(‘id’,p.new.user_id).single();
-setPosts(prev=>[{…p.new,anonymous_name:u?.anonymous_name,reaction_counts:{},comment_count:0,vote_a:0,vote_b:0},…prev]);
-}).subscribe();
-return()=>supabase.removeChannel(ch);
-},[]);
-
-function handleAuth(u){
-setUser(u); setAuth(null);
-bumpStreak();
-addToast(`Welcome, @${u.anonymous_name}! 💔`,‘success’);
-}
-function logout(){
-if(supabase) supabase.auth.signOut();
-setUser(null); setPage(‘home’);
-addToast(‘Logged out. Your secrets are safe.’,‘info’);
-}
-function openPost(post){setActive(post);setPage(‘detail’);window.scrollTo({top:0,behavior:‘smooth’});}
-function handleNewPost(post){setPosts(p=>[post,…p]);setPage(‘home’);}
-function needAuth(mode=‘signup’){setAuth(mode);}
-
-/* Feed filtering + ranking */
-function getFeed(){
-let f=page===‘confessions’?posts.filter(p=>p.type===‘confession’)
-:page===‘advice’?posts.filter(p=>p.type===‘advice’)
-:posts;
-if(tagFilter!==‘all’) f=f.filter(p=>p.tags?.includes(tagFilter));
-// Boosted posts first, then ranked
-const boosted=f.filter(p=>p.boosted);
-const rest=[…f.filter(p=>!p.boosted)].sort((a,b)=>feedScore(b)-feedScore(a));
-return […boosted,…rest];
-}
-
-const feed=getFeed();
-const isFeed=[‘home’,‘confessions’,‘advice’].includes(page);
-const titles={home:‘Latest Stories’,confessions:‘Confessions’,advice:‘Seeking Advice’};
-const isAdmin=user?.email===ADMIN_EMAIL;
-
-const navTabs=[
-{id:‘home’,label:‘Home’},
-{id:‘confessions’,label:‘Confessions’},
-{id:‘advice’,label:‘Advice’},
-{id:‘trending’,label:‘🔥 Trending’},
-{id:‘profile’,label:‘👤 Profile’},
-…(isAdmin?[{id:‘admin’,label:‘🛡 Admin’}]:[]),
-];
-
-return (
-<ErrorBoundary>
-{/* NAV */}
-<nav className="nav">
-<div className=“nav-logo” onClick={()=>{setPage(‘home’);setActive(null);}}>💔 HC</div>
-<div className="nav-tabs">
-{navTabs.map(tab=>(
-<button key={tab.id} className={`nav-tab ${page===tab.id?'active':''}`}
-onClick={()=>{setPage(tab.id);setActive(null);}}>
-{tab.label}
-</button>
-))}
-</div>
-<div style={{display:‘flex’,alignItems:‘center’,gap:8,flexShrink:0}}>
-{user&&streak.count>0&&(
-<div className=“streak-chip” onClick={()=>setPage(‘profile’)} title=“Your posting streak”>
-🔥{streak.count}
-</div>
-)}
-{user&&<NotifBell user={user}/>}
-{user?(
-<>
-<button className=“btn btn-primary” style={{padding:‘7px 12px’,fontSize:13}} onClick={()=>setPage(‘create’)}>+ Post</button>
-<button className=“btn btn-ghost” style={{fontSize:12,padding:‘6px 10px’}} onClick={logout}>Out</button>
-</>
-):(
-<>
-<button className=“btn btn-ghost” style={{fontSize:12}} onClick={()=>setAuth(‘login’)}>Login</button>
-<button className=“btn btn-primary” style={{padding:‘7px 12px’,fontSize:13}} onClick={()=>setAuth(‘signup’)}>Join free</button>
-</>
-)}
-</div>
-</nav>
-
-```
-  {/* MAIN */}
-  <div className="layout">
-    <div className="layout-center">
-
-      {/* CONFIG NOTICE */}
-      {!IS_CFG&&isFeed&&(
-        <div className="config-notice">
-          <strong>⚙️ Demo mode</strong> — replace <code>SUPABASE_URL</code> and <code>SUPABASE_KEY</code> to connect your backend. Auth is simulated, feed algorithm is live.
-        </div>
-      )}
-
-      {/* DETAIL */}
-      {page==='detail'&&active&&(
-        <PostDetail post={active} user={user} onBack={()=>{setPage('home');setActive(null);}} onNeedAuth={needAuth}/>
-      )}
-
-      {/* FEED */}
-      {isFeed&&(
-        <div>
-          {page==='home'&&(
-            <div className="hero">
-              <div className="hero-eyebrow">anonymous · safe · real</div>
-              <h1 className="hero-title">HeartConfia</h1>
-              <p className="hero-sub">Share the stories you've never told anyone. No names. No judgment. Just hearts.</p>
-              {user?(
-                <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
-                  <button className="btn btn-primary" onClick={()=>setPage('create')}>💔 Share your confession</button>
-                  <button className="btn btn-secondary" onClick={()=>setShowPro(true)}>💎 Go Pro</button>
-                </div>
-              ):(
-                <div style={{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}}>
-                  <button className="btn btn-primary" onClick={()=>setAuth('signup')}>Join anonymously</button>
-                  <button className="btn btn-secondary" onClick={()=>setAuth('login')}>Log in</button>
-                </div>
-              )}
-            </div>
-          )}
-          {page!=='home'&&(
-            <div className="section-header">
-              <h2 className="section-title">{titles[page]}</h2>
-              <span className="section-badge">{feed.length}</span>
-            </div>
-          )}
-          <div className="pills">
-            {['all',...ALL_TAGS].map(t=>(
-              <button key={t} className={`pill ${tagFilter===t?'active':''}`} onClick={()=>setTagFilter(t)}>
-                {t==='all'?'All stories':t}
-              </button>
-            ))}
-          </div>
-          {user&&(
-            <div className="create-prompt-bar" onClick={()=>setPage('create')}>
-              <div className="avatar">{user.anonymous_name?.charAt(0)}</div>
-              <span className="create-prompt-text">Something's weighing on you. Share it as <strong style={{color:'var(--text2)'}}>@{user.anonymous_name}</strong>…</span>
-            </div>
-          )}
-          {loading?(
-            <div style={{display:'flex',justifyContent:'center',padding:'60px 0'}}><span className="spinner" style={{width:36,height:36}}/></div>
-          ):feed.length===0?(
-            <div className="empty-state"><div className="empty-icon">🕊️</div><div className="empty-title">Nothing here yet</div><p>Be the first to share.</p></div>
-          ):feed.map((post,i)=>(
-            <PostCard key={post.id} post={post} user={user}
-              onClick={()=>openPost(post)} onNeedAuth={needAuth} delay={Math.min(i*.05,.3)}/>
-          ))}
-        </div>
-      )}
-
-      {/* TRENDING */}
-      {page==='trending'&&<TrendingPage posts={posts} user={user} onOpen={openPost} onNeedAuth={needAuth}/>}
-
-      {/* CREATE */}
-      {page==='create'&&(
-        user
-          ?<CreatePost user={user} onBack={()=>setPage('home')} onPost={handleNewPost} addToast={addToast}/>
-          :<div style={{textAlign:'center',padding:'80px 20px'}}>
-            <div style={{fontSize:46,marginBottom:14}}>🔒</div>
-            <div className="section-title">Sign in to share your confession</div>
-            <div style={{marginTop:20,display:'flex',gap:12,justifyContent:'center'}}>
-              <button className="btn btn-primary" onClick={()=>setAuth('signup')}>Sign up free</button>
-              <button className="btn btn-secondary" onClick={()=>setAuth('login')}>Log in</button>
-            </div>
-          </div>
-      )}
-
-      {/* PROFILE */}
-      {page==='profile'&&<ProfilePage user={user} posts={posts} onBack={()=>setPage('home')} addToast={addToast} onNeedAuth={needAuth}/>}
-
-      {/* ADMIN */}
-      {page==='admin'&&isAdmin&&<AdminPanel user={user} addToast={addToast}/>}
-
-    </div>
-  </div>
-
-  {/* MODALS */}
-  {auth&&<AuthModal initMode={auth} onClose={()=>setAuth(null)} onAuth={handleAuth}/>}
-  {showPro&&<ProModal onClose={()=>setShowPro(false)}/>}
-  <ToastStack toasts={toasts}/>
-</ErrorBoundary>
-```
-
-);
-}
-
-ReactDOM.createRoot(document.getElementById(‘root’)).render(<App/>);
+<div id="root"><div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px"><div style="width:36px;height:36px;border:3px solid rgba(255,77,109,.3);border-top-color:#ff4d6d;border-radius:50%;animation:spin .7s linear infinite"></div><p style="color:#9a96b4;font-size:14px;font-family:sans-serif">Loading HeartConfia…</p></div></div>
+
+<script>
+/* ── Load React + Supabase, then boot app ── */
+(function(){
+  var scripts=[
+    'https://unpkg.com/react@18/umd/react.production.min.js',
+    'https://unpkg.com/react-dom@18/umd/react-dom.production.min.js',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
+  ];
+  var loaded=0;
+  function next(){
+    if(loaded>=scripts.length){bootApp();return;}
+    var s=document.createElement('script');
+    s.src=scripts[loaded++];
+    s.onload=next;
+    s.onerror=function(){console.error('Failed to load',s.src);next();};
+    document.head.appendChild(s);
+  }
+  next();
+})();
 </script>
 
-<!--
-╔══════════════════════════════════════════════════════════════════════╗
-║           SUPABASE SQL SCHEMA v2  —  paste into SQL Editor          ║
-╚══════════════════════════════════════════════════════════════════════╝
+<script id="app-source" type="text/plain">
+/* APP SOURCE — parsed and evaled after deps load */
+BOOT_PLACEHOLDER
+</script>
 
--- Extensions
-create extension if not exists "uuid-ossp";
+<script>
+function bootApp(){
+  try{
+    /* ─── CONFIG ─────────────────────────────────────────────── */
+    var SUPABASE_URL  = 'https://rihritdkzvmqoeckleud.supabase.co';
+    /* ⚠️  Paste your ANON (public) key below — NOT the service role key.
+       Find it: Supabase Dashboard → Settings → API → anon / public key     */
+    var SUPABASE_KEY  = 'PASTE_YOUR_ANON_KEY_HERE';
+    var ADMIN_EMAIL   = 'netlifesocaial@gmail.com';
+    var HOT_TTL       = 48*3600*1000;
 
--- Users
-create table public.users (
-  id             uuid references auth.users(id) on delete cascade primary key,
-  email          text not null,
-  anonymous_name text not null unique,
-  is_pro         boolean default false,
-  created_at     timestamptz default now()
-);
+    var IS_CFG = SUPABASE_KEY !== 'PASTE_YOUR_ANON_KEY_HERE';
+    var sb = IS_CFG ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
--- Posts
-create table public.posts (
-  id         uuid default uuid_generate_v4() primary key,
-  user_id    uuid references public.users(id) on delete cascade not null,
-  title      text not null,
-  content    text not null,
-  type       text not null check (type in ('confession','advice','hot_take')),
-  tags       text[] default '{}',
-  boosted    boolean default false,
-  created_at timestamptz default now()
-);
+    /* ─── UTILS ─────────────────────────────────────────────── */
+    var {useState,useEffect,useRef,useCallback,Component} = React;
+    var h = React.createElement;
 
--- Comments
-create table public.comments (
-  id         uuid default uuid_generate_v4() primary key,
-  post_id    uuid references public.posts(id) on delete cascade not null,
-  user_id    uuid references public.users(id) on delete cascade not null,
-  content    text not null,
-  upvotes    int default 0,
-  created_at timestamptz default now()
-);
+    function ago(iso){
+      var s=(Date.now()-new Date(iso).getTime())/1000;
+      if(s<60) return 'just now';
+      if(s<3600) return Math.floor(s/60)+'m ago';
+      if(s<86400) return Math.floor(s/3600)+'h ago';
+      return Math.floor(s/86400)+'d ago';
+    }
+    function makeName(){
+      var p=['Heart','Confess','Soul','Echo','Ache','Muse','Pulse','Veil'];
+      return p[Math.floor(Math.random()*p.length)]+'_'+Math.floor(1000+Math.random()*9000);
+    }
+    function feedScore(p){
+      var rx=Object.values(p.reaction_counts||{}).reduce(function(a,v){return a+v},0);
+      var eng=rx+(p.comment_count||0)*2.5+((p.vote_a||0)+(p.vote_b||0))*1.5;
+      var age=(Date.now()-new Date(p.created_at).getTime())/3600000;
+      return eng/Math.pow(age+2,1.8);
+    }
+    function controversyScore(p){
+      var tot=(p.vote_a||0)+(p.vote_b||0);
+      if(tot<5) return 0;
+      return Math.pow(tot,1.5)/(Math.abs((p.vote_a||0)-(p.vote_b||0))+1);
+    }
+    function hotLeft(created){
+      var rem=new Date(created).getTime()+HOT_TTL-Date.now();
+      if(rem<=0) return null;
+      return Math.floor(rem/3600000)+'h '+Math.floor((rem%3600000)/60000)+'m';
+    }
+    function getStreak(){
+      try{return JSON.parse(localStorage.getItem('hc_sk')||'{"count":0,"last":""}');}
+      catch(e){return{count:0,last:''};}
+    }
+    function bumpStreak(){
+      var today=new Date().toDateString();
+      var d=getStreak();
+      if(d.last===today) return d;
+      var nd={count:d.last===new Date(Date.now()-86400000).toDateString()?d.count+1:1,last:today};
+      localStorage.setItem('hc_sk',JSON.stringify(nd));
+      return nd;
+    }
+    function calcKarma(myPosts){
+      return myPosts.reduce(function(k,p){
+        return k+Object.values(p.reaction_counts||{}).reduce(function(a,v){return a+v},0)+(p.comment_count||0)+10;
+      },0);
+    }
+    function getBadges(karma,myPosts,streak){
+      var b=[];
+      if(myPosts.length>=1) b.push({i:'🌱',l:'First Confession'});
+      if(karma>=50) b.push({i:'⭐',l:'Rising Star'});
+      if(karma>=250) b.push({i:'🔥',l:'On Fire'});
+      if(karma>=1000) b.push({i:'👑',l:'Legend'});
+      if(streak>=3) b.push({i:'📅',l:'Dedicated'});
+      if(streak>=7) b.push({i:'🏆',l:'Week Warrior'});
+      if(myPosts.some(function(p){return (p.comment_count||0)>=20;})) b.push({i:'💬',l:'Conversation Starter'});
+      return b;
+    }
+    function shareImg(post){
+      var W=1200,H=630,cv=document.createElement('canvas');
+      cv.width=W;cv.height=H;
+      var ctx=cv.getContext('2d');
+      ctx.fillStyle='#0a0a0f';ctx.fillRect(0,0,W,H);
+      var g=ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,'rgba(255,77,109,0.18)');g.addColorStop(1,'rgba(124,58,237,0.12)');
+      ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#ff4d6d';ctx.fillRect(0,0,W,5);
+      ctx.font='bold 26px Georgia,serif';ctx.fillStyle='#ff4d6d';ctx.fillText('💔 HeartConfia',56,68);
+      ctx.font='bold 44px Georgia,serif';ctx.fillStyle='#f0eef8';
+      var words=post.title.split(' '),lines=[],cur='';
+      words.forEach(function(w){var t=cur?cur+' '+w:w;if(ctx.measureText(t).width>1080){lines.push(cur);cur=w;}else{cur=t;}});
+      if(cur)lines.push(cur);
+      lines.slice(0,2).forEach(function(l,i){ctx.fillText(l,56,148+i*56);});
+      ctx.font='24px sans-serif';ctx.fillStyle='#9a96b4';
+      var sy=148+Math.min(lines.length,2)*56+28;
+      var cl=post.content.replace(/\n/g,' ').split(' ');
+      var cl2=[],cc='';
+      cl.forEach(function(w){var t=cc?cc+' '+w:w;if(ctx.measureText(t).width>1080){cl2.push(cc);cc=w;}else{cc=t;}});
+      if(cc)cl2.push(cc);
+      cl2.slice(0,3).forEach(function(l,i){ctx.fillText(l,56,sy+i*34);});
+      ctx.font='bold 17px sans-serif';ctx.fillStyle='#5e5a78';
+      var rx=Object.values(post.reaction_counts||{}).reduce(function(a,v){return a+v},0);
+      ctx.fillText(rx.toLocaleString()+' reactions · '+(post.comment_count||0)+' comments · @'+post.anonymous_name,56,558);
+      ctx.font='15px sans-serif';ctx.fillStyle='#3a3a5c';
+      ctx.fillText('heartconfia.com — anonymous relationship confessions',56,598);
+      cv.toBlob(function(blob){
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');a.href=url;a.download='confession.png';a.click();URL.revokeObjectURL(url);
+      });
+    }
 
--- Reactions
-create table public.reactions (
-  id         uuid default uuid_generate_v4() primary key,
-  post_id    uuid references public.posts(id) on delete cascade not null,
-  user_id    uuid references public.users(id) on delete cascade not null,
-  type       text not null check (type in ('🔥','😂','😢','😡')),
-  created_at timestamptz default now(),
-  unique(post_id, user_id, type)
-);
+    /* ─── DEMO DATA ─────────────────────────────────────────── */
+    var DPOSTS=[
+      {id:'1',type:'confession',title:"I've been in love with my best friend's husband for 3 years",
+       content:"I know how this sounds. I hate myself for it.\n\nBut every time I see them together, something breaks inside me a little. He doesn't know. She doesn't know. I carry this alone every single day — smiling at their anniversary photos, quietly unravelling inside.\n\nI've tried dating other people, therapy, even moving cities. Nothing cuts through this feeling. Has anyone ever loved someone they absolutely cannot have and found a way to be okay?",
+       tags:['situationship'],anonymous_name:'Heart_4821',created_at:new Date(Date.now()-2*3600000).toISOString(),
+       reaction_counts:{'🔥':847,'😂':12,'😢':1203,'😡':45},comment_count:234,vote_a:312,vote_b:589,user_id:'u1'},
+      {id:'2',type:'advice',title:"My boyfriend read all my messages and called me dramatic for confronting him",
+       content:"We've been together 2 years. Last week I caught him scrolling my DMs. When I said something, he flipped it — claimed I'd 'given him reason to be suspicious' because I was texting my ex about returning a book.\n\nNo apology. He listed every time I 'acted weird.' I feel violated and gaslit.\n\nHe says every couple does this. Am I wrong to feel this way?",
+       tags:['dating'],anonymous_name:'Confess_7732',created_at:new Date(Date.now()-5*3600000).toISOString(),
+       reaction_counts:{'🔥':432,'😂':23,'😢':567,'😡':1890},comment_count:456,vote_a:1203,vote_b:87,user_id:'u2'},
+      {id:'3',type:'confession',title:"I said yes to a marriage proposal I didn't mean",
+       content:"He cried. His whole family was there — parents, siblings, cousins with phones out. I panicked and said yes.\n\nThat was four months ago. I've been wearing a ring that feels like a lie every single day. I care about him deeply — just not the way you're supposed to care about the person you're going to marry.\n\nI don't know how to undo this without destroying him.",
+       tags:['marriage','breakup'],anonymous_name:'Heart_9023',created_at:new Date(Date.now()-24*3600000).toISOString(),
+       reaction_counts:{'🔥':2341,'😂':67,'😢':3102,'😡':234},comment_count:892,vote_a:445,vote_b:1876,user_id:'u3'},
+      {id:'4',type:'hot_take',title:"Hot take: staying in a relationship out of comfort is more honest than leaving",
+       content:"Everyone celebrates 'having the courage to leave.' But choosing to stay — even when the butterflies are gone — is its own kind of maturity that nobody talks about.\n\nReal love isn't a feeling. It's a decision you make every morning even when you don't feel it. Fight me.",
+       tags:['dating'],anonymous_name:'Confess_3341',created_at:new Date(Date.now()-3*3600000).toISOString(),
+       reaction_counts:{'🔥':5678,'😂':89,'😢':421,'😡':1923},comment_count:1203,vote_a:876,vote_b:2134,user_id:'u4'},
+      {id:'5',type:'advice',title:"She said she loves me but isn't 'in love' with me. Is there any coming back?",
+       content:"Together 3.5 years. Last night she told me she loves me as a person but doesn't feel 'in love' anymore. She doesn't want to break up, but she doesn't know what she wants.\n\nI'm sitting here not knowing whether to fight for us or start grieving quietly.\n\nHas anyone come back from that specific conversation?",
+       tags:['dating','situationship'],anonymous_name:'Heart_6612',created_at:new Date(Date.now()-6*3600000).toISOString(),
+       reaction_counts:{'🔥':1234,'😂':34,'😢':2876,'😡':156},comment_count:678,vote_a:543,vote_b:987,user_id:'u5'},
+    ];
+    var DCOMS={
+      '1':[
+        {id:'c1',anonymous_name:'Confess_5512',content:"I was in this situation for 5 years. The only thing that helped was real, sustained distance. Moved countries eventually. Took two years to feel okay. You will survive this.",created_at:new Date(Date.now()-30*60000).toISOString(),upvotes:234,user_id:'u6'},
+        {id:'c2',anonymous_name:'Heart_8821',content:"You're not a bad person. Feelings don't follow rules. The fact that you're in pain about it says a lot about who you are.",created_at:new Date(Date.now()-3600000).toISOString(),upvotes:567,user_id:'u7'},
+        {id:'c3',anonymous_name:'Confess_2201',content:"'Quietly unravelling inside' hit me hard. I lived this. I know. You will be okay.",created_at:new Date(Date.now()-7200000).toISOString(),upvotes:891,user_id:'u8'},
+      ],
+      '2':[
+        {id:'c4',anonymous_name:'Heart_3391',content:"What he did is textbook DARVO — Deny, Attack, Reverse Victim and Offender. The moment he made you the problem, the conversation became about control, not trust.",created_at:new Date(Date.now()-45*60000).toISOString(),upvotes:1203,user_id:'u9'},
+        {id:'c5',anonymous_name:'Confess_7718',content:"You are absolutely not overreacting. Privacy invasion + gaslighting in one breath tells you everything you need to know.",created_at:new Date(Date.now()-90*60000).toISOString(),upvotes:876,user_id:'u10'},
+      ],
+    };
+    var TAGS=['cheating','breakup','dating','marriage','situationship'];
+    var RX=['🔥','😂','😢','😡'];
+    var REASONS=['Harmful content','Harassment','Spam','Fake story','Self-promotion','Other'];
+    var TAG_CLS={cheating:'tc',breakup:'tb',dating:'td',marriage:'tm',situationship:'ts'};
 
--- Votes
-create table public.votes (
-  id         uuid default uuid_generate_v4() primary key,
-  post_id    uuid references public.posts(id) on delete cascade not null,
-  user_id    uuid references public.users(id) on delete cascade not null,
-  vote_type  text not null check (vote_type in ('A','B')),
-  created_at timestamptz default now(),
-  unique(post_id, user_id)
-);
+    /* ─── TOAST ─────────────────────────────────────────────── */
+    function Toasts(p){
+      return h('div',{className:'twrap'},p.items.map(function(t){
+        return h('div',{key:t.id,className:'toast '+(t.type==='success'?'suc':t.type==='error'?'er':'')},
+          h('span',null,t.type==='success'?'✅':t.type==='error'?'❌':'💬'),t.msg);
+      }));
+    }
 
--- Notifications (in-app)
-create table public.notifications (
-  id         uuid default uuid_generate_v4() primary key,
-  user_id    uuid references public.users(id) on delete cascade not null,
-  type       text not null,  -- 'comment' | 'reaction' | 'vote' | 'trending' | 'reply'
-  post_id    uuid references public.posts(id) on delete cascade,
-  actor_name text,
-  message    text not null,
-  read       boolean default false,
-  created_at timestamptz default now()
-);
+    /* ─── AUTH MODAL ────────────────────────────────────────── */
+    function AuthModal(p){
+      var _=useState(p.initMode||'login');var mode=_[0];var setMode=_[1];
+      var em=useState('');var email=em[0];var setEmail=em[1];
+      var pw=useState('');var pass=pw[0];var setPass=pw[1];
+      var ld=useState(false);var loading=ld[0];var setLoading=ld[1];
+      var er=useState('');var err=er[0];var setErr=er[1];
+      var ok=useState('');var done=ok[0];var setDone=ok[1];
 
--- Reports
-create table public.reports (
-  id          uuid default uuid_generate_v4() primary key,
-  reporter_id uuid references public.users(id) on delete cascade not null,
-  post_id     uuid references public.posts(id) on delete cascade,
-  comment_id  uuid references public.comments(id) on delete cascade,
-  reason      text not null,
-  created_at  timestamptz default now()
-);
+      function sw(m){setMode(m);setErr('');setDone('');}
 
--- Post updates (OP continue the story)
-create table public.post_updates (
-  id         uuid default uuid_generate_v4() primary key,
-  post_id    uuid references public.posts(id) on delete cascade not null,
-  user_id    uuid references public.users(id) on delete cascade not null,
-  content    text not null,
-  created_at timestamptz default now()
-);
+      async function submit(){
+        setErr('');setLoading(true);
+        if(!IS_CFG){
+          await new Promise(function(r){setTimeout(r,700);});
+          p.onAuth({id:'demo',email:email,anonymous_name:makeName()});
+          setLoading(false);return;
+        }
+        try{
+          if(mode==='reset'){
+            var r1=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+            if(r1.error) throw r1.error;
+            setDone('Reset link sent! Check your inbox 📧');
+          } else if(mode==='signup'){
+            var r2=await sb.auth.signUp({email:email,password:pass});
+            if(r2.error) throw r2.error;
+            if(r2.data.user){
+              var name=makeName();
+              await sb.from('users').insert({id:r2.data.user.id,email:email,anonymous_name:name});
+              setDone('Check your inbox to verify your account 💌');
+            }
+          } else {
+            var r3=await sb.auth.signInWithPassword({email:email,password:pass});
+            if(r3.error) throw r3.error;
+            var pr=await sb.from('users').select('*').eq('id',r3.data.user.id).single();
+            p.onAuth(Object.assign({},r3.data.user,{anonymous_name:pr.data&&pr.data.anonymous_name||makeName()}));
+          }
+        }catch(e){setErr(e.message);}
+        setLoading(false);
+      }
 
--- RLS
-alter table public.users       enable row level security;
-alter table public.posts       enable row level security;
-alter table public.comments    enable row level security;
-alter table public.reactions   enable row level security;
-alter table public.votes       enable row level security;
-alter table public.notifications enable row level security;
-alter table public.reports     enable row level security;
-alter table public.post_updates enable row level security;
+      return h('div',{className:'mov',onClick:function(e){if(e.target===e.currentTarget)p.onClose();}},
+        h('div',{className:'mod'},
+          h('button',{className:'mclose',onClick:p.onClose},'✕'),
+          h('div',{style:{fontFamily:'var(--fd)',fontSize:26,fontWeight:900,color:'var(--rose)',textAlign:'center',marginBottom:6}},'💔 HeartConfia'),
+          h('p',{style:{textAlign:'center',color:'var(--tx2)',fontSize:14,marginBottom:22}},
+            mode==='login'?'Your secrets are safe here.':mode==='signup'?'Share anonymously. Feel less alone.':'Reset your password.'),
+          mode!=='reset'&&h('div',{className:'mtabs'},
+            h('button',{className:'mtab '+(mode==='login'?'on':''),onClick:function(){sw('login');}},'Log in'),
+            h('button',{className:'mtab '+(mode==='signup'?'on':''),onClick:function(){sw('signup');}},'Sign up')),
+          done?h('div',{style:{textAlign:'center',padding:'20px 0',color:'var(--teal)',fontSize:15,lineHeight:1.6}},done)
+            :h('div',{style:{display:'flex',flexDirection:'column',gap:14}},
+              h('div',null,h('label',{className:'flbl'},'Email'),
+                h('input',{className:'inp',type:'email',placeholder:'your@email.com',value:email,onChange:function(e){setEmail(e.target.value);}})),
+              mode!=='reset'&&h('div',null,h('label',{className:'flbl'},'Password'),
+                h('input',{className:'inp',type:'password',placeholder:'••••••••',value:pass,
+                  onChange:function(e){setPass(e.target.value);},
+                  onKeyDown:function(e){if(e.key==='Enter')submit();}})),
+              err&&h('p',{className:'err'},err),
+              h('button',{className:'btn bp',onClick:submit,disabled:loading||!email||(mode!=='reset'&&!pass),
+                style:{width:'100%',justifyContent:'center',padding:'14px'}},
+                loading?h('span',{className:'spin'}):mode==='login'?'Log in':mode==='signup'?'Create account':'Send reset link'),
+              mode==='login'&&h('button',{style:{background:'none',border:'none',color:'var(--tx3)',fontSize:13,cursor:'pointer',textAlign:'center',fontFamily:'var(--fb)'},onClick:function(){sw('reset');}},'Forgot password?'),
+              mode==='reset'&&h('button',{className:'btn bg',style:{justifyContent:'center'},onClick:function(){sw('login');}},'← Back to login')),
+          h('div',{className:'mswitch'},
+            mode==='login'?[h('span',{key:'t'},"Don't have an account? "),h('button',{key:'b',onClick:function(){sw('signup');}},'Sign up free')]
+              :mode==='signup'?[h('span',{key:'t'},'Already have an account? '),h('button',{key:'b',onClick:function(){sw('login');}},'Log in')]:null)));
+    }
 
--- Policies
-create policy "read users"       on public.users       for select using (true);
-create policy "insert own user"  on public.users       for insert with check (auth.uid()=id);
-create policy "update own user"  on public.users       for update using (auth.uid()=id);
-create policy "delete own user"  on public.users       for delete using (auth.uid()=id);
+    /* ─── PAYWALL ────────────────────────────────────────────── */
+    function Paywall(p){
+      return h('div',{className:'pw'},
+        h('div',{style:{fontSize:30,marginBottom:8}},'💔'),
+        h('div',{style:{fontFamily:'var(--fd)',fontSize:17,fontWeight:700,color:'var(--tx)',marginBottom:6}},'Continue reading this confession'),
+        h('p',{style:{fontSize:13,color:'var(--tx2)',marginBottom:16}},'Free account — your identity always stays anonymous.'),
+        h('div',{style:{display:'flex',gap:10,justifyContent:'center',flexWrap:'wrap'}},
+          h('button',{className:'btn bp',onClick:p.onSignup},'Sign up free'),
+          h('button',{className:'btn bs',onClick:p.onLogin},'Log in')));
+    }
 
-create policy "read posts"       on public.posts       for select using (true);
-create policy "insert post"      on public.posts       for insert with check (auth.uid()=user_id);
-create policy "delete own post"  on public.posts       for delete using (auth.uid()=user_id);
+    /* ─── NOTIFICATIONS ─────────────────────────────────────── */
+    function NotifBell(p){
+      var ns=useState([]);var notifs=ns[0];var setNotifs=ns[1];
+      var op=useState(false);var open=op[0];var setOpen=op[1];
+      var ref=useRef();
+      var unread=notifs.filter(function(n){return !n.read;}).length;
 
-create policy "read comments"    on public.comments    for select using (true);
-create policy "insert comment"   on public.comments    for insert with check (auth.uid()=user_id);
-create policy "delete own comm"  on public.comments    for delete using (auth.uid()=user_id);
+      useEffect(function(){
+        if(!sb||!p.user) return;
+        sb.from('notifications').select('*').eq('user_id',p.user.id).order('created_at',{ascending:false}).limit(25)
+          .then(function(r){if(r.data)setNotifs(r.data);});
+        var ch=sb.channel('notifs-'+p.user.id)
+          .on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'user_id=eq.'+p.user.id},
+            function(pl){setNotifs(function(prev){return [pl.new].concat(prev);});})
+          .subscribe();
+        return function(){sb.removeChannel(ch);};
+      },[p.user&&p.user.id]);
 
-create policy "read reactions"   on public.reactions   for select using (true);
-create policy "own reactions"    on public.reactions   for all   using (auth.uid()=user_id);
+      useEffect(function(){
+        function cl(e){if(ref.current&&!ref.current.contains(e.target))setOpen(false);}
+        document.addEventListener('mousedown',cl);
+        return function(){document.removeEventListener('mousedown',cl);};
+      },[]);
 
-create policy "read votes"       on public.votes       for select using (true);
-create policy "insert vote"      on public.votes       for insert with check (auth.uid()=user_id);
+      function toggle(){
+        setOpen(function(o){return !o;});
+        if(!open&&unread>0){
+          setNotifs(function(prev){return prev.map(function(n){return Object.assign({},n,{read:true});});});
+          if(sb)sb.from('notifications').update({read:true}).eq('user_id',p.user.id);
+        }
+      }
+      var icons={comment:'💬',reaction:'🔥',vote:'⚖️',trending:'🚀'};
+      return h('div',{className:'notifwrap',ref:ref},
+        h('button',{className:'nbtn',onClick:toggle},'🔔',unread>0&&h('span',{className:'nbadge'},unread>9?'9+':unread)),
+        open&&h('div',{className:'npanel'},
+          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderBottom:'1px solid var(--bd)'}},
+            h('span',{style:{fontSize:14,fontWeight:600}},'Notifications'),
+            unread>0&&h('span',{style:{fontSize:12,color:'var(--rose)'}},'All read')),
+          notifs.length===0
+            ?h('div',{style:{padding:'30px 16px',textAlign:'center',color:'var(--tx3)',fontSize:13}},'No notifications yet.')
+            :notifs.map(function(n){
+              return h('div',{key:n.id,className:'nitem '+(n.read?'':'unread')},
+                h('div',{style:{display:'flex',gap:10,alignItems:'flex-start'}},
+                  !n.read&&h('div',{className:'ndot'}),
+                  h('div',{style:{flex:1}},
+                    h('div',{className:'nmsg'},(icons[n.type]||'📣')+' '+n.message),
+                    h('div',{className:'ntime'},ago(n.created_at)))));
+            })));
+    }
 
-create policy "own notifications" on public.notifications for select using (auth.uid()=user_id);
-create policy "insert notif"      on public.notifications for insert with check (auth.role()='authenticated');
-create policy "update own notif"  on public.notifications for update using (auth.uid()=user_id);
+    /* ─── REPORT MODAL ──────────────────────────────────────── */
+    function ReportModal(p){
+      var rs=useState('');var reason=rs[0];var setReason=rs[1];
+      var ds=useState(false);var done=ds[0];var setDone=ds[1];
+      async function submit(){
+        if(sb&&p.user&&p.user.id!=='demo')
+          await sb.from('reports').insert({reporter_id:p.user.id,post_id:p.postId||null,comment_id:p.commentId||null,reason:reason});
+        setDone(true);
+        setTimeout(function(){p.addToast('Report submitted. We'll review it.','success');p.onClose();},1200);
+      }
+      return h('div',{className:'mov',onClick:function(e){if(e.target===e.currentTarget)p.onClose();}},
+        h('div',{className:'mod',style:{maxWidth:380}},
+          h('button',{className:'mclose',onClick:p.onClose},'✕'),
+          h('h3',{style:{fontFamily:'var(--fd)',fontSize:22,marginBottom:6}},'Report content'),
+          h('p',{style:{color:'var(--tx2)',fontSize:14,marginBottom:20}},'Why are you reporting this?'),
+          done?h('div',{style:{textAlign:'center',padding:'20px 0',color:'var(--teal)',fontSize:15}},'✅ Thanks, we'll review it.')
+            :h('div',null,
+              h('div',{style:{display:'flex',flexDirection:'column',gap:8,marginBottom:20}},
+                REASONS.map(function(r){
+                  return h('div',{key:r,className:'repopt '+(reason===r?'sel':''),onClick:function(){setReason(r);}},
+                    reason===r?'●':'○',' ',r);
+                })),
+              h('button',{className:'btn',style:{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',width:'100%',justifyContent:'center',padding:'12px'},
+                onClick:submit,disabled:!reason},'Submit Report'))));
+    }
 
-create policy "insert report"    on public.reports     for insert with check (auth.uid()=reporter_id);
-create policy "admin read"       on public.reports     for select using (true);
-create policy "admin delete"     on public.reports     for delete using (true);
+    /* ─── PRO MODAL ─────────────────────────────────────────── */
+    function ProModal(p){
+      var feats=[
+        {i:'📊',t:'See full vote breakdown — who picked OP vs Partner'},
+        {i:'🔔',t:'Instant email when someone replies to your confession'},
+        {i:'⚡',t:'Boost your post to the top of the feed (24h)'},
+        {i:'🔖',t:'Save confessions to a private reading list'},
+        {i:'🎨',t:'Custom anonymous name & identity flair'},
+        {i:'🚫',t:'No ads when we launch them'},
+      ];
+      return h('div',{className:'mov',onClick:function(e){if(e.target===e.currentTarget)p.onClose();}},
+        h('div',{className:'mod',style:{maxWidth:440}},
+          h('button',{className:'mclose',onClick:p.onClose},'✕'),
+          h('div',{style:{textAlign:'center',marginBottom:24}},
+            h('div',{style:{fontSize:44,marginBottom:8}},'💎'),
+            h('div',{style:{fontFamily:'var(--fd)',fontSize:26,fontWeight:900}},'HeartConfia Pro'),
+            h('p',{style:{color:'var(--tx2)',fontSize:14,marginTop:6}},'Go deeper. Stay anonymous. Feel more.')),
+          h('div',{style:{marginBottom:24}},feats.map(function(f){
+            return h('div',{key:f.t,className:'prof'},h('span',{style:{fontSize:22}},f.i),h('span',{style:{fontSize:14,color:'var(--tx2)'}},f.t));
+          })),
+          h('div',{style:{textAlign:'center'}},
+            h('div',{style:{fontFamily:'var(--fd)',fontSize:30,fontWeight:900,marginBottom:4}},'$4.99',h('span',{style:{fontSize:16,color:'var(--tx3)',fontFamily:'var(--fb)'}},' /month')),
+            h('p',{style:{fontSize:12,color:'var(--tx3)',marginBottom:14}},'or $39/year · Cancel anytime'),
+            h('button',{className:'btn bv',style:{width:'100%',justifyContent:'center',padding:'14px',fontSize:15}},'Upgrade to Pro 💎'),
+            h('p',{style:{fontSize:12,color:'var(--tx3)',marginTop:10}},'Your anonymity is always protected, Pro or not.'))));
+    }
 
-create policy "read updates"     on public.post_updates for select using (true);
-create policy "insert update"    on public.post_updates for insert with check (auth.uid()=user_id);
+    /* ─── POST CARD ─────────────────────────────────────────── */
+    function PostCard(p){
+      var rs=useState(p.post.reaction_counts||{});var reactions=rs[0];var setReactions=rs[1];
+      var ms=useState(null);var mine=ms[0];var setMine=ms[1];
+      var rp=useState(false);var showRep=rp[0];var setShowRep=rp[1];
+      var ts=useState(p.post.type==='hot_take'?hotLeft(p.post.created_at):null);var timer=ts[0];var setTimer=ts[1];
 
--- Realtime
-alter publication supabase_realtime add table public.comments;
-alter publication supabase_realtime add table public.posts;
-alter publication supabase_realtime add table public.reactions;
-alter publication supabase_realtime add table public.votes;
-alter publication supabase_realtime add table public.notifications;
+      useEffect(function(){
+        if(p.post.type!=='hot_take') return;
+        var iv=setInterval(function(){setTimer(hotLeft(p.post.created_at));},60000);
+        return function(){clearInterval(iv);};
+      },[]);
 
--- ──────────────────────────────────────────────────────────────────────
---  SUPABASE EDGE FUNCTION  — Email notifications on new comment
---  Deploy with: supabase functions deploy notify-on-comment
--- ──────────────────────────────────────────────────────────────────────
--- // supabase/functions/notify-on-comment/index.ts
--- import { serve } from "https://deno.land/std/http/server.ts"
--- import { createClient } from "https://esm.sh/@supabase/supabase-js"
--- serve(async (req) => {
---   const { record } = await req.json()
---   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
---   const { data: post } = await supabase.from('posts').select('*,users(email,anonymous_name)').eq('id', record.post_id).single()
---   if (!post || post.user_id === record.user_id) return new Response('ok')
---   // Send email via Resend / SendGrid / Postmark
---   await fetch('https://api.resend.com/emails', {
---     method: 'POST',
---     headers: { 'Authorization': `Bearer ${Deno.env.get('RESEND_API_KEY')}`, 'Content-Type': 'application/json' },
---     body: JSON.stringify({
---       from: 'HeartConfia <noreply@heartconfia.com>',
---       to: post.users.email,
---       subject: `Someone replied to your confession 💔`,
---       html: `<p>@${record.anonymous_name} commented on <strong>${post.title}</strong></p><p>${record.content}</p><a href="https://heartconfia.com">View on HeartConfia</a>`
---     })
---   })
---   return new Response('ok')
--- })
--- 
--- -- Add this database trigger to fire the function:
--- create or replace function notify_new_comment()
--- returns trigger language plpgsql as $$
--- begin
---   perform net.http_post(url := 'https://YOUR_PROJECT.supabase.co/functions/v1/notify-on-comment',
---     headers := '{"Authorization": "Bearer YOUR_ANON_KEY"}'::jsonb,
---     body := json_build_object('record', row_to_json(NEW))::jsonb);
---   return NEW;
--- end; $$;
--- 
--- create trigger on_comment_insert after insert on public.comments
--- for each row execute function notify_new_comment();
--- ──────────────────────────────────────────────────────────────────────
+      async function react(e,type){
+        e.stopPropagation();
+        if(!p.user){p.onNeedAuth('signup');return;}
+        var prev=mine,r=Object.assign({},reactions);
+        if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
+        else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
+        setReactions(r);
+        if(sb&&p.user.id!=='demo'){
+          if(prev) await sb.from('reactions').delete().match({post_id:p.post.id,user_id:p.user.id,type:prev});
+          if(prev!==type){
+            await sb.from('reactions').insert({post_id:p.post.id,user_id:p.user.id,type:type});
+            if(p.post.user_id&&p.post.user_id!==p.user.id)
+              await sb.from('notifications').insert({user_id:p.post.user_id,type:'reaction',post_id:p.post.id,actor_name:p.user.anonymous_name,message:'@'+p.user.anonymous_name+' reacted '+type+' to your confession',read:false});
+          }
+        }
+      }
 
--->
+      var totalRx=Object.values(reactions).reduce(function(a,v){return a+v;},0);
+      var topRx=Object.entries(reactions).sort(function(a,b){return b[1]-a[1];})[0];
+      var post=p.post;
+
+      return h('div',null,
+        h('div',{className:'pc '+(post.boosted?'boosted':'')+(post.type==='hot_take'?' hot-take':''),
+          onClick:p.onClick,style:{animationDelay:p.delay+'s'}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}},
+            h('div',{style:{display:'flex',flexDirection:'column',gap:6}},
+              h('span',{className:'ptb '+post.type},
+                post.type==='confession'?'💔 Confession':post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take'),
+              post.type==='hot_take'&&h('span',{className:'hottimer'},timer?('⏱ '+timer+' left'):'⏰ Expired')),
+            h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}},
+              (post.tags||[]).slice(0,2).map(function(t){return h('span',{key:t,className:'tag '+(TAG_CLS[t]||'')},t);}),
+              h('button',{style:{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:16,padding:'0 4px'},
+                onClick:function(e){e.stopPropagation();setShowRep(true);}},'⋯'))),
+          h('h2',{className:'ptitle'},post.title),
+          h('div',{className:'pmeta'},
+            h('span',{className:'aname'},'@'+post.anonymous_name),
+            h('span',{className:'pdot'}),
+            h('span',null,ago(post.created_at)),
+            totalRx>0&&h('span',{className:'pdot'}),
+            totalRx>0&&h('span',null,topRx[0]+' '+totalRx.toLocaleString())),
+          p.user
+            ?h('p',{className:'pprev'},post.content)
+            :h('div',null,
+              h('div',{className:'blw'},h('p',{style:{fontSize:14,lineHeight:1.7,color:'var(--tx2)'}},post.content.slice(0,160)+'…')),
+              h(Paywall,{onSignup:function(){p.onNeedAuth('signup');},onLogin:function(){p.onNeedAuth('login');}})),
+          p.user&&h('div',{className:'rxrow'},
+            RX.map(function(r){
+              return h('button',{key:r,className:'rxb '+(mine===r?'on':''),onClick:function(e){react(e,r);}},
+                r,h('span',null,(reactions[r]||0)>0?(reactions[r]||0).toLocaleString():''));
+            }),
+            h('div',{style:{display:'flex',alignItems:'center',gap:5,fontSize:13,color:'var(--tx3)'}},'💬 '+(post.comment_count||0).toLocaleString()),
+            h('button',{style:{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:13,marginLeft:'auto',fontFamily:'var(--fb)',display:'flex',alignItems:'center',gap:4},
+              onClick:function(e){e.stopPropagation();shareImg(post);}},'↗ Share'))),
+        showRep&&h(ReportModal,{postId:post.id,user:p.user,onClose:function(){setShowRep(false);},addToast:function(){}}));
+    }
+
+    /* ─── VOTE SECTION ──────────────────────────────────────── */
+    function VoteSection(p){
+      var as=useState(p.post.vote_a||0);var vA=as[0];var setVA=as[1];
+      var bs=useState(p.post.vote_b||0);var vB=bs[0];var setVB=bs[1];
+      var vs=useState(null);var voted=vs[0];var setVoted=vs[1];
+      var total=vA+vB;
+      var pA=total>0?Math.round((vA/total)*100):50;
+
+      async function vote(type){
+        if(!p.user){p.onNeedAuth();return;}
+        if(voted) return;
+        type==='A'?setVA(function(v){return v+1;}):setVB(function(v){return v+1;});
+        setVoted(type);
+        if(sb&&p.user.id!=='demo'){
+          await sb.from('votes').insert({post_id:p.post.id,user_id:p.user.id,vote_type:type});
+          if(p.post.user_id&&p.post.user_id!==p.user.id)
+            await sb.from('notifications').insert({user_id:p.post.user_id,type:'vote',post_id:p.post.id,actor_name:p.user.anonymous_name,message:'Someone voted on your confession — '+pA+'% think you\'re right',read:false});
+        }
+      }
+      return h('div',{className:'vbox'},
+        h('div',{style:{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--tx3)',marginBottom:16}},'⚖️ Who is right?'),
+        h('div',{className:'vgrid'},
+          h('button',{className:'vbtn '+(voted==='A'?'va':''),onClick:function(){vote('A');}},
+            (voted==='A'?'✓ ':'')+'OP is right',
+            h('div',{style:{fontSize:22,fontFamily:'var(--fd)',marginTop:4,color:voted==='A'?'var(--rose)':'var(--tx3)'}},pA+'%')),
+          h('button',{className:'vbtn '+(voted==='B'?'vb':''),onClick:function(){vote('B');}},
+            (voted==='B'?'✓ ':'')+'Partner is right',
+            h('div',{style:{fontSize:22,fontFamily:'var(--fd)',marginTop:4,color:voted==='B'?'#a78bfa':'var(--tx3)'}},( 100-pA)+'%'))),
+        h('div',{className:'vtrack'},
+          h('div',{className:'vfa',style:{width:pA+'%'}}),
+          h('div',{className:'vfb',style:{width:(100-pA)+'%'}})),
+        h('div',{className:'vfoot'},
+          h('span',null,vA.toLocaleString()+' for OP'),
+          h('span',null,total.toLocaleString()+' total'),
+          h('span',null,vB.toLocaleString()+' for Partner')));
+    }
+
+    /* ─── COMMENTS ──────────────────────────────────────────── */
+    function Comments(p){
+      var cs=useState((DCOMS[p.postId]||[]));var comments=cs[0];var setComments=cs[1];
+      var ts=useState('');var text=ts[0];var setText=ts[1];
+      var ld=useState(false);var sending=ld[0];var setSending=ld[1];
+      var uv=useState({});var upvoted=uv[0];var setUpvoted=uv[1];
+      var rp=useState(null);var showRep=rp[0];var setShowRep=rp[1];
+
+      useEffect(function(){
+        if(!sb) return;
+        sb.from('comments').select('*').eq('post_id',p.postId).order('upvotes',{ascending:false})
+          .then(function(r){if(r.data&&r.data.length)setComments(r.data);});
+        var ch=sb.channel('comments-'+p.postId)
+          .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments',filter:'post_id=eq.'+p.postId},
+            function(pl){setComments(function(prev){return [pl.new].concat(prev);});})
+          .subscribe();
+        return function(){sb.removeChannel(ch);};
+      },[p.postId]);
+
+      async function postComment(){
+        if(!p.user){p.onNeedAuth();return;}
+        if(!text.trim()) return;
+        setSending(true);
+        var c={id:Date.now()+'',anonymous_name:p.user.anonymous_name,content:text.trim(),created_at:new Date().toISOString(),upvotes:0,user_id:p.user.id};
+        setComments(function(prev){return [c].concat(prev);});
+        setText('');
+        if(sb&&p.user.id!=='demo'){
+          await sb.from('comments').insert({post_id:p.postId,user_id:p.user.id,content:c.content});
+          if(p.postOwnerId&&p.postOwnerId!==p.user.id)
+            await sb.from('notifications').insert({user_id:p.postOwnerId,type:'comment',post_id:p.postId,actor_name:p.user.anonymous_name,message:'@'+p.user.anonymous_name+' commented on your confession',read:false});
+        }
+        setSending(false);
+      }
+
+      function upvote(cid){
+        if(!p.user){p.onNeedAuth();return;}
+        if(upvoted[cid]) return;
+        setComments(function(prev){return prev.map(function(c){return c.id===cid?Object.assign({},c,{upvotes:(c.upvotes||0)+1}):c;});});
+        setUpvoted(function(prev){return Object.assign({},prev,{[cid]:true});});
+      }
+
+      var sorted=[].concat(comments).sort(function(a,b){return (b.upvotes||0)-(a.upvotes||0);});
+      var bestId=comments.length>2?sorted[0]&&sorted[0].id:null;
+
+      return h('div',null,
+        h('div',{className:'sh',style:{marginBottom:16}},
+          h('span',{className:'st',style:{fontSize:18}},'Comments'),
+          h('span',{className:'sbadge'},comments.length)),
+        h('div',{className:'crow'},
+          h('div',{className:'ava'},p.user?p.user.anonymous_name.charAt(0):'?'),
+          h('div',{style:{flex:1}},
+            h('textarea',{className:'inp',rows:3,style:{minHeight:76},
+              placeholder:p.user?'Reply as @'+p.user.anonymous_name+'…':'Log in to comment',
+              value:text,onChange:function(e){setText(e.target.value);},disabled:!p.user}),
+            p.user
+              ?h('button',{className:'btn bp',style:{marginTop:8},onClick:postComment,disabled:!text.trim()||sending},sending?h('span',{className:'spin'}):'Post comment')
+              :h('button',{className:'btn bs',style:{marginTop:8},onClick:p.onNeedAuth},'Log in to comment'))),
+        sorted.map(function(c){
+          return h('div',{key:c.id,className:'cc '+(c.id===bestId?'best':'')},
+            c.id===bestId&&h('div',{className:'bbadge'},'✅ Top answer'),
+            h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center'}},
+              h('span',{style:{fontSize:13,fontWeight:600,color:'var(--tx)'}},'@'+c.anonymous_name),
+              h('div',{style:{display:'flex',gap:8,alignItems:'center'}},
+                h('span',{style:{fontSize:12,color:'var(--tx3)'}},(ago(c.created_at))),
+                h('button',{style:{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:14},onClick:function(){setShowRep(c.id);}},'⋯'))),
+            h('p',{style:{fontSize:14,lineHeight:1.65,color:'var(--tx2)',marginTop:6}},c.content),
+            h('div',{className:'cact'},
+              h('button',{className:'cactb '+(upvoted[c.id]?'on':''),onClick:function(){upvote(c.id);}},
+                (upvoted[c.id]?'❤️':'🤍')+' '+(c.upvotes||0).toLocaleString()),
+              h('button',{className:'cactb'},'↩ Reply')));
+        }),
+        showRep&&h(ReportModal,{commentId:showRep,user:p.user,onClose:function(){setShowRep(null);},addToast:function(){}}));
+    }
+
+    /* ─── STORY UPDATES ─────────────────────────────────────── */
+    function StoryUpdates(p){
+      var us=useState([]);var updates=us[0];var setUpdates=us[1];
+      var ts=useState('');var text=ts[0];var setText=ts[1];
+      var ld=useState(false);var loading=ld[0];var setLoading=ld[1];
+      var isOwner=p.user&&p.user.id===p.post.user_id;
+
+      useEffect(function(){
+        if(!sb) return;
+        sb.from('post_updates').select('*').eq('post_id',p.post.id).order('created_at',{ascending:true})
+          .then(function(r){if(r.data)setUpdates(r.data);});
+      },[p.post.id]);
+
+      async function add(){
+        if(!text.trim()) return;
+        setLoading(true);
+        var u={id:Date.now()+'',content:text.trim(),created_at:new Date().toISOString()};
+        setUpdates(function(prev){return prev.concat([u]);});
+        setText('');
+        if(sb&&p.user.id!=='demo')
+          await sb.from('post_updates').insert({post_id:p.post.id,user_id:p.user.id,content:text.trim()});
+        setLoading(false);
+      }
+
+      if(!isOwner&&updates.length===0) return null;
+      return h('div',{style:{marginBottom:20}},
+        h('div',{style:{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--teal)',marginBottom:12}},'📰 Updates from OP'),
+        updates.map(function(u,i){
+          return h('div',{key:u.id,className:'upcard'},
+            h('div',{className:'uplbl'},'Update #'+(i+1)+' · '+ago(u.created_at)),
+            h('p',{style:{fontSize:14,color:'var(--tx2)',lineHeight:1.65}},u.content));
+        }),
+        isOwner&&h('div',{style:{marginTop:12}},
+          h('textarea',{className:'inp',rows:3,style:{minHeight:76},placeholder:'Add an update to your story… (only you see this button)',value:text,onChange:function(e){setText(e.target.value);}}),
+          h('button',{className:'btn bt',style:{marginTop:8},onClick:add,disabled:!text.trim()||loading},loading?h('span',{className:'spin'}):'📰 Post Update')));
+    }
+
+    /* ─── POST DETAIL ────────────────────────────────────────── */
+    function PostDetail(p){
+      var rs=useState(p.post.reaction_counts||{});var reactions=rs[0];var setReactions=rs[1];
+      var ms=useState(null);var mine=ms[0];var setMine=ms[1];
+
+      if(!p.user) return h('div',{className:'fu'},
+        h('button',{className:'bkbtn',onClick:p.onBack},'← Back'),
+        h('div',{className:'card'},
+          h('span',{className:'ptb '+p.post.type},p.post.type==='confession'?'💔 Confession':p.post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take'),
+          h('h1',{style:{fontFamily:'var(--fd)',fontSize:'clamp(22px,5vw,30px)',fontWeight:900,lineHeight:1.2,color:'var(--tx)',margin:'10px 0 16px'}},p.post.title),
+          h('div',{className:'pmeta',style:{marginBottom:20}},
+            h('span',{className:'aname'},'@'+p.post.anonymous_name),h('span',{className:'pdot'}),h('span',null,ago(p.post.created_at))),
+          h('div',{className:'blw',style:{maxHeight:110}},h('p',{style:{fontSize:16,lineHeight:1.9,color:'var(--tx2)',whiteSpace:'pre-wrap'}},p.post.content.slice(0,280)+'…')),
+          h(Paywall,{onSignup:function(){p.onNeedAuth('signup');},onLogin:function(){p.onNeedAuth('login');}})));
+
+      function react(type){
+        var prev=mine,r=Object.assign({},reactions);
+        if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
+        else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
+        setReactions(r);
+      }
+
+      return h('div',{className:'fu'},
+        h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}},
+          h('button',{className:'bkbtn',style:{margin:0},onClick:p.onBack},'← Back to feed'),
+          h('button',{style:{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:13,fontFamily:'var(--fb)',display:'flex',alignItems:'center',gap:5},onClick:function(){shareImg(p.post);}},'↗ Share as image')),
+        h('div',{className:'card',style:{marginBottom:14}},
+          h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14}},
+            h('div',{style:{display:'flex',flexDirection:'column',gap:6}},
+              h('span',{className:'ptb '+p.post.type},p.post.type==='confession'?'💔 Confession':p.post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take'),
+              p.post.type==='hot_take'&&(function(){var t=hotLeft(p.post.created_at);return t?h('span',{className:'hottimer'},'⏱ '+t+' left'):h('span',{style:{fontSize:12,color:'var(--tx3)'}},'⏰ Expired');})()),
+            h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',justifyContent:'flex-end'}},
+              (p.post.tags||[]).map(function(t){return h('span',{key:t,className:'tag '+(TAG_CLS[t]||'')},t);}))),
+          h('h1',{style:{fontFamily:'var(--fd)',fontSize:'clamp(22px,5vw,30px)',fontWeight:900,lineHeight:1.2,color:'var(--tx)',marginBottom:16}},p.post.title),
+          h('div',{className:'pmeta',style:{marginBottom:20}},
+            h('span',{className:'aname'},'@'+p.post.anonymous_name),h('span',{className:'pdot'}),h('span',null,ago(p.post.created_at)),
+            h('span',{className:'pdot'}),h('span',null,'💬 '+(p.post.comment_count||0).toLocaleString())),
+          h('p',{style:{fontSize:16,lineHeight:1.9,color:'var(--tx2)',whiteSpace:'pre-wrap'}},p.post.content),
+          h('div',{className:'div'}),
+          h('div',{className:'rxrow'},RX.map(function(r){
+            return h('button',{key:r,className:'rxb '+(mine===r?'on':''),onClick:function(){react(r);}},r,' ',h('span',null,(reactions[r]||0).toLocaleString()));
+          }))),
+        h(StoryUpdates,{post:p.post,user:p.user}),
+        h(VoteSection,{post:p.post,user:p.user,onNeedAuth:function(){p.onNeedAuth('signup');}}),
+        h(Comments,{postId:p.post.id,postOwnerId:p.post.user_id,user:p.user,onNeedAuth:function(){p.onNeedAuth('signup');}}));
+    }
+
+    /* ─── CREATE POST ────────────────────────────────────────── */
+    function CreatePost(p){
+      var ti=useState('');var title=ti[0];var setTitle=ti[1];
+      var co=useState('');var content=co[0];var setContent=co[1];
+      var ty=useState('confession');var type=ty[0];var setType=ty[1];
+      var tg=useState([]);var tags=tg[0];var setTags=tg[1];
+      var ld=useState(false);var loading=ld[0];var setLoading=ld[1];
+
+      function toggleTag(t){setTags(function(prev){return prev.includes(t)?prev.filter(function(x){return x!==t;}):[].concat(prev,[t]).slice(0,3);});}
+
+      async function submit(){
+        if(!title.trim()||!content.trim()){p.addToast('Please fill in title and story','error');return;}
+        setLoading(true);
+        var np={id:Date.now()+'',title:title.trim(),content:content.trim(),type:type,tags:tags,
+          anonymous_name:p.user.anonymous_name,created_at:new Date().toISOString(),
+          reaction_counts:{'🔥':0,'😂':0,'😢':0,'😡':0},comment_count:0,vote_a:0,vote_b:0,user_id:p.user.id};
+        if(sb&&p.user.id!=='demo'){
+          var r=await sb.from('posts').insert({title:np.title,content:np.content,type:type,tags:tags,user_id:p.user.id}).select().single();
+          if(r.error){p.addToast(r.error.message,'error');setLoading(false);return;}
+          np.id=r.data.id;
+        } else await new Promise(function(r){setTimeout(r,600);});
+        var streak=bumpStreak();
+        p.onPost(np);
+        p.addToast(streak.count>1?'Posted! 🔥 '+streak.count+'-day streak!':'Your confession was posted anonymously 💔','success');
+        setLoading(false);
+      }
+
+      var types=[{id:'confession',icon:'💔',label:'Confession'},{id:'advice',icon:'💬',label:'Seeking Advice'},{id:'hot_take',icon:'🌶',label:'Hot Take (48h)'}];
+
+      return h('div',{className:'fu'},
+        h('button',{className:'bkbtn',onClick:p.onBack},'← Back'),
+        h('div',{style:{marginBottom:24}},
+          h('h1',{style:{fontFamily:'var(--fd)',fontSize:'clamp(24px,6vw,32px)',fontWeight:900,marginBottom:8}},'Share anonymously'),
+          h('p',{style:{color:'var(--tx2)',fontSize:14}},['You\'ll appear as ',h('strong',{key:'n',style:{color:'var(--rose)'}},'@'+p.user.anonymous_name)])),
+        h('div',{className:'card',style:{display:'flex',flexDirection:'column',gap:18}},
+          h('div',null,
+            h('label',{className:'flbl'},'Post type'),
+            h('div',{style:{display:'flex',gap:10,flexWrap:'wrap'}},types.map(function(t){
+              return h('button',{key:t.id,className:'btn '+(type===t.id?'bp':'bs'),onClick:function(){setType(t.id);},style:{flex:'1 1 auto',justifyContent:'center'}},t.icon+' '+t.label);
+            })),
+            type==='hot_take'&&h('p',{style:{fontSize:12,color:'var(--amber)',marginTop:8}},'⏱ Hot takes disappear from the feed after 48 hours. Debate fast.')),
+          h('div',null,
+            h('label',{className:'flbl'},'Title'),
+            h('input',{className:'inp',placeholder:'Give your story a title that stops the scroll…',value:title,onChange:function(e){setTitle(e.target.value);},maxLength:120}),
+            h('div',{style:{textAlign:'right',fontSize:12,color:'var(--tx3)',marginTop:4}},title.length+'/120')),
+          h('div',null,
+            h('label',{className:'flbl'},'Your story'),
+            h('textarea',{className:'inp',rows:9,placeholder:'Share everything. Be honest. No one knows it\'s you.',value:content,onChange:function(e){setContent(e.target.value);}})),
+          h('div',null,
+            h('label',{className:'flbl'},'Tags ',h('span',{style:{color:'var(--tx3)'}},'(up to 3)')),
+            h('div',{className:'pills'},TAGS.map(function(t){
+              return h('button',{key:t,className:'pill '+(tags.includes(t)?'on':''),onClick:function(){toggleTag(t);}},t);
+            }))),
+          h('button',{className:'btn bp',onClick:submit,disabled:loading||!title.trim()||!content.trim(),style:{justifyContent:'center',padding:'14px',fontSize:15}},
+            loading?h('span',{className:'spin'}):'💔 Post anonymously')));
+    }
+
+    /* ─── TRENDING ───────────────────────────────────────────── */
+    function TrendingPage(p){
+      var ts=useState('hot');var tab=ts[0];var setTab=ts[1];
+      var ranked;
+      if(tab==='hot') ranked=[].concat(p.posts).sort(function(a,b){return feedScore(b)-feedScore(a);});
+      else if(tab==='controversial') ranked=[].concat(p.posts).sort(function(a,b){return controversyScore(b)-controversyScore(a);}).filter(function(x){return (x.vote_a||0)+(x.vote_b||0)>0;});
+      else ranked=[].concat(p.posts).sort(function(a,b){return (b.comment_count||0)-(a.comment_count||0);});
+
+      return h('div',null,
+        h('div',{className:'hero',style:{paddingTop:16}},
+          h('div',{className:'hey'},'📊 Charts'),
+          h('h1',{className:'htitle'},'Trending'),
+          h('p',{className:'hsub'},'The most viral, debated, and emotional confessions right now.')),
+        h('div',{className:'pills',style:{justifyContent:'center',marginBottom:24}},
+          [{id:'hot',l:'🔥 Hot'},{id:'controversial',l:'⚡ Controversial'},{id:'discussed',l:'💬 Most Discussed'}].map(function(t){
+            return h('button',{key:t.id,className:'pill '+(tab===t.id?'on':''),onClick:function(){setTab(t.id);}},t.l);
+          })),
+        ranked.map(function(post,i){
+          var tot=(post.vote_a||0)+(post.vote_b||0);
+          var pA=tot>0?Math.round(((post.vote_a||0)/tot)*100):50;
+          return h('div',{key:post.id,className:'pc',onClick:function(){p.onOpen(post);},style:{display:'flex',gap:16,alignItems:'flex-start',animationDelay:(i*.05)+'s'}},
+            h('div',{className:'trn '+(i<3?'top':'')},'#'+(i+1)),
+            h('div',{style:{flex:1}},
+              h('div',{style:{display:'flex',justifyContent:'space-between',marginBottom:8,flexWrap:'wrap',gap:6}},
+                h('span',{className:'ptb '+post.type},post.type==='confession'?'💔':post.type==='advice'?'💬':'🌶',' '+post.type.replace('_',' ')),
+                h('div',{style:{display:'flex',gap:6}},(post.tags||[]).slice(0,1).map(function(t){return h('span',{key:t,className:'tag '+(TAG_CLS[t]||'')},t);}))),
+              h('h3',{className:'ptitle',style:{fontSize:16}},post.title),
+              h('div',{className:'pmeta'},
+                h('span',null,'@'+post.anonymous_name),h('span',{className:'pdot'}),
+                h('span',null,'💬 '+(post.comment_count||0).toLocaleString()),h('span',{className:'pdot'}),
+                h('span',null,'🔥 '+Object.values(post.reaction_counts||{}).reduce(function(a,v){return a+v;},0).toLocaleString()),
+                tab==='controversial'&&h('span',{className:'pdot'}),
+                tab==='controversial'&&h('span',{style:{color:'var(--rose)'}},pA+'% / '+(100-pA)+'%'))));
+        }));
+    }
+
+    /* ─── PROFILE ────────────────────────────────────────────── */
+    function ProfilePage(p){
+      if(!p.user) return h('div',{style:{textAlign:'center',padding:'80px 20px'}},
+        h('div',{style:{fontSize:46,marginBottom:14}},'👤'),
+        h('div',{className:'st'},'Sign in to see your profile'),
+        h('div',{style:{marginTop:20,display:'flex',gap:12,justifyContent:'center'}},
+          h('button',{className:'btn bp',onClick:function(){p.onNeedAuth('signup');}},'Sign up free'),
+          h('button',{className:'btn bs',onClick:function(){p.onNeedAuth('login');}},'Log in')));
+
+      var myPosts=p.posts.filter(function(x){return x.user_id===p.user.id;});
+      var karma=calcKarma(myPosts);
+      var streak=getStreak();
+      var badges=getBadges(karma,myPosts,streak.count);
+      var ds=useState(false);var showDel=ds[0];var setShowDel=ds[1];
+      var dc=useState('');var delC=dc[0];var setDelC=dc[1];
+
+      async function delAcc(){
+        if(delC!=='DELETE') return;
+        if(sb){await sb.from('users').delete().eq('id',p.user.id);await sb.auth.signOut();}
+        localStorage.removeItem('hc_sk');
+        p.addToast('Account deleted. Take care of yourself. 💔','info');
+        setTimeout(function(){window.location.reload();},1500);
+      }
+
+      return h('div',{className:'fu'},
+        h('button',{className:'bkbtn',onClick:p.onBack},'← Back'),
+        h('div',{style:{textAlign:'center',marginBottom:28}},
+          h('div',{style:{width:64,height:64,borderRadius:'50%',background:'linear-gradient(135deg,var(--rose),var(--violet))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24,fontWeight:700,color:'#fff',margin:'0 auto 12px'}},p.user.anonymous_name.charAt(0)),
+          h('div',{style:{fontFamily:'var(--fd)',fontSize:22,fontWeight:700}},p.user.anonymous_name),
+          h('div',{style:{fontSize:13,color:'var(--tx3)',marginTop:4}},p.user.email)),
+        h('div',{className:'statg'},
+          h('div',{className:'statb'},h('div',{className:'statn'},karma.toLocaleString()),h('div',{className:'statl'},'💜 Karma')),
+          h('div',{className:'statb'},h('div',{className:'statn'},streak.count),h('div',{className:'statl'},'🔥 Streak')),
+          h('div',{className:'statb'},h('div',{className:'statn'},myPosts.length),h('div',{className:'statl'},'📝 Posts'))),
+        badges.length>0&&h('div',{style:{marginBottom:24}},
+          h('div',{style:{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--tx3)',marginBottom:12}},'Badges earned'),
+          h('div',{className:'bdrow'},badges.map(function(b){return h('div',{key:b.l,className:'bdc'},b.i+' '+b.l);}))),
+        myPosts.length>0&&h('div',{style:{marginBottom:24}},
+          h('div',{className:'sh'},h('span',{className:'st',style:{fontSize:18}},'My Confessions')),
+          myPosts.map(function(mp){return h('div',{key:mp.id,className:'card',style:{marginBottom:10}},
+            h('div',{style:{fontFamily:'var(--fd)',fontSize:15,fontWeight:700,marginBottom:6}},mp.title),
+            h('div',{className:'pmeta'},h('span',null,ago(mp.created_at)),h('span',{className:'pdot'}),h('span',null,'💬 '+(mp.comment_count||0)),h('span',{className:'pdot'}),h('span',null,'🔥 '+Object.values(mp.reaction_counts||{}).reduce(function(a,v){return a+v;},0))));})),
+        h('div',{className:'div'}),
+        !showDel
+          ?h('button',{className:'btn bs',style:{color:'#ef4444',borderColor:'rgba(239,68,68,.3)'},onClick:function(){setShowDel(true);}},'🗑 Delete account & data (GDPR)')
+          :h('div',{className:'card',style:{borderColor:'rgba(239,68,68,.25)'}},
+            h('p',{style:{fontSize:14,color:'var(--tx2)',marginBottom:12}},'This permanently deletes your account and all data. Type DELETE to confirm.'),
+            h('input',{className:'inp',placeholder:'Type DELETE',value:delC,onChange:function(e){setDelC(e.target.value);},style:{marginBottom:10}}),
+            h('div',{style:{display:'flex',gap:10}},
+              h('button',{className:'btn',style:{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff'},onClick:delAcc,disabled:delC!=='DELETE'},'Confirm delete'),
+              h('button',{className:'btn bg',onClick:function(){setShowDel(false);setDelC('');}}))));
+    }
+
+    /* ─── ADMIN ──────────────────────────────────────────────── */
+    function AdminPanel(p){
+      var rs=useState([]);var reports=rs[0];var setReports=rs[1];
+      var ld=useState(true);var loading=ld[0];var setLoading=ld[1];
+
+      useEffect(function(){
+        if(!sb) return;
+        sb.from('reports').select('*,posts(title),comments(content)').order('created_at',{ascending:false})
+          .then(function(r){if(r.data)setReports(r.data);setLoading(false);});
+      },[]);
+
+      async function dismiss(id){
+        setReports(function(prev){return prev.filter(function(r){return r.id!==id;});});
+        if(sb) await sb.from('reports').delete().eq('id',id);
+        p.addToast('Report dismissed','success');
+      }
+      async function remove(report){
+        if(sb){
+          if(report.post_id) await sb.from('posts').delete().eq('id',report.post_id);
+          if(report.comment_id) await sb.from('comments').delete().eq('id',report.comment_id);
+          await sb.from('reports').delete().eq('id',report.id);
+        }
+        setReports(function(prev){return prev.filter(function(r){return r.id!==report.id;});});
+        p.addToast('Content removed','success');
+      }
+
+      return h('div',{className:'fu'},
+        h('div',{style:{marginBottom:24}},
+          h('h1',{style:{fontFamily:'var(--fd)',fontSize:28,fontWeight:900}},'🛡 Admin Panel'),
+          h('p',{style:{color:'var(--tx2)',fontSize:14}},'Moderation queue · '+reports.length+' open reports')),
+        loading?h('div',{style:{display:'flex',justifyContent:'center',padding:40}},h('span',{className:'spin',style:{width:32,height:32}}))
+          :reports.length===0?h('div',{className:'empty'},h('div',{className:'empi'},'✅'),h('div',{className:'empt'},'Queue clear'),h('p',null,'No pending reports.'))
+          :reports.map(function(r){
+            return h('div',{key:r.id,className:'adm'},
+              h('div',{style:{flex:1}},
+                h('div',{style:{fontSize:12,color:'var(--rose)',fontWeight:700,marginBottom:6,textTransform:'uppercase'}},r.reason),
+                h('p',{style:{fontSize:14,color:'var(--tx2)',marginBottom:6}},(r.posts&&r.posts.title)||(r.comments&&r.comments.content)||'Content unavailable'),
+                h('div',{style:{fontSize:12,color:'var(--tx3)'}},(ago(r.created_at)))),
+              h('div',{style:{display:'flex',gap:8,flexShrink:0,flexDirection:'column'}},
+                h('button',{className:'btn bs',style:{padding:'6px 12px',fontSize:12},onClick:function(){dismiss(r.id);}},'Dismiss'),
+                h('button',{className:'btn',style:{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',padding:'6px 12px',fontSize:12},onClick:function(){remove(r);}},'Remove')));
+          }));
+    }
+
+    /* ─── APP ────────────────────────────────────────────────── */
+    function App(){
+      var us=useState(null);var user=us[0];var setUser=us[1];
+      var pg=useState('home');var page=pg[0];var setPage=pg[1];
+      var ps=useState(DPOSTS);var posts=ps[0];var setPosts=ps[1];
+      var ac=useState(null);var active=ac[0];var setActive=ac[1];
+      var tf=useState('all');var tagFilter=tf[0];var setTagFilter=tf[1];
+      var au=useState(null);var auth=au[0];var setAuth=au[1];
+      var to=useState([]);var toasts=to[0];var setToasts=to[1];
+      var ld=useState(false);var loading=ld[0];var setLoading=ld[1];
+      var sp=useState(false);var showPro=sp[0];var setShowPro=sp[1];
+
+      function addToast(msg,type){
+        var id=Date.now();
+        setToasts(function(p){return p.concat([{id:id,msg:msg,type:type||'info'}]);});
+        setTimeout(function(){setToasts(function(p){return p.filter(function(t){return t.id!==id;});});},3600);
+      }
+
+      useEffect(function(){
+        if(!sb) return;
+        sb.auth.getSession().then(function(r){
+          if(r.data.session&&r.data.session.user)
+            sb.from('users').select('*').eq('id',r.data.session.user.id).single()
+              .then(function(pr){if(pr.data)setUser(Object.assign({},r.data.session.user,{anonymous_name:pr.data.anonymous_name}));});
+        });
+        sb.auth.onAuthStateChange(function(ev){if(ev==='SIGNED_OUT')setUser(null);});
+      },[]);
+
+      useEffect(function(){
+        if(!sb) return;
+        setLoading(true);
+        sb.from('posts').select('*,users(anonymous_name)').order('created_at',{ascending:false}).limit(60)
+          .then(function(r){
+            if(r.data&&r.data.length)
+              setPosts(r.data.map(function(p){return Object.assign({},p,{anonymous_name:p.users&&p.users.anonymous_name});
+            }));
+            setLoading(false);
+          });
+      },[]);
+
+      useEffect(function(){
+        if(!sb) return;
+        var ch=sb.channel('feed-rt')
+          .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},async function(pl){
+            var u=await sb.from('users').select('anonymous_name').eq('id',pl.new.user_id).single();
+            setPosts(function(prev){return [Object.assign({},pl.new,{anonymous_name:u.data&&u.data.anonymous_name,reaction_counts:{},comment_count:0,vote_a:0,vote_b:0})].concat(prev);});
+          }).subscribe();
+        return function(){sb.removeChannel(ch);};
+      },[]);
+
+      function handleAuth(u){setUser(u);setAuth(null);bumpStreak();addToast('Welcome, @'+u.anonymous_name+'! 💔','success');}
+      function logout(){if(sb)sb.auth.signOut();setUser(null);setPage('home');addToast('Logged out. Your secrets are safe.','info');}
+      function openPost(post){setActive(post);setPage('detail');window.scrollTo({top:0,behavior:'smooth'});}
+      function newPost(post){setPosts(function(p){return [post].concat(p);});setPage('home');}
+      function needAuth(mode){setAuth(mode||'signup');}
+
+      function getFeed(){
+        var f=page==='confessions'?posts.filter(function(p){return p.type==='confession';})
+              :page==='advice'?posts.filter(function(p){return p.type==='advice';})
+              :posts;
+        if(tagFilter!=='all') f=f.filter(function(p){return (p.tags||[]).includes(tagFilter);});
+        var boosted=f.filter(function(p){return p.boosted;});
+        var rest=[].concat(f.filter(function(p){return !p.boosted;})).sort(function(a,b){return feedScore(b)-feedScore(a);});
+        return boosted.concat(rest);
+      }
+
+      var feed=getFeed();
+      var isFeed=['home','confessions','advice'].includes(page);
+      var titles={home:'Latest Stories',confessions:'Confessions',advice:'Seeking Advice'};
+      var isAdmin=user&&user.email===ADMIN_EMAIL;
+      var navTabs=[{id:'home',l:'Home'},{id:'confessions',l:'Confessions'},{id:'advice',l:'Advice'},{id:'trending',l:'🔥 Trending'},{id:'profile',l:'👤 Profile'}];
+      if(isAdmin) navTabs.push({id:'admin',l:'🛡 Admin'});
+      var streak=getStreak();
+
+      return h('div',null,
+        /* NAV */
+        h('nav',{className:'nav'},
+          h('div',{className:'nlogo',onClick:function(){setPage('home');setActive(null);}},'💔 HeartConfia'),
+          h('div',{className:'ntabs'},navTabs.map(function(t){
+            return h('button',{key:t.id,className:'ntab '+(page===t.id?'on':''),onClick:function(){setPage(t.id);setActive(null);}},t.l);
+          })),
+          h('div',{style:{display:'flex',alignItems:'center',gap:8,flexShrink:0}},
+            user&&streak.count>0&&h('div',{className:'streakc',onClick:function(){setPage('profile');},title:'Your posting streak'},'🔥'+streak.count),
+            user&&h(NotifBell,{user:user}),
+            user?h('div',{style:{display:'flex',gap:8,alignItems:'center'}},
+              h('button',{className:'btn bp',style:{padding:'7px 12px',fontSize:13},onClick:function(){setPage('create');}},'+ Post'),
+              h('button',{className:'btn bg',style:{fontSize:12,padding:'6px 10px'},onClick:logout},'Out'))
+            :h('div',{style:{display:'flex',gap:6}},
+              h('button',{className:'btn bg',style:{fontSize:12},onClick:function(){setAuth('login');}},'Login'),
+              h('button',{className:'btn bp',style:{padding:'7px 12px',fontSize:13},onClick:function(){setAuth('signup');}},'Join free')))),
+
+        /* LAYOUT */
+        h('div',{className:'lay'},h('div',{className:'lc'},
+
+          /* Config notice */
+          !IS_CFG&&isFeed&&h('div',{className:'cnote'},
+            h('strong',null,'⚙️ Action needed:'),
+            ' Go to your Supabase dashboard → Settings → API and copy the ',
+            h('code',null,'anon / public'),
+            ' key. Replace ',h('code',null,'PASTE_YOUR_ANON_KEY_HERE'),' at the top of this file.',
+            h('br',null),
+            h('span',{style:{color:'rgba(245,158,11,.7)',fontSize:11}},'⚠️ Never use the service_role key in browser code — it bypasses all security.')),
+
+          /* Detail */
+          page==='detail'&&active&&h(PostDetail,{post:active,user:user,onBack:function(){setPage('home');setActive(null);},onNeedAuth:needAuth}),
+
+          /* Feed */
+          isFeed&&h('div',null,
+            page==='home'&&h('div',{className:'hero'},
+              h('div',{className:'hey'},'anonymous · safe · real'),
+              h('h1',{className:'htitle'},'HeartConfia'),
+              h('p',{className:'hsub'},'Share the stories you\'ve never told anyone. No names. No judgment. Just hearts.'),
+              user?h('div',{style:{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}},
+                h('button',{className:'btn bp',onClick:function(){setPage('create');}},'💔 Share your confession'),
+                h('button',{className:'btn bs',onClick:function(){setShowPro(true);}},'💎 Go Pro'))
+                :h('div',{style:{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}},
+                  h('button',{className:'btn bp',onClick:function(){setAuth('signup');}},'Join anonymously'),
+                  h('button',{className:'btn bs',onClick:function(){setAuth('login');}},'Log in'))),
+            page!=='home'&&h('div',{className:'sh'},
+              h('h2',{className:'st'},titles[page]),h('span',{className:'sbadge'},feed.length)),
+            h('div',{className:'pills'},['all'].concat(TAGS).map(function(t){
+              return h('button',{key:t,className:'pill '+(tagFilter===t?'on':''),onClick:function(){setTagFilter(t);}},t==='all'?'All stories':t);
+            })),
+            user&&h('div',{className:'cpbar',onClick:function(){setPage('create');}},
+              h('div',{className:'ava'},user.anonymous_name.charAt(0)),
+              h('span',{style:{fontSize:14,color:'var(--tx3)'}},'Something\'s weighing on you. Share it as @'+user.anonymous_name+'…')),
+            loading?h('div',{style:{display:'flex',justifyContent:'center',padding:'60px 0'}},h('span',{className:'spin',style:{width:36,height:36}}))
+              :feed.length===0?h('div',{className:'empty'},h('div',{className:'empi'},'🕊️'),h('div',{className:'empt'},'Nothing here yet'),h('p',null,'Be the first to share.'))
+              :feed.map(function(post,i){return h(PostCard,{key:post.id,post:post,user:user,onClick:function(){openPost(post);},onNeedAuth:needAuth,delay:Math.min(i*.05,.3)});})),
+
+          /* Trending */
+          page==='trending'&&h(TrendingPage,{posts:posts,user:user,onOpen:openPost,onNeedAuth:needAuth}),
+
+          /* Create */
+          page==='create'&&(user
+            ?h(CreatePost,{user:user,onBack:function(){setPage('home');},onPost:newPost,addToast:addToast})
+            :h('div',{style:{textAlign:'center',padding:'80px 20px'}},
+              h('div',{style:{fontSize:46,marginBottom:14}},'🔒'),
+              h('div',{className:'st'},'Sign in to share your confession'),
+              h('div',{style:{marginTop:20,display:'flex',gap:12,justifyContent:'center'}},
+                h('button',{className:'btn bp',onClick:function(){setAuth('signup');}},'Sign up free'),
+                h('button',{className:'btn bs',onClick:function(){setAuth('login');}},'Log in')))),
+
+          /* Profile */
+          page==='profile'&&h(ProfilePage,{user:user,posts:posts,onBack:function(){setPage('home');},addToast:addToast,onNeedAuth:needAuth}),
+
+          /* Admin */
+          page==='admin'&&isAdmin&&h(AdminPanel,{user:user,addToast:addToast}))),
+
+        /* Modals & Toasts */
+        auth&&h(AuthModal,{initMode:auth,onClose:function(){setAuth(null);},onAuth:handleAuth}),
+        showPro&&h(ProModal,{onClose:function(){setShowPro(false);}}),
+        h(Toasts,{items:toasts}));
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(h(App,null));
+  } catch(e) {
+    document.getElementById('root').innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;padding:20px;text-align:center">'
+      +'<div style="font-size:48px">💔</div>'
+      +'<div style="font-family:Georgia,serif;font-size:22px;color:#f0eef8">Something went wrong</div>'
+      +'<p style="color:#9a96b4;font-size:14px;max-width:400px">'+e.message+'</p>'
+      +'<button onclick="location.reload()" style="background:linear-gradient(135deg,#ff4d6d,#c9184a);color:#fff;border:none;border-radius:50px;padding:12px 24px;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">Reload</button>'
+      +'</div>';
+    console.error('HeartConfia boot error:',e);
+  }
+}
+</script>
 
 </body>
 </html>
