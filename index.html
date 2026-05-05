@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HeartConfia 💔 — Anonymous Relationship Confessions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070d;--s1:#0f0f18;--s2:#161622;--s3:#1e1e30;--s4:#252538;
+  --bd:rgba(255,255,255,0.06);--bd2:rgba(255,255,255,0.11);--bd3:rgba(255,255,255,0.18);
+  --tx:#f2f0ff;--tx2:#a09cbd;--tx3:#5f5b7a;--tx4:#3d3a55;
+  --rose:#ff3d5a;--rdim:rgba(255,61,90,0.14);--rglow:rgba(255,61,90,0.3);
+  --violet:#8b5cf6;--vdim:rgba(139,92,246,0.14);
+  --amber:#f59e0b;--teal:#10b981;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden}
+#root{min-height:100vh}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--s4);border-radius:2px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes hb{0%,100%{transform:scale(1)}15%{transform:scale(1.3)}30%{transform:scale(1)}45%{transform:scale(1.14)}60%{transform:scale(1)}}
+@keyframes popIn{0%{transform:scale(0.85);opacity:0}65%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+@keyframes bounceVote{0%{transform:scale(1)}30%{transform:scale(1.45)}60%{transform:scale(0.9)}100%{transform:scale(1)}}
+@keyframes floatUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(1.7)}}
+@keyframes gradShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes liveBlip{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.65)}}
+@keyframes borderPulse{0%,100%{border-color:rgba(255,61,90,.25)}50%{border-color:rgba(255,61,90,.65)}}
+@keyframes countUp{from{transform:translateY(8px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:50px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s;white-space:nowrap}
+.bp{background:linear-gradient(135deg,var(--rose),#c9184a);color:#fff;box-shadow:0 4px 20px var(--rglow)}
+.bp:hover{transform:translateY(-2px);box-shadow:0 8px 32px var(--rglow)}
+.bs{background:var(--s2);color:var(--tx);border:1px solid var(--bd2)}
+.bs:hover{background:var(--s3);border-color:var(--bd3)}
+.bg{background:transparent;color:var(--tx2);padding:8px 14px}
+.bg:hover{color:var(--tx);background:var(--s2)}
+.bv{background:linear-gradient(135deg,var(--violet),#6d28d9);color:#fff;box-shadow:0 4px 20px rgba(139,92,246,.3)}
+.bt{background:linear-gradient(135deg,var(--teal),#059669);color:#fff}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none!important}
+
+.inp{width:100%;padding:13px 16px;background:var(--s2);border:1px solid var(--bd);border-radius:12px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:all .2s}
+.inp:focus{border-color:var(--rose);box-shadow:0 0 0 3px rgba(255,61,90,.1)}
+.inp::placeholder{color:var(--tx3)}
+textarea.inp{resize:vertical;min-height:120px;line-height:1.7}
+
+/* Nav */
+.nav{position:fixed;top:0;left:0;right:0;height:62px;z-index:200;background:rgba(7,7,13,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:10px}
+.nlogo{font-family:'Playfair Display',serif;font-size:20px;font-weight:900;color:var(--rose);cursor:pointer;flex-shrink:0;user-select:none;animation:hb 4s ease-in-out infinite;display:inline-block;text-shadow:0 0 28px rgba(255,61,90,.5)}
+.ntabs{display:flex;gap:2px;flex:1;overflow-x:auto;scrollbar-width:none}
+.ntabs::-webkit-scrollbar{display:none}
+.ntab{padding:7px 14px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);transition:all .2s;border:none;background:transparent;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.ntab:hover{color:var(--tx);background:var(--s2)}
+.ntab.on{color:var(--rose);background:var(--rdim);font-weight:600}
+
+/* Live ticker */
+.ticker-wrap{background:rgba(255,61,90,.07);border-bottom:1px solid rgba(255,61,90,.12);height:34px;overflow:hidden;display:flex;align-items:center;position:fixed;top:62px;left:0;right:0;z-index:199}
+.ticker-track{display:inline-flex;animation:ticker 50s linear infinite;white-space:nowrap}
+.ticker-item{font-size:12px;font-weight:500;color:var(--tx2);padding:0 28px;display:inline-flex;align-items:center;gap:8px}
+.ticker-dot{width:5px;height:5px;border-radius:50%;background:var(--rose);animation:liveBlip 1.2s ease infinite;flex-shrink:0}
+
+/* Layout */
+.lay{display:grid;grid-template-columns:1fr min(720px,100%) 1fr;min-height:100vh;padding-top:96px}
+.lc{grid-column:2;padding:20px 16px 100px}
+
+/* Emotional badges */
+.ebadge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.eb-hot{background:linear-gradient(135deg,rgba(255,61,90,.2),rgba(245,158,11,.2));color:#fbbf24;border:1px solid rgba(255,61,90,.3);animation:borderPulse 2s ease infinite}
+.eb-trending{background:rgba(245,158,11,.14);color:var(--amber);border:1px solid rgba(245,158,11,.28)}
+.eb-sad{background:rgba(99,102,241,.14);color:#818cf8;border:1px solid rgba(99,102,241,.28)}
+.eb-toxic{background:rgba(239,68,68,.14);color:#f87171;border:1px solid rgba(239,68,68,.28)}
+.eb-wild{background:rgba(234,179,8,.14);color:#facc15;border:1px solid rgba(234,179,8,.28)}
+.eb-debated{background:rgba(139,92,246,.14);color:#a78bfa;border:1px solid rgba(139,92,246,.28)}
+
+/* Post card */
+.pc{background:var(--s1);border:1px solid var(--bd);border-radius:20px;padding:22px;margin-bottom:14px;cursor:pointer;transition:all .3s cubic-bezier(.4,0,.2,1);animation:fadeUp .45s ease both;position:relative;overflow:hidden}
+.pc::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--rose),var(--violet),var(--amber));opacity:0;transition:opacity .3s}
+.pc:hover{border-color:rgba(255,61,90,.22);transform:translateY(-3px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.pc:hover::before{opacity:1}
+.ptb{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em}
+.ptb.confession{color:var(--rose)}.ptb.advice{color:#a78bfa}.ptb.hot_take{color:var(--amber)}
+.ptitle{font-family:'Playfair Display',serif;font-size:19px;font-weight:900;line-height:1.32;color:var(--tx);margin-bottom:10px;letter-spacing:-.01em}
+.pprev{font-size:14px;line-height:1.75;color:var(--tx2);margin-bottom:16px}
+.pprev-clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.pmeta{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--tx3);margin-bottom:14px;flex-wrap:wrap}
+.pdot{width:3px;height:3px;border-radius:50%;background:var(--tx4);flex-shrink:0}
+.aname{color:var(--tx2);font-weight:600}
+
+/* Reactions */
+.rxrow{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.rxb{display:flex;align-items:center;gap:5px;padding:7px 13px;border-radius:50px;background:var(--s2);border:1px solid var(--bd);cursor:pointer;font-size:13px;font-weight:600;color:var(--tx2);transition:all .2s;font-family:'DM Sans',sans-serif;position:relative;overflow:hidden}
+.rxb:hover{border-color:rgba(255,61,90,.3);color:var(--tx);transform:scale(1.06)}
+.rxb.on{background:var(--rdim);border-color:rgba(255,61,90,.4);color:var(--rose)}
+.float-emoji{position:fixed;pointer-events:none;font-size:22px;animation:floatUp .9s ease forwards;z-index:9999}
+
+/* Engagement bar */
+.eng-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 16px;background:var(--s2);border-radius:12px;margin-top:14px;flex-wrap:wrap}
+.eng-stat{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--tx2)}
+.eng-stat.hot{color:var(--amber)}
+
+/* Blur / Paywall */
+.blw{position:relative;max-height:90px;overflow:hidden}
+.blw::after{content:'';position:absolute;bottom:0;left:0;right:0;height:75px;background:linear-gradient(transparent,var(--s1))}
+.pw{padding:24px 20px;background:linear-gradient(to bottom,transparent,rgba(15,15,24,.98) 22%);text-align:center;border-top:1px solid rgba(255,61,90,.14);margin:0 -22px -22px;border-radius:0 0 20px 20px}
+.pw-head{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;color:var(--tx);margin-bottom:7px;line-height:1.3}
+.pw-sub{font-size:13px;color:var(--tx2);margin-bottom:18px;line-height:1.65}
+.pw-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* Modal */
+.mov{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.88);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .2s ease}
+.mod{background:var(--s1);border:1px solid var(--bd2);border-radius:24px;padding:34px;width:100%;max-width:430px;position:relative;animation:popIn .3s ease;max-height:92vh;overflow-y:auto}
+.mclose{position:absolute;top:14px;right:14px;background:var(--s2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--tx2);font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.mclose:hover{background:var(--s3);color:var(--tx)}
+.flbl{font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:6px;display:block}
+.mswitch{text-align:center;font-size:14px;color:var(--tx2);margin-top:16px}
+.mswitch button{background:none;border:none;color:var(--rose);cursor:pointer;font-weight:700;font-size:14px;font-family:'DM Sans',sans-serif}
+.mtabs{display:flex;gap:4px;background:var(--s2);border-radius:12px;padding:4px;margin-bottom:22px}
+.mtab{flex:1;padding:9px;border-radius:9px;border:none;background:transparent;color:var(--tx2);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.mtab.on{background:var(--rdim);color:var(--rose)}
+
+/* WHO IS WRONG */
+.wiw{background:linear-gradient(135deg,rgba(255,61,90,.06),rgba(139,92,246,.06));border:1px solid rgba(255,61,90,.18);border-radius:16px;padding:18px;margin:18px 0}
+.wiw-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.14em;color:var(--tx3);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.wiw-title::after{content:'';flex:1;height:1px;background:var(--bd)}
+.wiw-opts{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.wiw-btn{flex:1;min-width:80px;padding:14px 8px;border-radius:14px;border:2px solid var(--bd2);background:var(--s2);cursor:pointer;text-align:center;font-family:'DM Sans',sans-serif;font-weight:700;font-size:13px;transition:all .25s;line-height:1.5;color:var(--tx2)}
+.wiw-btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.wiw-btn.he.sel,.wiw-btn.he:hover{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.5);color:#f87171}
+.wiw-btn.she.sel,.wiw-btn.she:hover{background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.5);color:#a78bfa}
+.wiw-btn.both.sel,.wiw-btn.both:hover{background:rgba(156,163,175,.14);border-color:rgba(156,163,175,.45);color:#d1d5db}
+.wiw-btn.sel{animation:bounceVote .4s ease}
+.wiw-icon{font-size:20px;display:block;margin-bottom:5px}
+.wiw-bars{display:flex;flex-direction:column;gap:8px}
+.wiw-row{display:flex;align-items:center;gap:10px}
+.wiw-lbl{width:68px;font-weight:600;color:var(--tx2);flex-shrink:0;font-size:12px}
+.wiw-track{flex:1;height:8px;border-radius:4px;background:var(--s3);overflow:hidden}
+.wiw-fill{height:100%;border-radius:4px;transition:width .8s cubic-bezier(.4,0,.2,1)}
+.wiw-fill.he{background:linear-gradient(90deg,#ef4444,#dc2626)}
+.wiw-fill.she{background:linear-gradient(90deg,#8b5cf6,#6d28d9)}
+.wiw-fill.both{background:linear-gradient(90deg,#9ca3af,#6b7280)}
+.wiw-pct{font-weight:700;font-size:12px;min-width:32px;text-align:right}
+.wiw-total{text-align:center;font-size:12px;color:var(--tx3);margin-top:10px;font-weight:500}
+.wiw-verdict{text-align:center;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:700;margin-top:10px}
+.wiw-verdict.he{background:rgba(239,68,68,.1);color:#f87171}
+.wiw-verdict.she{background:rgba(139,92,246,.1);color:#a78bfa}
+.wiw-verdict.both{background:rgba(156,163,175,.1);color:#d1d5db}
+
+/* Comments */
+.cmt-sort{display:flex;gap:8px;margin-bottom:18px;overflow-x:auto;scrollbar-width:none}
+.cmt-sort::-webkit-scrollbar{display:none}
+.csb{padding:6px 14px;border-radius:50px;font-size:12px;font-weight:600;border:1px solid var(--bd);background:var(--s2);color:var(--tx2);cursor:pointer;white-space:nowrap;transition:all .2s;font-family:'DM Sans',sans-serif}
+.csb.on{background:var(--rdim);border-color:rgba(255,61,90,.4);color:var(--rose)}
+.cmt-row{display:flex;gap:12px;margin-bottom:24px;align-items:flex-start}
+.ava{width:38px;height:38px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(--rose),var(--violet));display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff}
+.ava.sm{width:30px;height:30px;font-size:11px}
+.cc{padding:16px 18px;background:var(--s2);border:1px solid var(--bd);border-radius:14px;margin-bottom:10px;animation:fadeUp .3s ease;transition:border-color .2s}
+.cc:hover{border-color:var(--bd2)}
+.cc.top{border-color:rgba(245,158,11,.3);background:linear-gradient(135deg,rgba(245,158,11,.04),var(--s2))}
+.cc.heated{border-color:rgba(239,68,68,.22)}
+.cc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.cc-body{font-size:14px;line-height:1.7;color:var(--tx2)}
+.cc-foot{display:flex;align-items:center;gap:12px;margin-top:10px}
+.cc-rxb{display:flex;align-items:center;gap:4px;padding:4px 10px;border-radius:50px;background:var(--s3);border:1px solid var(--bd);cursor:pointer;font-size:12px;font-weight:600;color:var(--tx3);transition:all .2s;font-family:'DM Sans',sans-serif}
+.cc-rxb:hover,.cc-rxb.on{color:var(--rose);border-color:rgba(255,61,90,.3)}
+.cc-reply{font-size:12px;color:var(--tx3);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;transition:color .2s;font-weight:600;display:flex;align-items:center;gap:4px}
+.cc-reply:hover{color:var(--rose)}
+.top-lbl{font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.hot-lbl{font-size:10px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:4px}
+
+/* Trending */
+.trn{font-family:'Playfair Display',serif;font-size:38px;font-weight:900;line-height:1;min-width:46px}
+.trn.g{background:linear-gradient(135deg,#f59e0b,#d97706);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.trn.s{background:linear-gradient(135deg,#9ca3af,#6b7280);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.trn.b{background:linear-gradient(135deg,#b45309,#92400e);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.trn.d{color:var(--s4)}
+
+/* Pills */
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;margin-bottom:20px}
+.pills::-webkit-scrollbar{display:none}
+.pill{padding:7px 18px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--s1);color:var(--tx2);transition:all .2s;white-space:nowrap;font-family:'DM Sans',sans-serif}
+.pill:hover{border-color:rgba(255,61,90,.35);color:var(--rose)}
+.pill.on{background:var(--rdim);border-color:rgba(255,61,90,.45);color:var(--rose)}
+
+/* Hero */
+.hero{text-align:center;padding:36px 0 28px;position:relative}
+.hero::before{content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(255,61,90,.08),transparent 70%);pointer-events:none}
+.hey{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;color:var(--rose);margin-bottom:10px}
+.htitle{font-family:'Playfair Display',serif;font-size:clamp(36px,9vw,58px);font-weight:900;line-height:1.06;background:linear-gradient(140deg,var(--tx) 30%,var(--rose) 65%,var(--violet));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px;background-size:200% 200%;animation:gradShift 6s ease infinite}
+.hsub{font-size:15px;color:var(--tx2);max-width:380px;margin:0 auto 28px;line-height:1.7}
+
+/* Stats */
+.statg{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.statb{background:var(--s2);border:1px solid var(--bd);border-radius:14px;padding:18px;text-align:center}
+.statn{font-family:'Playfair Display',serif;font-size:30px;font-weight:900;color:var(--tx)}
+.statl{font-size:12px;color:var(--tx3);margin-top:4px;font-weight:500}
+
+/* Misc */
+.sh{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.st{font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:var(--tx)}
+.sbadge{padding:3px 11px;border-radius:50px;background:var(--rdim);color:var(--rose);font-size:12px;font-weight:700}
+.cpbar{background:linear-gradient(135deg,rgba(255,61,90,.07),rgba(139,92,246,.05));border:1px solid rgba(255,61,90,.15);border-radius:16px;padding:16px 20px;margin-bottom:20px;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:14px}
+.cpbar:hover{border-color:rgba(255,61,90,.32);transform:translateY(-1px)}
+.bkbtn{display:inline-flex;align-items:center;gap:7px;color:var(--tx2);font-size:14px;font-weight:600;cursor:pointer;background:none;border:none;padding:8px 0;margin-bottom:20px;transition:color .2s;font-family:'DM Sans',sans-serif}
+.bkbtn:hover{color:var(--tx)}
+.div{height:1px;background:var(--bd);margin:24px 0}
+.spin{width:20px;height:20px;border:2px solid var(--bd);border-top-color:var(--rose);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;display:inline-block}
+.empty{text-align:center;padding:60px 20px;color:var(--tx3)}
+.empi{font-size:48px;margin-bottom:12px}
+.empt{font-family:'Playfair Display',serif;font-size:20px;color:var(--tx2);margin-bottom:8px}
+.twrap{position:fixed;bottom:24px;right:20px;z-index:2000;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.toast{padding:13px 18px;border-radius:14px;background:var(--s2);border:1px solid var(--bd2);font-size:14px;color:var(--tx);box-shadow:0 12px 40px rgba(0,0,0,.5);animation:fadeUp .3s ease;display:flex;align-items:center;gap:10px;min-width:200px;max-width:320px}
+.toast.suc{border-color:rgba(16,185,129,.4)}.toast.er{border-color:rgba(255,61,90,.4)}
+.cnote{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--amber);line-height:1.65}
+.cnote code{background:rgba(245,158,11,.15);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:50px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
+.tc{background:rgba(239,68,68,.12);color:#f87171}.tb{background:var(--rdim);color:var(--rose)}.td{background:var(--vdim);color:#a78bfa}.tm{background:rgba(16,185,129,.12);color:var(--teal)}.ts{background:rgba(245,158,11,.12);color:var(--amber)}
+.notifwrap{position:relative}
+.nbtn{background:var(--s2);border:1px solid var(--bd);border-radius:50%;width:38px;height:38px;cursor:pointer;color:var(--tx2);font-size:15px;display:flex;align-items:center;justify-content:center;position:relative;transition:all .2s;flex-shrink:0}
+.nbtn:hover{background:var(--s3);color:var(--tx)}
+.nbadge{position:absolute;top:-4px;right:-4px;background:var(--rose);color:#fff;font-size:10px;font-weight:700;width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)}
+.npanel{position:absolute;top:calc(100% + 10px);right:0;width:300px;background:var(--s1);border:1px solid var(--bd2);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.6);z-index:200;max-height:380px;overflow-y:auto;animation:fadeUp .2s ease}
+.nitem{padding:13px 16px;border-bottom:1px solid var(--bd);cursor:pointer;transition:background .2s}
+.nitem:hover{background:var(--s2)}.nitem.unread{background:rgba(255,61,90,.05)}
+.ndot{width:7px;height:7px;border-radius:50%;background:var(--rose);flex-shrink:0;margin-top:5px}
+.streakc{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:50px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:var(--amber);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0}
+.hottimer{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:50px;background:rgba(255,61,90,.12);border:1px solid rgba(255,61,90,.25);font-size:12px;font-weight:700;color:var(--rose)}
+.upcard{background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.2);border-radius:12px;padding:12px 16px;margin-bottom:8px}
+.uplbl{font-size:11px;color:var(--teal);font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
+.repopt{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:12px;border:1px solid var(--bd);background:var(--s2);cursor:pointer;transition:all .2s;font-size:14px;color:var(--tx2);margin-bottom:8px}
+.repopt:hover{border-color:rgba(255,61,90,.35);color:var(--tx)}
+.repopt.sel{background:var(--rdim);border-color:rgba(255,61,90,.45);color:var(--rose)}
+.prorow{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--bd)}
+.prorow:last-child{border-bottom:none}
+.adm{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.bdrow{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:24px}
+
+@media(max-width:600px){
+  .nav{padding:0 10px;gap:6px}
+  .lc{padding:12px 10px 100px}
+  .mod{padding:24px 16px;border-radius:20px}
+  .wiw-opts{flex-direction:column}
+  .ptitle{font-size:17px}
+  .npanel{width:260px;right:-40px}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function(){
+'use strict';
+var R=window.React,RD=window.ReactDOM,h=R.createElement;
+var useState=R.useState,useEffect=R.useEffect,useRef=R.useRef;
+
+/* ══ CONFIG ══ */
+var SUPABASE_URL='https://rihritdkzvmqoeckleud.supabase.co';
+var SUPABASE_KEY='PASTE_ANON_KEY_HERE';
+var ADMIN_EMAIL='netlifesocaial@gmail.com';
+var HOT_TTL=48*3600*1000;
+var IS_CFG=SUPABASE_KEY!=='PASTE_ANON_KEY_HERE';
+var sb=null;
+if(IS_CFG){try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.warn(e);}}
+
+/* ══ UTILS ══ */
+var TAGS=['cheating','breakup','dating','marriage','situationship'];
+var RX=['🔥','😂','😢','😡'];
+var TCLASS={cheating:'tc',breakup:'tb',dating:'td',marriage:'tm',situationship:'ts'};
+var REASONS=['Harmful content','Harassment','Spam','Fake story','Other'];
+function ago(iso){var s=(Date.now()-new Date(iso).getTime())/1000;if(s<60)return 'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago';}
+function makeName(){var p=['Heart','Confess','Soul','Echo','Ache','Muse','Pulse','Veil','Rift','Dusk'];return p[Math.floor(Math.random()*p.length)]+'_'+Math.floor(1000+Math.random()*9000);}
+function feedScore(p){var rx=Object.values(p.reaction_counts||{}).reduce(function(a,v){return a+v;},0);var eng=rx+(p.comment_count||0)*3+((p.vote_a||0)+(p.vote_b||0))*1.5;var age=(Date.now()-new Date(p.created_at).getTime())/3600000;return eng/Math.pow(age+2,1.8);}
+function controvScore(p){var tot=(p.vote_a||0)+(p.vote_b||0);if(tot<3)return 0;return Math.pow(tot,1.5)/(Math.abs((p.vote_a||0)-(p.vote_b||0))+1);}
+function hotLeft(c){var r=new Date(c).getTime()+HOT_TTL-Date.now();if(r<=0)return null;return Math.floor(r/3600000)+'h '+Math.floor((r%3600000)/60000)+'m';}
+function getStreak(){try{return JSON.parse(localStorage.getItem('hc_sk')||'{"count":0,"last":""}');}catch(e){return{count:0,last:''};}}
+function bumpStreak(){var today=new Date().toDateString();var d=getStreak();if(d.last===today)return d;var nd={count:d.last===new Date(Date.now()-86400000).toDateString()?d.count+1:1,last:today};localStorage.setItem('hc_sk',JSON.stringify(nd));return nd;}
+function calcKarma(mp){return mp.reduce(function(k,p){return k+Object.values(p.reaction_counts||{}).reduce(function(a,v){return a+v;},0)+(p.comment_count||0)+10;},0);}
+function getBadges(karma,myPosts,streak){var b=[];if(myPosts.length>=1)b.push({i:'🌱',l:'First Confession'});if(karma>=50)b.push({i:'⭐',l:'Rising Star'});if(karma>=250)b.push({i:'🔥',l:'On Fire'});if(karma>=1000)b.push({i:'👑',l:'Legend'});if(streak>=3)b.push({i:'📅',l:'Dedicated'});if(streak>=7)b.push({i:'🏆',l:'Week Warrior'});return b;}
+
+/* ══ EMOTIONAL BADGES ══ */
+function getEmoBadges(post){
+  var badges=[];
+  var rx=Object.values(post.reaction_counts||{}).reduce(function(a,v){return a+v;},0);
+  var comments=post.comment_count||0;
+  var ageH=(Date.now()-new Date(post.created_at).getTime())/3600000;
+  var score=feedScore(post);
+  var wiwTot=(post.wiw_he||0)+(post.wiw_she||0)+(post.wiw_both||0);
+  if(score>200&&ageH<24)badges.push({cls:'eb-hot',i:'🔥',l:'Trending Now'});
+  else if(score>80)badges.push({cls:'eb-trending',i:'🔥',l:'Trending'});
+  if((post.reaction_counts&&post.reaction_counts['😢']||0)>200)badges.push({cls:'eb-sad',i:'💔',l:'Saddest Story'});
+  if((post.reaction_counts&&post.reaction_counts['😡']||0)>300)badges.push({cls:'eb-toxic',i:'😳',l:'Most Toxic'});
+  if((post.reaction_counts&&post.reaction_counts['😂']||0)>150)badges.push({cls:'eb-wild',i:'😂',l:'Wildest'});
+  if(wiwTot>50){var diff=Math.abs((post.wiw_he||0)-(post.wiw_she||0));if(diff/wiwTot<0.2)badges.push({cls:'eb-debated',i:'🧠',l:'Most Debated'});}
+  if(comments>50&&ageH<12)badges.push({cls:'eb-debated',i:'💬',l:'Hot Discussion'});
+  return badges.slice(0,2);
+}
+
+/* ══ SEED DATA ══ */
+var STORIES=[
+  {type:'confession',title:"I picked up my girlfriend's phone to check the time and saw something I still can't forget…",content:"She'd left her messages open. I wasn't snooping — I just wanted the time. The name at the top was someone I'd never heard of. The last message was sent at 2:47am. That's all I could read before my hands started shaking.\n\nWe've been together four years. I put the phone back down. That was three weeks ago and I haven't said a word. I can't sleep.",tags:['cheating']},
+  {type:'confession',title:"My husband cried at our wedding. I was the reason — but not in the way anyone thought.",content:"Standing at the altar watching him cry, I felt nothing. Not nerves, not joy — just this hollow, echoing silence where love was supposed to be.\n\nI smiled through the whole ceremony. Our photos look beautiful. I kept waiting for the feeling to arrive. That was 8 months ago.",tags:['marriage']},
+  {type:'confession',title:"She doesn't know I drove past her apartment every night for a month after we broke up.",content:"Not to confront her. Not even hoping she'd see me. Just… to feel close to something that used to be mine. I'd park across the street, watch the light in her window, and drive home.\n\nI've never told anyone that. I barely let myself think it.",tags:['breakup']},
+  {type:'confession',title:"I've been lying about my job to someone I've been talking to for 6 months. I don't know how to stop.",content:"We matched on an app when I was going through a rough patch. I told her I was an architect. I'm not. I work in a call center — which I'm not ashamed of, but I was embarrassed that day and it just… came out.\n\nNow she wants to meet my 'colleagues.' I think about telling the truth every single day.",tags:['dating']},
+  {type:'confession',title:"I found my ex's journal by accident. Now I know exactly how she felt when she left me.",content:"She'd left a box of things at my place. Buried inside was a small notebook. I only read the last ten pages before I stopped myself. But those ten pages answered every question I'd spent two years asking.\n\nShe'd felt trapped for months. And she'd loved me, deeply, right up until she couldn't anymore.\n\nI mailed it back without a note.",tags:['breakup']},
+  {type:'confession',title:"I faked being happy for so long that I forgot what I was pretending about.",content:"My partner is wonderful. Kind, patient, funny. Everyone says we're the perfect couple.\n\nBut there's this quiet dread every time I hear his key in the door. Not because he's done anything wrong. I just think I chose wrong — and I'm terrified I'll be choosing wrong for the rest of my life.",tags:['marriage']},
+  {type:'confession',title:"The person I was cheating with just had a baby. It might be mine.",content:"We ended things eight months ago. I'm married. My wife wants kids. We've been trying.\n\nShe texted me last week. A photo. No words.\n\nI don't know what to do. I don't know who to tell.",tags:['cheating']},
+  {type:'confession',title:"I stayed in a 6-year relationship because I was afraid of losing the apartment.",content:"This sounds terrible. But when you're 27 in a city where rent is impossible, 'I love you' starts sounding a lot like 'I can't afford to not love you.'\n\nWe finally broke up eight months ago. I'm on a futon in my cousin's living room. I've never been happier.",tags:['breakup','situationship']},
+  {type:'confession',title:"I told everyone my ex was controlling. The truth is more complicated than that.",content:"He was difficult — moody, sometimes cold. But I was worse. I just told the story better after we broke up.\n\nI made myself the victim because it was easier than admitting I pushed every button he had. He probably still thinks I hate him.",tags:['breakup','dating']},
+  {type:'confession',title:"I've been secretly paying my ex's rent for two years. His new girlfriend doesn't know.",content:"We dated for five years. He lost his job during the breakup. I couldn't watch him lose the apartment too. I set up a direct transfer and told him it was a 'loan from a family member.'\n\nHis girlfriend posts about how financially stable he is. I transfer the money every month and say nothing.",tags:['breakup']},
+  {type:'confession',title:"I have a second phone that my wife doesn't know about. It's not what you think.",content:"It's not for cheating. It's for therapy. I started seeing a therapist two years ago and was too ashamed to tell her. I pay for sessions in cash. The phone is so notifications don't show up on our shared family app.\n\nI've gotten so much better. But now I'm trapped in a lie I built to protect myself.",tags:['marriage']},
+  {type:'confession',title:"I went through my partner's messages while he slept. What I found wasn't cheating — but it broke me anyway.",content:"Long conversations with his ex. Not romantic. Just… intimate. The kind of emotional openness he's never had with me. He told her things about his childhood, his fears — things I didn't know after four years.\n\nI put the phone back and sat on the bathroom floor for a long time.",tags:['dating']},
+  {type:'confession',title:"My parents don't know I'm not actually in a relationship. I've been faking a boyfriend for two years.",content:"They were so worried about me after my last breakup. I invented someone. His name is James. He's an engineer. He can't make it to family events because he 'travels for work.'\n\nLast Christmas they asked when they'd meet him. I said Easter. It's February.",tags:['dating']},
+  {type:'confession',title:"I kissed my best friend's girlfriend at their engagement party. She kissed me back.",content:"We've been pretending it didn't happen for four months. We see each other at least twice a week. Their wedding is in July. I'm the best man.\n\nHe's my oldest friend. I don't know who I am right now.",tags:['cheating']},
+  {type:'confession',title:"My situationship ended and I'm grieving harder than I ever did after a real breakup.",content:"We never put a label on it. So technically nothing ended. He just… stopped texting the same way.\n\nI have to pretend I'm fine because we weren't even officially together. How do you mourn something that was never named?",tags:['situationship']},
+  {type:'confession',title:"I've been sleeping in the guest room for 6 months. My husband thinks it's my back.",content:"My back is fine.",tags:['marriage']},
+  {type:'confession',title:"I turned down a job in another city without telling my partner it existed.",content:"The salary would have changed our lives. But the job was in a city where my ex lives. I told myself it was about the relationship.\n\nBut the truth is I didn't trust myself.",tags:['dating','cheating']},
+  {type:'confession',title:"I don't think I've ever been in love. I've been in comfort, in convenience, in loneliness — but never love.",content:"I'm 34. I've been in three long-term relationships. Every time someone asked if I loved them, I said yes because I wanted it to be true.\n\nI still don't know what it's supposed to feel like.",tags:['dating','situationship']},
+  {type:'confession',title:"I pretended to be asleep when he came home drunk and apologetic. I wanted him to feel what silence feels like.",content:"He sat on the edge of the bed for 20 minutes. I heard him cry quietly. I didn't move.\n\nI've never told him I was awake. I don't know if that makes me cruel or just exhausted.",tags:['dating']},
+  {type:'confession',title:"I got my partner's name tattooed two weeks before we broke up. I knew it was ending when I booked the appointment.",content:"I thought maybe the commitment would fix something. It didn't. We ended it 11 days later.\n\nI now have her name permanently on my ribs. I wear it like something between a scar and a secret.",tags:['breakup','dating']},
+  {type:'advice',title:"He said 'I love you' for the first time during a fight. Does that count?",content:"We've been together 14 months. We never say it. Last night things got heated and in the middle of the argument he blurted out 'because I love you, that's why.'\n\nWe didn't acknowledge it. The fight ended. He fell asleep. I've been awake for three hours. Does that count?",tags:['dating']},
+  {type:'advice',title:"My girlfriend went through my phone, found nothing, and now wants all my passwords. When does this stop?",content:"I gave her my phone password after she found a text from a female colleague she didn't like. Completely innocent. She went through everything — two years of messages — and found nothing.\n\nNow she wants my Instagram, Gmail, and WhatsApp. She says if I have nothing to hide I shouldn't mind.",tags:['dating']},
+  {type:'advice',title:"My husband said he's 'not attracted to me anymore' but wants to work on the marriage. What does that even mean?",content:"He said it kindly. That almost made it worse. He loves me but the physical attraction faded in the last two years and he's been holding it in.\n\nHe doesn't want to leave. He wants to 'figure it out together.' I don't know if I want to be someone's project.",tags:['marriage']},
+  {type:'advice',title:"I broke up with someone who never did anything wrong. Now I can't stop feeling like a monster.",content:"He was good to me. Patient, present, kind. There was nothing to point to. I just knew it wasn't right.\n\nHe was devastated. He still texts occasionally just to say he misses me. I don't regret leaving but I feel like I broke a good person.",tags:['breakup']},
+  {type:'advice',title:"She's been 'needing space' for 3 weeks. We still live together. What does space mean when you share a bed?",content:"She said she needed to 'breathe' and 'think.' I said okay.\n\nWe're cordial. We cook. We sleep on different sides of a bed in silence. She hasn't said what she's thinking about.\n\nDo I ask? Do I wait? How long does someone get to think in the same apartment?",tags:['dating','marriage']},
+  {type:'advice',title:"Found out my boyfriend of 2 years has been hiding $40k in debt from me. Is this a dealbreaker?",content:"We've been having the 'moving in together' conversation for months. He finally showed me his finances last week and my stomach dropped.\n\nHe's been paying minimums on four credit cards and a personal loan. He apologized and said he was embarrassed. I believe him. But can I build a future with someone who hid this?",tags:['dating','marriage']},
+  {type:'advice',title:"My wife and I haven't been intimate in 14 months. She says she's just tired. I believe her but I'm disappearing.",content:"She works incredibly hard. We have two kids. I understand 'tired.'\n\nBut 14 months is a long time to feel unwanted by the one person in the world you chose to be with. I don't know how to raise this without making her feel guilty.",tags:['marriage']},
+  {type:'advice',title:"He told me he was single. I found out he has a girlfriend of 2 years. And I think I'm falling for him anyway.",content:"We work together. We've been spending time outside work for three months. The conversations feel real. The connection feels real.\n\nHis girlfriend apparently exists and he has never mentioned her once. Part of me wants to tell her. Part of me just wants him.",tags:['cheating','dating']},
+  {type:'advice',title:"We broke up 4 months ago and I'm fine — except I compare every person I meet to her. When does that stop?",content:"New dates aren't bad. Some are good, even. But there's always a moment where I notice something she did better, or something she would have found funny.\n\nIs this just grief or is this something I should be more worried about?",tags:['breakup']},
+  {type:'advice',title:"My ex keeps texting me 'just to check in' and I don't know if I want to stop him.",content:"We ended mutually. No disaster, just misalignment. He texts maybe once every two weeks — nothing intense, just gentle. How's the dog, did you see that show.\n\nMy friends say block him. But it feels like blocking a door I'm not sure I want closed. Am I self-destructing or being human?",tags:['breakup']},
+];
+
+var COMMENTS=[
+  "The part that got me was the detail. This isn't vague pain — this is someone who remembers every second of it.",
+  "I had an ex who did something almost identical. It took me four years to fully process it. You're not alone.",
+  "The other person is absolutely in the wrong here. No debate.",
+  "People always assume these situations are black and white. Both people are usually hurting.",
+  "The courage it takes to write this out, even anonymously, is underrated.",
+  "Red flag after red flag and everyone around them probably saw it except the person living it.",
+  "Sometimes you're not the villain in your own story as much as you think you are.",
+  "The way this is written feels incredibly real. I believe you.",
+  "This made me close my eyes for a second. I know this feeling in my body.",
+  "The ending hit different. I wasn't expecting it to hurt like that.",
+  "Coming in hot: OP knows exactly what they should do. The question is whether they have the courage.",
+  "Someone needed to say this out loud. Thank you.",
+  "I've been on the other side of this exact situation. It's just as painful from over here.",
+  "Three years ago I was in an almost identical situation. Here's what I wish someone had told me:",
+  "Can we talk about the fact that nobody around them seems to have noticed? That's the scariest part.",
+];
+
+function makePosts(){
+  return STORIES.map(function(s,i){
+    var age=[2,5,8,12,18,24,36,48,72,96,120,144,168,200,240,280,320,360,400,440,2,7,11,15,19,23,28,34,50,64][i%30]*3600000;
+    var rxBase=Math.floor(Math.random()*1800)+50;
+    return Object.assign({},s,{
+      id:'p'+i, anonymous_name:makeName(),
+      created_at:new Date(Date.now()-age).toISOString(),
+      reaction_counts:{'🔥':Math.floor(rxBase*(.3+Math.random()*.5)),'😂':Math.floor(rxBase*(.05+Math.random()*.15)),'😢':Math.floor(rxBase*(.2+Math.random()*.6)),'😡':Math.floor(rxBase*(.05+Math.random()*.35))},
+      comment_count:Math.floor(Math.random()*450)+15,
+      vote_a:Math.floor(Math.random()*900)+20,vote_b:Math.floor(Math.random()*900)+20,
+      wiw_he:Math.floor(Math.random()*500)+10,wiw_she:Math.floor(Math.random()*500)+10,wiw_both:Math.floor(Math.random()*200)+5,
+      user_id:'u'+i,
+    });
+  });
+}
+
+function makeComments(postId,count){
+  return Array.from({length:Math.min(count||5,8)},function(_,i){
+    return {id:'c'+postId+i,anonymous_name:makeName(),content:COMMENTS[Math.floor(Math.random()*COMMENTS.length)],created_at:new Date(Date.now()-(i+1)*Math.floor(Math.random()*3600000+300000)).toISOString(),upvotes:Math.floor(Math.random()*350)+1,user_id:'cu'+i,heated:Math.random()>.65};
+  });
+}
+
+var ALL_POSTS=makePosts();
+
+/* ══ COMPONENTS ══ */
+
+function Toasts(p){return h('div',{className:'twrap'},p.items.map(function(t){return h('div',{key:t.id,className:'toast '+(t.type==='success'?'suc':t.type==='error'?'er':'')},h('span',null,t.type==='success'?'✅':t.type==='error'?'❌':'💬'),t.msg);}));}
+
+function LiveTicker(p){
+  var items=p.posts.slice(0,10).map(function(post){var rx=Object.values(post.reaction_counts||{}).reduce(function(a,v){return a+v;},0);return '💔 @'+post.anonymous_name+' · '+rx.toLocaleString()+' reactions · "'+post.title.slice(0,40)+'…"';});
+  var all=items.concat(items);
+  return h('div',{className:'ticker-wrap'},h('div',{className:'ticker-track'},all.map(function(item,i){return h('span',{key:i,className:'ticker-item'},h('span',{className:'ticker-dot'}),item);})));
+}
+
+function AuthModal(p){
+  var m=useState(p.initMode||'login'),mode=m[0],setMode=m[1];
+  var e=useState(''),email=e[0],setEmail=e[1];
+  var pw=useState(''),pass=pw[0],setPass=pw[1];
+  var l=useState(false),loading=l[0],setLoading=l[1];
+  var er=useState(''),err=er[0],setErr=er[1];
+  var ok=useState(''),done=ok[0],setDone=ok[1];
+  function sw(x){setMode(x);setErr('');setDone('');}
+  function submit(){
+    setErr('');setLoading(true);
+    if(!IS_CFG){setTimeout(function(){p.onAuth({id:'demo',email:email,anonymous_name:makeName()});setLoading(false);},700);return;}
+    (async function(){try{if(mode==='reset'){var r=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});if(r.error)throw r.error;setDone('Reset link sent 📧');}else if(mode==='signup'){var r2=await sb.auth.signUp({email:email,password:pass});if(r2.error)throw r2.error;if(r2.data&&r2.data.user){await sb.from('users').insert({id:r2.data.user.id,email:email,anonymous_name:makeName()});setDone('Verify your email 💌');}}else{var r3=await sb.auth.signInWithPassword({email:email,password:pass});if(r3.error)throw r3.error;var pr=await sb.from('users').select('*').eq('id',r3.data.user.id).single();p.onAuth(Object.assign({},r3.data.user,{anonymous_name:(pr.data&&pr.data.anonymous_name)||makeName()}));}}catch(ex){setErr(ex.message);}setLoading(false);})();
+  }
+  return h('div',{className:'mov',onClick:function(ev){if(ev.target===ev.currentTarget)p.onClose();}},
+    h('div',{className:'mod'},
+      h('button',{className:'mclose',onClick:p.onClose},'✕'),
+      h('div',{style:{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900,color:'var(--rose)',textAlign:'center',marginBottom:6}},'💔 HeartConfia'),
+      h('p',{style:{textAlign:'center',color:'var(--tx2)',fontSize:14,marginBottom:22}},mode==='login'?'Your secrets are safe here.':mode==='signup'?'Share anonymously. Feel less alone.':'Reset your password.'),
+      mode!=='reset'&&h('div',{className:'mtabs'},h('button',{className:'mtab '+(mode==='login'?'on':''),onClick:function(){sw('login');}},'Log in'),h('button',{className:'mtab '+(mode==='signup'?'on':''),onClick:function(){sw('signup');}},'Sign up')),
+      done?h('div',{style:{textAlign:'center',padding:'20px 0',color:'var(--teal)',fontSize:15,lineHeight:1.6}},done)
+        :h('div',{style:{display:'flex',flexDirection:'column',gap:14}},
+          h('div',null,h('label',{className:'flbl'},'Email'),h('input',{className:'inp',type:'email',placeholder:'your@email.com',value:email,onChange:function(ev){setEmail(ev.target.value);}})),
+          mode!=='reset'&&h('div',null,h('label',{className:'flbl'},'Password'),h('input',{className:'inp',type:'password',placeholder:'••••••••',value:pass,onChange:function(ev){setPass(ev.target.value);},onKeyDown:function(ev){if(ev.key==='Enter')submit();}})),
+          err&&h('p',{style:{color:'var(--rose)',fontSize:13,marginTop:4}},err),
+          h('button',{className:'btn bp',onClick:submit,disabled:loading||!email||(mode!=='reset'&&!pass),style:{width:'100%',justifyContent:'center',padding:'14px'}},loading?h('span',{className:'spin'}):mode==='login'?'Log in':mode==='signup'?'Create account':'Send reset link'),
+          mode==='login'&&h('button',{style:{background:'none',border:'none',color:'var(--tx3)',fontSize:13,cursor:'pointer',textAlign:'center',fontFamily:"'DM Sans',sans-serif",marginTop:4},onClick:function(){sw('reset');}},'Forgot password?')),
+      h('div',{className:'mswitch'},mode==='login'?[h('span',{key:'t'},"Don't have an account? "),h('button',{key:'b',onClick:function(){sw('signup');}},'Sign up free')]:mode==='signup'?[h('span',{key:'t'},'Already have an account? '),h('button',{key:'b',onClick:function(){sw('login');}},'Log in')]:null)));
+}
+
+function Paywall(p){
+  return h('div',{className:'pw'},
+    h('div',{style:{fontSize:36,marginBottom:10}},'🔒'),
+    h('div',{className:'pw-head'},p.headline||'Find out what happened next 💔'),
+    h('p',{className:'pw-sub'},p.sub||'Sign up free to read the full story, vote on who\'s wrong, and join the debate.'),
+    h('div',{className:'pw-btns'},h('button',{className:'btn bp',onClick:p.onSignup,style:{fontSize:15,padding:'12px 28px'}},'Sign up free'),h('button',{className:'btn bs',onClick:p.onLogin},'Log in')));
+}
+
+function WhoIsWrong(p){
+  var ws=useState({he:p.post.wiw_he||0,she:p.post.wiw_she||0,both:p.post.wiw_both||0});
+  var votes=ws[0],setVotes=ws[1];
+  var vs=useState(null),voted=vs[0],setVoted=vs[1];
+  var total=votes.he+votes.she+votes.both;
+  function pct(v){return total>0?Math.round((v/total)*100):33;}
+  function vote(c){
+    if(!p.user){p.onNeedAuth();return;}
+    if(voted)return;
+    var nv=Object.assign({},votes);nv[c]++;setVotes(nv);setVoted(c);
+    if(sb&&p.user.id!=='demo')sb.from('wiw_votes').insert({post_id:p.post.id,user_id:p.user.id,choice:c});
+  }
+  var leading=total>0?(votes.he>votes.she&&votes.he>votes.both?'he':votes.she>votes.he&&votes.she>votes.both?'she':'both'):null;
+  var verdicts={he:'The community says: He is wrong 🟥',she:'The community says: She is wrong 🟪',both:'The community says: Both are wrong ⚪'};
+  return h('div',{className:'wiw'},
+    h('div',{className:'wiw-title'},'⚖️ Who is in the wrong?'),
+    !voted&&h('div',{className:'wiw-opts'},
+      h('button',{className:'wiw-btn he '+(voted==='he'?'sel':''),onClick:function(){vote('he');}},h('span',{className:'wiw-icon'},'🟥'),'He is wrong'),
+      h('button',{className:'wiw-btn she '+(voted==='she'?'sel':''),onClick:function(){vote('she');}},h('span',{className:'wiw-icon'},'🟪'),'She is wrong'),
+      h('button',{className:'wiw-btn both '+(voted==='both'?'sel':''),onClick:function(){vote('both');}},h('span',{className:'wiw-icon'},'⚪'),'Both wrong')),
+    (voted||total>0)&&h('div',null,
+      h('div',{className:'wiw-bars'},
+        [{k:'he',l:'🟥 He',c:'he'},{k:'she',l:'🟪 She',c:'she'},{k:'both',l:'⚪ Both',c:'both'}].map(function(o){
+          return h('div',{key:o.k,className:'wiw-row'},
+            h('span',{className:'wiw-lbl'},o.l),
+            h('div',{className:'wiw-track'},h('div',{className:'wiw-fill '+o.c,style:{width:pct(votes[o.k])+'%'}})),
+            h('span',{className:'wiw-pct',style:{color:o.k==='he'?'#f87171':o.k==='she'?'#a78bfa':'#d1d5db'}},pct(votes[o.k])+'%'));
+        })),
+      h('div',{className:'wiw-total'},total.toLocaleString()+' votes cast'),
+      leading&&voted&&h('div',{className:'wiw-verdict '+leading},verdicts[leading])));
+}
+
+function NotifBell(p){
+  var ns=useState([]),notifs=ns[0],setNotifs=ns[1];
+  var op=useState(false),open=op[0],setOpen=op[1];
+  var ref=useRef();
+  var unread=notifs.filter(function(n){return !n.read;}).length;
+  useEffect(function(){
+    if(!sb||!p.user)return;
+    sb.from('notifications').select('*').eq('user_id',p.user.id).order('created_at',{ascending:false}).limit(25).then(function(r){if(r.data)setNotifs(r.data);});
+    var ch=sb.channel('notifs-'+p.user.id).on('postgres_changes',{event:'INSERT',schema:'public',table:'notifications',filter:'user_id=eq.'+p.user.id},function(pl){setNotifs(function(prev){return [pl.new].concat(prev);});}).subscribe();
+    return function(){sb.removeChannel(ch);};
+  },[p.user&&p.user.id]);
+  useEffect(function(){function cl(ev){if(ref.current&&!ref.current.contains(ev.target))setOpen(false);}document.addEventListener('mousedown',cl);return function(){document.removeEventListener('mousedown',cl);};},[]);
+  function toggle(){var o=!open;setOpen(o);if(o&&unread>0){setNotifs(function(prev){return prev.map(function(n){return Object.assign({},n,{read:true});});});if(sb)sb.from('notifications').update({read:true}).eq('user_id',p.user.id);}}
+  var icons={comment:'💬',reaction:'🔥',vote:'⚖️',trending:'🚀'};
+  return h('div',{className:'notifwrap',ref:ref},
+    h('button',{className:'nbtn',onClick:toggle},'🔔',unread>0&&h('span',{className:'nbadge'},unread>9?'9+':unread)),
+    open&&h('div',{className:'npanel'},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'14px 16px',borderBottom:'1px solid var(--bd)'}},h('span',{style:{fontSize:14,fontWeight:700}},'Notifications')),
+      notifs.length===0?h('div',{style:{padding:'30px 16px',textAlign:'center',color:'var(--tx3)',fontSize:13}},'No notifications yet.')
+        :notifs.map(function(n){return h('div',{key:n.id,className:'nitem '+(n.read?'':'unread')},h('div',{style:{display:'flex',gap:10,alignItems:'flex-start'}},!n.read&&h('div',{className:'ndot'}),h('div',{style:{flex:1}},h('div',{style:{fontSize:13,color:'var(--tx2)',lineHeight:1.5,marginBottom:3}},(icons[n.type]||'📣')+' '+n.message),h('div',{style:{fontSize:11,color:'var(--tx3)'}},ago(n.created_at)))));})));
+}
+
+function ReportModal(p){
+  var rs=useState(''),reason=rs[0],setReason=rs[1];
+  var ds=useState(false),done=ds[0],setDone=ds[1];
+  function submit(){if(sb&&p.user&&p.user.id!=='demo')sb.from('reports').insert({reporter_id:p.user.id,post_id:p.postId||null,comment_id:p.commentId||null,reason:reason});setDone(true);setTimeout(function(){p.onClose();},1500);}
+  return h('div',{className:'mov',onClick:function(ev){if(ev.target===ev.currentTarget)p.onClose();}},
+    h('div',{className:'mod',style:{maxWidth:360}},
+      h('button',{className:'mclose',onClick:p.onClose},'✕'),
+      h('h3',{style:{fontFamily:"'Playfair Display',serif",fontSize:22,marginBottom:8}},'Report content'),
+      done?h('div',{style:{textAlign:'center',padding:'20px 0',color:'var(--teal)',fontSize:15}},'✅ Thanks!')
+        :h('div',null,REASONS.map(function(r){return h('div',{key:r,className:'repopt '+(reason===r?'sel':''),onClick:function(){setReason(r);}},'● '+r);}),
+          h('button',{className:'btn',style:{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',width:'100%',justifyContent:'center',padding:'12px',marginTop:8},onClick:submit,disabled:!reason},'Submit Report'))));
+}
+
+function Comments(p){
+  var cs=useState(makeComments(p.postId,6)),comments=cs[0],setComments=cs[1];
+  var ts=useState(''),text=ts[0],setText=ts[1];
+  var ld=useState(false),sending=ld[0],setSending=ld[1];
+  var so=useState('top'),sortBy=so[0],setSortBy=so[1];
+  var uv=useState({}),upvoted=uv[0],setUpvoted=uv[1];
+  var rp=useState(null),showRep=rp[0],setShowRep=rp[1];
+  useEffect(function(){
+    if(!sb)return;
+    sb.from('comments').select('*').eq('post_id',p.postId).order('upvotes',{ascending:false}).then(function(r){if(r.data&&r.data.length)setComments(r.data);});
+    var ch=sb.channel('comments-'+p.postId).on('postgres_changes',{event:'INSERT',schema:'public',table:'comments',filter:'post_id=eq.'+p.postId},function(pl){setComments(function(prev){return [Object.assign({},pl.new,{heated:Math.random()>.7})].concat(prev);});}).subscribe();
+    return function(){sb.removeChannel(ch);};
+  },[p.postId]);
+  function postComment(){
+    if(!p.user){p.onNeedAuth();return;}
+    if(!text.trim())return;
+    setSending(true);
+    var c={id:Date.now()+'',anonymous_name:p.user.anonymous_name,content:text.trim(),created_at:new Date().toISOString(),upvotes:0,user_id:p.user.id,heated:false};
+    setComments(function(prev){return [c].concat(prev);});setText('');
+    if(sb&&p.user.id!=='demo'){(async function(){await sb.from('comments').insert({post_id:p.postId,user_id:p.user.id,content:c.content});if(p.postOwnerId&&p.postOwnerId!==p.user.id)await sb.from('notifications').insert({user_id:p.postOwnerId,type:'comment',post_id:p.postId,actor_name:p.user.anonymous_name,message:'@'+p.user.anonymous_name+' joined the debate on your confession',read:false});setSending(false);})();}
+    else setTimeout(function(){setSending(false);},400);
+  }
+  function upvote(cid){if(!p.user){p.onNeedAuth();return;}if(upvoted[cid])return;setComments(function(prev){return prev.map(function(c){return c.id===cid?Object.assign({},c,{upvotes:(c.upvotes||0)+1}):c;});});setUpvoted(function(prev){var o=Object.assign({},prev);o[cid]=true;return o;});}
+  var sorted=[].concat(comments).sort(function(a,b){if(sortBy==='heated')return (b.heated?1:0)-(a.heated?1:0)||(b.upvotes||0)-(a.upvotes||0);if(sortBy==='new')return new Date(b.created_at)-new Date(a.created_at);return (b.upvotes||0)-(a.upvotes||0);});
+  var topId=sorted[0]&&comments.length>2&&sorted[0].id;
+  return h('div',null,
+    h('div',{className:'sh',style:{marginBottom:16}},h('span',{className:'st',style:{fontSize:18}},'The Debate'),h('span',{className:'sbadge'},comments.length)),
+    h('div',{className:'cmt-sort'},[{id:'top',l:'🏆 Top'},{id:'heated',l:'🔥 Most Heated'},{id:'new',l:'✨ Newest'}].map(function(s){return h('button',{key:s.id,className:'csb '+(sortBy===s.id?'on':''),onClick:function(){setSortBy(s.id);}},s.l);})),
+    h('div',{className:'cmt-row'},
+      h('div',{className:'ava'},p.user?p.user.anonymous_name.charAt(0):'?'),
+      h('div',{style:{flex:1}},
+        h('textarea',{className:'inp',rows:3,style:{minHeight:76},placeholder:p.user?'Add your take on this situation…':'Sign in to join the debate',value:text,onChange:function(ev){setText(ev.target.value);},disabled:!p.user}),
+        p.user?h('button',{className:'btn bp',style:{marginTop:8},onClick:postComment,disabled:!text.trim()||sending},sending?h('span',{className:'spin'}):'💬 Add your take')
+          :h('button',{className:'btn bs',style:{marginTop:8},onClick:p.onNeedAuth},'Sign in to debate'))),
+    sorted.map(function(c){
+      var isTop=c.id===topId;var isHeat=c.heated&&!isTop;
+      return h('div',{key:c.id,className:'cc '+(isTop?'top ':isHeat?'heated ':'')},
+        isTop&&h('div',{className:'top-lbl'},'🏆 Top Comment'),
+        isHeat&&h('div',{className:'hot-lbl'},'🔥 Heated'),
+        h('div',{className:'cc-head'},
+          h('div',{style:{display:'flex',alignItems:'center',gap:8}},h('div',{className:'ava sm'},c.anonymous_name.charAt(0)),h('span',{style:{fontSize:13,fontWeight:700,color:'var(--tx)'}},'@'+c.anonymous_name)),
+          h('div',{style:{display:'flex',gap:8,alignItems:'center'}},h('span',{style:{fontSize:11,color:'var(--tx3)'}},ago(c.created_at)),h('button',{style:{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:14,lineHeight:1},onClick:function(){setShowRep(c.id);}},'⋯'))),
+        h('p',{className:'cc-body'},c.content),
+        h('div',{className:'cc-foot'},
+          h('button',{className:'cc-rxb '+(upvoted[c.id]?'on':''),onClick:function(){upvote(c.id);}},upvoted[c.id]?'❤️':'🤍',' '+(c.upvotes||0).toLocaleString()),
+          h('button',{className:'cc-reply'},'↩ Reply'),
+          isTop&&h('span',{style:{fontSize:11,color:'var(--amber)',marginLeft:'auto',fontWeight:600}},'Most helpful')));
+    }),
+    showRep&&h(ReportModal,{commentId:showRep,user:p.user,onClose:function(){setShowRep(null);}}));
+}
+
+function StoryUpdates(p){
+  var us=useState([]),updates=us[0],setUpdates=us[1];
+  var ts=useState(''),text=ts[0],setText=ts[1];
+  var ld=useState(false),loading=ld[0],setLoading=ld[1];
+  var isOwner=p.user&&p.user.id===p.post.user_id;
+  useEffect(function(){if(!sb)return;sb.from('post_updates').select('*').eq('post_id',p.post.id).order('created_at',{ascending:true}).then(function(r){if(r.data)setUpdates(r.data);});},[p.post.id]);
+  function add(){if(!text.trim())return;setLoading(true);var u={id:Date.now()+'',content:text.trim(),created_at:new Date().toISOString()};setUpdates(function(prev){return prev.concat([u]);});setText('');if(sb&&p.user.id!=='demo')sb.from('post_updates').insert({post_id:p.post.id,user_id:p.user.id,content:text.trim()});setTimeout(function(){setLoading(false);},400);}
+  if(!isOwner&&updates.length===0)return null;
+  return h('div',{style:{marginBottom:20}},
+    h('div',{style:{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--teal)',marginBottom:12}},'📰 Updates from OP'),
+    updates.map(function(u,i){return h('div',{key:u.id,className:'upcard'},h('div',{className:'uplbl'},'Update #'+(i+1)+' · '+ago(u.created_at)),h('p',{style:{fontSize:14,color:'var(--tx2)',lineHeight:1.7}},u.content));}),
+    isOwner&&h('div',{style:{marginTop:12}},h('textarea',{className:'inp',rows:3,style:{minHeight:76},placeholder:'Add an update…',value:text,onChange:function(ev){setText(ev.target.value);}}),h('button',{className:'btn bt',style:{marginTop:8},onClick:add,disabled:!text.trim()||loading},loading?h('span',{className:'spin'}):'📰 Post Update')));
+}
+
+function PostCard(p){
+  var rs=useState(p.post.reaction_counts||{}),reactions=rs[0],setReactions=rs[1];
+  var ms=useState(null),mine=ms[0],setMine=ms[1];
+  var rp=useState(false),showRep=rp[0],setShowRep=rp[1];
+  var fe=useState([]),floaters=fe[0],setFloaters=fe[1];
+  var ts=useState(p.post.type==='hot_take'?hotLeft(p.post.created_at):null),timer=ts[0];
+  var emBadges=getEmoBadges(p.post);
+
+  function react(ev,type){
+    ev.stopPropagation();
+    if(!p.user){p.onNeedAuth('signup');return;}
+    var id=Date.now();
+    setFloaters(function(prev){return prev.concat([{id:id,emoji:type,x:ev.clientX,y:ev.clientY}]);});
+    setTimeout(function(){setFloaters(function(prev){return prev.filter(function(f){return f.id!==id;});});},950);
+    var prev=mine,r=Object.assign({},reactions);
+    if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}
+    else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}
+    setReactions(r);
+    if(sb&&p.user.id!=='demo'){(async function(){if(prev)await sb.from('reactions').delete().match({post_id:p.post.id,user_id:p.user.id,type:prev});if(prev!==type){await sb.from('reactions').insert({post_id:p.post.id,user_id:p.user.id,type:type});if(p.post.user_id&&p.post.user_id!==p.user.id)await sb.from('notifications').insert({user_id:p.post.user_id,type:'reaction',post_id:p.post.id,actor_name:p.user.anonymous_name,message:'@'+p.user.anonymous_name+' reacted '+type+' to your confession',read:false});}})();}
+  }
+
+  var totalRx=Object.values(reactions).reduce(function(a,v){return a+v;},0);
+  var wiwTot=(p.post.wiw_he||0)+(p.post.wiw_she||0)+(p.post.wiw_both||0);
+  var post=p.post;
+
+  return h('div',null,
+    // Floating emoji particles
+    floaters.map(function(f){return h('span',{key:f.id,className:'float-emoji',style:{left:f.x+'px',top:(f.y-20)+'px'}},f.emoji);}),
+    h('div',{className:'pc',onClick:p.onClick,style:{animationDelay:(p.delay||0)+'s'}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12,gap:8}},
+        h('div',{style:{display:'flex',flexDirection:'column',gap:8}},
+          h('div',{style:{display:'flex',alignItems:'center',gap:8,flexWrap:'wrap'}},
+            h('span',{className:'ptb '+post.type},post.type==='confession'?'💔 Confession':post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take'),
+            post.type==='hot_take'&&timer&&h('span',{className:'hottimer'},'⏱ '+timer)),
+          emBadges.length>0&&h('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},emBadges.map(function(b,i){return h('span',{key:i,className:'ebadge '+b.cls},b.i+' '+b.l);}))),
+        h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center',justifyContent:'flex-end'}},
+          (post.tags||[]).slice(0,2).map(function(t){return h('span',{key:t,className:'tag '+(TCLASS[t]||'')},t);}),
+          h('button',{style:{background:'none',border:'none',color:'var(--tx3)',cursor:'pointer',fontSize:18,padding:'0 2px',lineHeight:1},onClick:function(ev){ev.stopPropagation();setShowRep(true);}},'⋯'))),
+      h('h2',{className:'ptitle'},post.title),
+      h('div',{className:'pmeta'},
+        h('span',{className:'aname'},'@'+post.anonymous_name),h('span',{className:'pdot'}),h('span',null,ago(post.created_at)),
+        totalRx>0&&h('span',{className:'pdot'}),totalRx>0&&h('span',null,totalRx.toLocaleString()+' reactions')),
+      p.user?h('p',{className:'pprev pprev-clamp'},post.content)
+        :h('div',null,h('div',{className:'blw'},h('p',{className:'pprev'},post.content.slice(0,180)+'…')),h(Paywall,{onSignup:function(){p.onNeedAuth('signup');},onLogin:function(){p.onNeedAuth('login');},headline:'Find out what happened next 💔',sub:'Sign up free to read the full story, vote on who\'s wrong, and join the debate.'})),
+      p.user&&wiwTot>0&&h('div',{onClick:function(ev){ev.stopPropagation();p.onClick();},style:{display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'var(--s2)',borderRadius:10,marginBottom:12,fontSize:13,cursor:'pointer'}},
+        h('span',{style:{color:'var(--tx3)',fontWeight:600}},'⚖️ Who is wrong?'),
+        h('span',{style:{color:'var(--tx2)',marginLeft:4}},wiwTot.toLocaleString()+' voted'),
+        h('span',{style:{marginLeft:'auto',fontSize:12,color:'var(--rose)',fontWeight:600}},'See results →')),
+      p.user&&h('div',{className:'eng-bar'},
+        h('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},RX.map(function(r){return h('button',{key:r,className:'rxb '+(mine===r?'on':''),onClick:function(ev){react(ev,r);},style:{padding:'6px 11px',fontSize:12}},r,h('span',null,(reactions[r]||0)>0?(reactions[r]||0).toLocaleString():''));})),
+        h('div',{style:{display:'flex',gap:14,alignItems:'center'}},
+          h('div',{className:'eng-stat'},'💬 '+(post.comment_count||0).toLocaleString()),
+          h('div',{className:'eng-stat '+(wiwTot>100?'hot':'')},'⚖️ '+wiwTot.toLocaleString())))),
+    showRep&&h(ReportModal,{postId:post.id,user:p.user,onClose:function(){setShowRep(false);}}));
+}
+
+function PostDetail(p){
+  var rs=useState(p.post.reaction_counts||{}),reactions=rs[0],setReactions=rs[1];
+  var ms=useState(null),mine=ms[0],setMine=ms[1];
+  var emBadges=getEmoBadges(p.post);
+  if(!p.user) return h('div',{style:{animation:'fadeUp .45s ease both'}},
+    h('button',{className:'bkbtn',onClick:p.onBack},'← Back'),
+    h('div',{style:{background:'var(--s1)',border:'1px solid var(--bd)',borderRadius:20,padding:24}},
+      h('span',{className:'ptb '+p.post.type},p.post.type==='confession'?'💔 Confession':'💬 Seeking Advice'),
+      h('h1',{style:{fontFamily:"'Playfair Display',serif",fontSize:'clamp(22px,5vw,30px)',fontWeight:900,lineHeight:1.2,color:'var(--tx)',margin:'12px 0 14px'}},p.post.title),
+      h('div',{className:'pmeta',style:{marginBottom:20}},h('span',{className:'aname'},'@'+p.post.anonymous_name),h('span',{className:'pdot'}),h('span',null,ago(p.post.created_at))),
+      h('div',{className:'blw',style:{maxHeight:120}},h('p',{style:{fontSize:16,lineHeight:1.9,color:'var(--tx2)',whiteSpace:'pre-wrap'}},p.post.content.slice(0,300)+'…')),
+      h(Paywall,{onSignup:function(){p.onNeedAuth('signup');},onLogin:function(){p.onNeedAuth('login');},headline:'The full story is right here 💔',sub:'Join free to read everything, vote on who\'s wrong, and add your take.'})));
+  function react(type){var prev=mine,r=Object.assign({},reactions);if(prev===type){r[type]=Math.max(0,(r[type]||1)-1);setMine(null);}else{if(prev)r[prev]=Math.max(0,(r[prev]||1)-1);r[type]=(r[type]||0)+1;setMine(type);}setReactions(r);}
+  return h('div',{style:{animation:'fadeUp .45s ease both'}},
+    h('button',{className:'bkbtn',onClick:p.onBack},'← Back to feed'),
+    h('div',{style:{background:'var(--s1)',border:'1px solid var(--bd)',borderRadius:20,padding:24,marginBottom:16}},
+      h('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:14,flexWrap:'wrap',gap:10}},
+        h('div',{style:{display:'flex',flexDirection:'column',gap:8}},
+          h('span',{className:'ptb '+p.post.type},p.post.type==='confession'?'💔 Confession':p.post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take'),
+          emBadges.length>0&&h('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},emBadges.map(function(b,i){return h('span',{key:i,className:'ebadge '+b.cls},b.i+' '+b.l);}))),
+        h('div',{style:{display:'flex',gap:6,flexWrap:'wrap'}},(p.post.tags||[]).map(function(t){return h('span',{key:t,className:'tag '+(TCLASS[t]||'')},t);}))),
+      h('h1',{style:{fontFamily:"'Playfair Display',serif",fontSize:'clamp(22px,5vw,32px)',fontWeight:900,lineHeight:1.2,color:'var(--tx)',marginBottom:14}},p.post.title),
+      h('div',{className:'pmeta',style:{marginBottom:20}},h('span',{className:'aname'},'@'+p.post.anonymous_name),h('span',{className:'pdot'}),h('span',null,ago(p.post.created_at)),h('span',{className:'pdot'}),h('span',null,'💬 '+(p.post.comment_count||0).toLocaleString())),
+      h('p',{style:{fontSize:16,lineHeight:1.9,color:'var(--tx2)',whiteSpace:'pre-wrap'}},p.post.content),
+      h('div',{className:'div'}),
+      h('div',{className:'rxrow'},RX.map(function(r){return h('button',{key:r,className:'rxb '+(mine===r?'on':''),onClick:function(){react(r);}},r,' ',h('span',null,(reactions[r]||0).toLocaleString()));})),
+      h(WhoIsWrong,{post:p.post,user:p.user,onNeedAuth:function(){p.onNeedAuth('signup');}})),
+    h(StoryUpdates,{post:p.post,user:p.user}),
+    h(Comments,{postId:p.post.id,post:p.post,postOwnerId:p.post.user_id,user:p.user,onNeedAuth:function(){p.onNeedAuth('signup');}}));
+}
+
+function CreatePost(p){
+  var ti=useState(''),title=ti[0],setTitle=ti[1];
+  var co=useState(''),content=co[0],setContent=co[1];
+  var ty=useState('confession'),type=ty[0],setType=ty[1];
+  var tg=useState([]),tags=tg[0],setTags=tg[1];
+  var ld=useState(false),loading=ld[0],setLoading=ld[1];
+  function toggleTag(t){setTags(function(prev){return prev.includes(t)?prev.filter(function(x){return x!==t;}):[].concat(prev,[t]).slice(0,3);});}
+  function submit(){
+    if(!title.trim()||!content.trim()){p.addToast('Please fill in title and story','error');return;}
+    setLoading(true);
+    var np={id:Date.now()+'',title:title.trim(),content:content.trim(),type:type,tags:tags,anonymous_name:p.user.anonymous_name,created_at:new Date().toISOString(),reaction_counts:{'🔥':0,'😂':0,'😢':0,'😡':0},comment_count:0,vote_a:0,vote_b:0,wiw_he:0,wiw_she:0,wiw_both:0,user_id:p.user.id};
+    if(sb&&p.user.id!=='demo'){(async function(){var r=await sb.from('posts').insert({title:np.title,content:np.content,type:type,tags:tags,user_id:p.user.id}).select().single();if(r.error){p.addToast(r.error.message,'error');setLoading(false);return;}np.id=r.data.id;var sk=bumpStreak();p.onPost(np);p.addToast(sk.count>1?'Posted! 🔥 '+sk.count+'-day streak!':'Posted anonymously 💔','success');setLoading(false);})();}
+    else setTimeout(function(){var sk=bumpStreak();p.onPost(np);p.addToast(sk.count>1?'Posted! 🔥 '+sk.count+'-day streak!':'Posted anonymously 💔','success');setLoading(false);},600);
+  }
+  return h('div',{style:{animation:'fadeUp .45s ease both'}},
+    h('button',{className:'bkbtn',onClick:p.onBack},'← Back'),
+    h('div',{style:{marginBottom:24}},h('h1',{style:{fontFamily:"'Playfair Display',serif",fontSize:'clamp(24px,6vw,34px)',fontWeight:900,marginBottom:8}},'Share anonymously'),h('p',{style:{color:'var(--tx2)',fontSize:14}},'You\'ll appear as ',h('strong',{style:{color:'var(--rose)'}},'@'+p.user.anonymous_name))),
+    h('div',{style:{background:'var(--s1)',border:'1px solid var(--bd)',borderRadius:20,padding:22,display:'flex',flexDirection:'column',gap:18}},
+      h('div',null,h('label',{className:'flbl'},'Post type'),h('div',{style:{display:'flex',gap:10,flexWrap:'wrap'}},[{id:'confession',i:'💔',l:'Confession'},{id:'advice',i:'💬',l:'Seeking Advice'},{id:'hot_take',i:'🌶',l:'Hot Take (48h)'}].map(function(t){return h('button',{key:t.id,className:'btn '+(type===t.id?'bp':'bs'),onClick:function(){setType(t.id);},style:{flex:'1 1 auto',justifyContent:'center'}},t.i+' '+t.l);}))),
+      h('div',null,h('label',{className:'flbl'},'Title — make it impossible to scroll past'),h('input',{className:'inp',placeholder:'e.g. "I found something that changed everything…"',value:title,onChange:function(ev){setTitle(ev.target.value);},maxLength:120}),h('div',{style:{textAlign:'right',fontSize:12,color:'var(--tx3)',marginTop:4}},title.length+'/120')),
+      h('div',null,h('label',{className:'flbl'},'Your story'),h('textarea',{className:'inp',rows:10,placeholder:'Share everything. The detail is what makes it real. No one knows it\'s you.',value:content,onChange:function(ev){setContent(ev.target.value);}})),
+      h('div',null,h('label',{className:'flbl'},'Tags'),h('div',{className:'pills'},TAGS.map(function(t){return h('button',{key:t,className:'pill '+(tags.includes(t)?'on':''),onClick:function(){toggleTag(t);}},t);}))),
+      h('button',{className:'btn bp',onClick:submit,disabled:loading||!title.trim()||!content.trim(),style:{justifyContent:'center',padding:'14px',fontSize:15}},loading?h('span',{className:'spin'}):'💔 Post anonymously')));
+}
+
+function TrendingPage(p){
+  var ts=useState('hot'),tab=ts[0],setTab=ts[1];
+  var ranked;
+  if(tab==='hot')ranked=[].concat(p.posts).sort(function(a,b){return feedScore(b)-feedScore(a);});
+  else if(tab==='controversial')ranked=[].concat(p.posts).filter(function(x){return (x.wiw_he||0)+(x.wiw_she||0)+(x.wiw_both||0)>3;}).sort(function(a,b){return controvScore(b)-controvScore(a);});
+  else ranked=[].concat(p.posts).sort(function(a,b){return (b.comment_count||0)-(a.comment_count||0);});
+  var trCls=['g','s','b','d','d','d'];
+  return h('div',null,
+    h('div',{style:{textAlign:'center',padding:'30px 0 24px'}},h('div',{className:'hey'},'📊 Charts'),h('h1',{className:'htitle'},'Trending'),h('p',{className:'hsub'},'The most viral, debated, and emotionally charged confessions right now.')),
+    h('div',{className:'pills',style:{justifyContent:'center',marginBottom:24}},[{id:'hot',l:'🔥 Hot Right Now'},{id:'controversial',l:'⚡ Most Controversial'},{id:'discussed',l:'💬 Most Debated'}].map(function(t){return h('button',{key:t.id,className:'pill '+(tab===t.id?'on':''),onClick:function(){setTab(t.id);}},t.l);})),
+    ranked.map(function(post,i){
+      var emBadges=getEmoBadges(post);var wiwTot=(post.wiw_he||0)+(post.wiw_she||0)+(post.wiw_both||0);
+      return h('div',{key:post.id,className:'pc',onClick:function(){p.onOpen(post);},style:{display:'flex',gap:16,alignItems:'flex-start',animationDelay:(Math.min(i*.05,.35))+'s'}},
+        h('div',{className:'trn '+(trCls[i]||'d')},'#'+(i+1)),
+        h('div',{style:{flex:1}},
+          h('div',{style:{display:'flex',gap:6,flexWrap:'wrap',marginBottom:8,alignItems:'center'}},
+            h('span',{className:'ptb '+post.type},post.type==='confession'?'💔':post.type==='advice'?'💬':'🌶',' '+post.type.replace('_',' ')),
+            emBadges.slice(0,1).map(function(b,j){return h('span',{key:j,className:'ebadge '+b.cls},b.i+' '+b.l);})),
+          h('h3',{className:'ptitle',style:{fontSize:16,marginBottom:8}},post.title),
+          h('div',{className:'pmeta'},
+            h('span',null,'@'+post.anonymous_name),h('span',{className:'pdot'}),
+            h('span',null,'💬 '+(post.comment_count||0).toLocaleString()),h('span',{className:'pdot'}),
+            h('span',null,'🔥 '+Object.values(post.reaction_counts||{}).reduce(function(a,v){return a+v;},0).toLocaleString()),
+            wiwTot>0&&h('span',{className:'pdot'}),wiwTot>0&&h('span',null,'⚖️ '+wiwTot.toLocaleString()))));
+    }));
+}
+
+function ProfilePage(p){
+  if(!p.user)return h('div',{style:{textAlign:'center',padding:'80px 20px'}},h('div',{style:{fontSize:46,marginBottom:14}},'👤'),h('div',{className:'st'},'Sign in to see your profile'),h('div',{style:{marginTop:20,display:'flex',gap:12,justifyContent:'center'}},h('button',{className:'btn bp',onClick:function(){p.onNeedAuth('signup');}},'Sign up free'),h('button',{className:'btn bs',onClick:function(){p.onNeedAuth('login');}},'Log in')));
+  var myPosts=p.posts.filter(function(x){return x.user_id===p.user.id;});
+  var karma=calcKarma(myPosts),streak=getStreak(),badges=getBadges(karma,myPosts,streak.count);
+  var ds=useState(false),showDel=ds[0],setShowDel=ds[1];var dc=useState(''),delC=dc[0],setDelC=dc[1];
+  function delAccount(){if(delC!=='DELETE')return;if(sb){sb.from('users').delete().eq('id',p.user.id);sb.auth.signOut();}localStorage.removeItem('hc_sk');p.addToast('Account deleted 💔','info');setTimeout(function(){window.location.reload();},1500);}
+  return h('div',{style:{animation:'fadeUp .45s ease both'}},
+    h('button',{className:'bkbtn',onClick:p.onBack},'← Back'),
+    h('div',{style:{textAlign:'center',marginBottom:28}},
+      h('div',{style:{width:68,height:68,borderRadius:'50%',background:'linear-gradient(135deg,var(--rose),var(--violet))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:26,fontWeight:700,color:'#fff',margin:'0 auto 12px'}},p.user.anonymous_name.charAt(0)),
+      h('div',{style:{fontFamily:"'Playfair Display',serif",fontSize:24,fontWeight:900}},p.user.anonymous_name),
+      h('div',{style:{fontSize:13,color:'var(--tx3)',marginTop:4}},p.user.email)),
+    h('div',{className:'statg'},h('div',{className:'statb'},h('div',{className:'statn'},karma.toLocaleString()),h('div',{className:'statl'},'💜 Karma')),h('div',{className:'statb'},h('div',{className:'statn'},streak.count),h('div',{className:'statl'},'🔥 Streak')),h('div',{className:'statb'},h('div',{className:'statn'},myPosts.length),h('div',{className:'statl'},'📝 Posts'))),
+    badges.length>0&&h('div',{style:{marginBottom:24}},h('div',{style:{fontSize:12,fontWeight:700,textTransform:'uppercase',letterSpacing:'.1em',color:'var(--tx3)',marginBottom:12}},'Badges'),h('div',{className:'bdrow'},badges.map(function(b){return h('div',{key:b.l,style:{display:'inline-flex',alignItems:'center',gap:6,padding:'7px 15px',borderRadius:50,background:'var(--s2)',border:'1px solid var(--bd)',fontSize:13,fontWeight:600,color:'var(--tx2)'}},b.i+' '+b.l);}))),
+    h('div',{className:'div'}),
+    !showDel?h('button',{className:'btn bs',style:{color:'#ef4444',borderColor:'rgba(239,68,68,.3)'},onClick:function(){setShowDel(true);}},'🗑 Delete account & data (GDPR)')
+      :h('div',{style:{background:'var(--s2)',border:'1px solid rgba(239,68,68,.25)',borderRadius:16,padding:20}},h('p',{style:{fontSize:14,color:'var(--tx2)',marginBottom:12}},'Type DELETE to confirm permanent deletion.'),h('input',{className:'inp',placeholder:'Type DELETE',value:delC,onChange:function(ev){setDelC(ev.target.value);},style:{marginBottom:10}}),h('div',{style:{display:'flex',gap:10}},h('button',{className:'btn',style:{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff'},onClick:delAccount,disabled:delC!=='DELETE'},'Confirm delete'),h('button',{className:'btn bg',onClick:function(){setShowDel(false);setDelC('');}}))));
+}
+
+function AdminPanel(p){
+  var rs=useState([]),reports=rs[0],setReports=rs[1];var ld=useState(true),loading=ld[0],setLoading=ld[1];
+  useEffect(function(){if(!sb)return;sb.from('reports').select('*,posts(title),comments(content)').order('created_at',{ascending:false}).then(function(r){if(r.data)setReports(r.data);setLoading(false);});},[]);
+  function dismiss(id){setReports(function(prev){return prev.filter(function(r){return r.id!==id;});});if(sb)sb.from('reports').delete().eq('id',id);p.addToast('Dismissed','success');}
+  function remove(report){if(sb){if(report.post_id)sb.from('posts').delete().eq('id',report.post_id);if(report.comment_id)sb.from('comments').delete().eq('id',report.comment_id);sb.from('reports').delete().eq('id',report.id);}setReports(function(prev){return prev.filter(function(r){return r.id!==report.id;});});p.addToast('Removed','success');}
+  return h('div',{style:{animation:'fadeUp .45s ease both'}},
+    h('div',{style:{marginBottom:24}},h('h1',{style:{fontFamily:"'Playfair Display',serif",fontSize:28,fontWeight:900}},'🛡 Admin'),h('p',{style:{color:'var(--tx2)',fontSize:14}},reports.length+' open reports')),
+    loading?h('div',{style:{display:'flex',justifyContent:'center',padding:40}},h('span',{className:'spin',style:{width:32,height:32}}))
+      :reports.length===0?h('div',{className:'empty'},h('div',{className:'empi'},'✅'),h('div',{className:'empt'},'Queue clear'))
+      :reports.map(function(r){return h('div',{key:r.id,className:'adm'},h('div',{style:{flex:1}},h('div',{style:{fontSize:12,color:'var(--rose)',fontWeight:700,marginBottom:6,textTransform:'uppercase'}},r.reason),h('p',{style:{fontSize:14,color:'var(--tx2)',marginBottom:6}},(r.posts&&r.posts.title)||(r.comments&&r.comments.content)||'—'),h('div',{style:{fontSize:12,color:'var(--tx3)'}},ago(r.created_at))),h('div',{style:{display:'flex',gap:8,flexDirection:'column'}},h('button',{className:'btn bs',style:{padding:'6px 12px',fontSize:12},onClick:function(){dismiss(r.id);}},'Dismiss'),h('button',{className:'btn',style:{background:'linear-gradient(135deg,#ef4444,#dc2626)',color:'#fff',padding:'6px 12px',fontSize:12},onClick:function(){remove(r);}},'Remove')));}))}
+
+/* ══ APP ══ */
+function App(){
+  var us=useState(null),user=us[0],setUser=us[1];
+  var pg=useState('home'),page=pg[0],setPage=pg[1];
+  var ps=useState(ALL_POSTS),posts=ps[0],setPosts=ps[1];
+  var ac=useState(null),active=ac[0],setActive=ac[1];
+  var tf=useState('all'),tagFilter=tf[0],setTagFilter=tf[1];
+  var au=useState(null),auth=au[0],setAuth=au[1];
+  var to=useState([]),toasts=to[0],setToasts=to[1];
+  var ld=useState(false),loading=ld[0],setLoading=ld[1];
+
+  function addToast(msg,type){var id=Date.now();setToasts(function(prev){return prev.concat([{id:id,msg:msg,type:type||'info'}]);});setTimeout(function(){setToasts(function(prev){return prev.filter(function(t){return t.id!==id;});});},3600);}
+
+  useEffect(function(){
+    if(!sb)return;
+    sb.auth.getSession().then(function(r){if(r.data&&r.data.session&&r.data.session.user){sb.from('users').select('*').eq('id',r.data.session.user.id).single().then(function(pr){if(pr.data)setUser(Object.assign({},r.data.session.user,{anonymous_name:pr.data.anonymous_name}));});}});
+    var sub=sb.auth.onAuthStateChange(function(ev){if(ev==='SIGNED_OUT')setUser(null);});
+    return function(){if(sub&&sub.data&&sub.data.subscription)sub.data.subscription.unsubscribe();};
+  },[]);
+
+  useEffect(function(){
+    if(!sb)return;
+    setLoading(true);
+    sb.from('posts').select('*,users(anonymous_name)').order('created_at',{ascending:false}).limit(60).then(function(r){if(r.data&&r.data.length)setPosts(r.data.map(function(p){return Object.assign({wiw_he:0,wiw_she:0,wiw_both:0},p,{anonymous_name:p.users&&p.users.anonymous_name});}));setLoading(false);});
+  },[]);
+
+  useEffect(function(){
+    if(!sb)return;
+    var ch=sb.channel('feed-rt').on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(pl){sb.from('users').select('anonymous_name').eq('id',pl.new.user_id).single().then(function(u){setPosts(function(prev){return [Object.assign({wiw_he:0,wiw_she:0,wiw_both:0},pl.new,{anonymous_name:u.data&&u.data.anonymous_name,reaction_counts:{},comment_count:0,vote_a:0,vote_b:0})].concat(prev);});});}).subscribe();
+    return function(){sb.removeChannel(ch);};
+  },[]);
+
+  function handleAuth(u){setUser(u);setAuth(null);bumpStreak();addToast('Welcome, @'+u.anonymous_name+'! 💔','success');}
+  function logout(){if(sb)sb.auth.signOut();setUser(null);setPage('home');addToast('Logged out. Your secrets are safe.','info');}
+  function openPost(post){setActive(post);setPage('detail');window.scrollTo({top:0,behavior:'smooth'});}
+  function newPost(post){setPosts(function(prev){return [post].concat(prev);});setPage('home');}
+  function needAuth(mode){setAuth(mode||'signup');}
+
+  function getFeed(){
+    var f=page==='confessions'?posts.filter(function(p){return p.type==='confession';})
+         :page==='advice'?posts.filter(function(p){return p.type==='advice';})
+         :posts;
+    if(tagFilter!=='all')f=f.filter(function(p){return (p.tags||[]).includes(tagFilter);});
+    return [].concat(f.filter(function(p){return p.boosted;})).concat([].concat(f.filter(function(p){return !p.boosted;})).sort(function(a,b){return feedScore(b)-feedScore(a);}));
+  }
+
+  var feed=getFeed();
+  var isFeed=['home','confessions','advice'].includes(page);
+  var titles={home:'Latest Stories',confessions:'Confessions',advice:'Seeking Advice'};
+  var isAdmin=user&&user.email===ADMIN_EMAIL;
+  var streak=getStreak();
+  var navTabs=[{id:'home',l:'Home'},{id:'confessions',l:'Confessions'},{id:'advice',l:'Advice'},{id:'trending',l:'🔥 Trending'},{id:'profile',l:'👤 Profile'}];
+  if(isAdmin)navTabs.push({id:'admin',l:'🛡 Admin'});
+
+  return h('div',null,
+    h('nav',{className:'nav'},
+      h('div',{className:'nlogo',onClick:function(){setPage('home');setActive(null);}},'💔 HeartConfia'),
+      h('div',{className:'ntabs'},navTabs.map(function(t){return h('button',{key:t.id,className:'ntab '+(page===t.id?'on':''),onClick:function(){setPage(t.id);setActive(null);}},t.l);})),
+      h('div',{style:{display:'flex',alignItems:'center',gap:8,flexShrink:0}},
+        user&&streak.count>0&&h('div',{className:'streakc',onClick:function(){setPage('profile');}},'🔥'+streak.count),
+        user&&h(NotifBell,{user:user}),
+        user?h('div',{style:{display:'flex',gap:6,alignItems:'center'}},h('button',{className:'btn bp',style:{padding:'7px 12px',fontSize:13},onClick:function(){setPage('create');}},'+ Post'),h('button',{className:'btn bg',style:{fontSize:12,padding:'6px 8px'},onClick:logout},'Out'))
+          :h('div',{style:{display:'flex',gap:6}},h('button',{className:'btn bg',style:{fontSize:12},onClick:function(){setAuth('login');}},'Login'),h('button',{className:'btn bp',style:{padding:'7px 12px',fontSize:13},onClick:function(){setAuth('signup');}},'Join free')))),
+    h(LiveTicker,{posts:feed}),
+    h('div',{className:'lay'},h('div',{className:'lc'},
+      !IS_CFG&&isFeed&&h('div',{className:'cnote'},h('strong',null,'⚙️ One step:'),' Go to ',h('strong',null,'Supabase → Settings → API'),', copy your ',h('code',null,'anon/public'),' key, replace ',h('code',null,'PASTE_ANON_KEY_HERE'),' in this file. Demo data shown until then.'),
+      page==='detail'&&active&&h(PostDetail,{post:active,user:user,onBack:function(){setPage('home');setActive(null);},onNeedAuth:needAuth}),
+      isFeed&&h('div',null,
+        page==='home'&&h('div',{className:'hero'},
+          h('div',{className:'hey'},'anonymous · real · unfiltered'),
+          h('h1',{className:'htitle'},'HeartConfia'),
+          h('p',{className:'hsub'},'The stories people carry alone. Share yours. Judge theirs. Feel everything.'),
+          user?h('div',{style:{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}},h('button',{className:'btn bp',onClick:function(){setPage('create');}},h('span',null,'💔'),' Share your confession'))
+            :h('div',{style:{display:'flex',gap:12,justifyContent:'center',flexWrap:'wrap'}},h('button',{className:'btn bp',onClick:function(){setAuth('signup');}},h('span',null,'💔'),' Join anonymously'),h('button',{className:'btn bs',onClick:function(){setAuth('login');}},'Log in'))),
+        page!=='home'&&h('div',{className:'sh'},h('h2',{className:'st'},titles[page]),h('span',{className:'sbadge'},feed.length)),
+        h('div',{className:'pills'},[{id:'all',l:'All'}].concat(TAGS.map(function(t){return {id:t,l:t};})).map(function(t){return h('button',{key:t.id,className:'pill '+(tagFilter===t.id?'on':''),onClick:function(){setTagFilter(t.id);}},t.l);})),
+        user&&h('div',{className:'cpbar',onClick:function(){setPage('create');}},h('div',{className:'ava'},user.anonymous_name.charAt(0)),h('span',{style:{fontSize:14,color:'var(--tx3)'}},'Something\'s weighing on you. Share it as ',h('strong',{style:{color:'var(--tx2)'}},'@'+user.anonymous_name),'…')),
+        loading?h('div',{style:{display:'flex',justifyContent:'center',padding:'60px 0'}},h('span',{className:'spin',style:{width:36,height:36}}))
+          :feed.length===0?h('div',{className:'empty'},h('div',{className:'empi'},'🕊️'),h('div',{className:'empt'},'Nothing here yet'))
+          :feed.map(function(post,i){return h(PostCard,{key:post.id,post:post,user:user,onClick:function(){openPost(post);},onNeedAuth:needAuth,delay:Math.min(i*.06,.4)});})),
+      page==='trending'&&h(TrendingPage,{posts:posts,user:user,onOpen:openPost,onNeedAuth:needAuth}),
+      page==='create'&&(user?h(CreatePost,{user:user,onBack:function(){setPage('home');},onPost:newPost,addToast:addToast}):h('div',{style:{textAlign:'center',padding:'80px 20px'}},h('div',{style:{fontSize:46,marginBottom:14}},'🔒'),h('div',{className:'st'},'Sign in to share your confession'),h('div',{style:{marginTop:20,display:'flex',gap:12,justifyContent:'center'}},h('button',{className:'btn bp',onClick:function(){setAuth('signup');}},'Sign up free'),h('button',{className:'btn bs',onClick:function(){setAuth('login');}},'Log in')))),
+      page==='profile'&&h(ProfilePage,{user:user,posts:posts,onBack:function(){setPage('home');},addToast:addToast,onNeedAuth:needAuth}),
+      page==='admin'&&isAdmin&&h(AdminPanel,{user:user,addToast:addToast}))),
+    auth&&h(AuthModal,{initMode:auth,onClose:function(){setAuth(null);},onAuth:handleAuth}),
+    h(Toasts,{items:toasts}));
+}
+
+try{RD.createRoot(document.getElementById('root')).render(h(App,null));}
+catch(e){document.getElementById('root').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;flex-direction:column;gap:16px;padding:20px;text-align:center"><div style="font-size:48px">💔</div><div style="font-family:Georgia,serif;font-size:22px;color:#f0eef8">Something went wrong</div><p style="color:#9a96b4;font-size:14px;max-width:380px">'+e.message+'</p><button onclick="location.reload()" style="background:#ff3d5a;color:#fff;border:none;border-radius:50px;padding:12px 24px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px">Reload</button></div>';console.error(e);}
+})();
+</script>
+</body>
+</html>
