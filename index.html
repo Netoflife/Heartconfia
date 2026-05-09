@@ -2,14 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>HeartConfia 💔 — Anonymous Relationship Confessions</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
-/* ═══════════════════════════════════════
-   HEARTCONFIA  ·  Dark Editorial
-   Like reading someone's diary at 2AM
-═══════════════════════════════════════ */
 :root{
   --bg:#09060a;
   --surface:#120e14;
@@ -41,13 +37,14 @@ body{
   background:var(--bg);color:var(--text);
   font-family:var(--fb);font-size:15px;
   min-height:100vh;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
 }
-/* all buttons reset */
 button{
   font-family:var(--fb);cursor:pointer;
   border:none;outline:none;background:none;
   color:inherit;padding:0;margin:0;
   -webkit-appearance:none;appearance:none;
+  position:relative;z-index:1;
 }
 input,textarea,select{
   font-family:var(--fb);outline:none;
@@ -61,14 +58,12 @@ img{display:block;max-width:100%}
 ::-webkit-scrollbar-track{background:var(--bg)}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
-/* ── LAYOUT ── */
-#app{min-height:100vh;padding-top:56px;padding-bottom:70px}
+#app{min-height:100vh;padding-top:56px;padding-bottom:70px;position:relative;z-index:1}
 .container{max-width:680px;margin:0 auto;padding:0 16px}
 .page{display:none;min-height:calc(100vh - 126px);animation:pgIn .25s ease both}
 .page.active{display:block}
 @keyframes pgIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── TOP NAV ── */
 #topnav{
   position:fixed;top:0;left:0;right:0;z-index:200;
   height:56px;
@@ -79,35 +74,34 @@ img{display:block;max-width:100%}
 .nav-inner{
   max-width:680px;margin:0 auto;
   display:flex;align-items:center;justify-content:space-between;
-  height:100%;padding:0 16px;
+  height:100%;padding:0 16px;position:relative;z-index:201;
 }
 .logo{
   font-family:var(--fd);font-size:21px;font-weight:900;
   background:linear-gradient(130deg,var(--accent) 30%,var(--purple));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  background-clip:text;letter-spacing:-.5px;line-height:1;
+  background-clip:text;letter-spacing:-.5px;line-height:1;pointer-events:none;
 }
 .logo em{font-style:italic}
-.nav-right{display:flex;align-items:center;gap:8px}
+.nav-right{display:flex;align-items:center;gap:8px;position:relative;z-index:201}
 
-/* ── BUTTONS ── */
 .btn{
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
   padding:8px 18px;border-radius:100px;
   font-family:var(--fb);font-size:13px;font-weight:600;
   cursor:pointer;transition:all .18s;
-  border:none;outline:none;
+  border:none;outline:none;position:relative;z-index:10;
+  pointer-events:auto;
 }
+.btn:active{opacity:.8;transform:scale(.97)}
 .btn-ghost{
   background:transparent;color:var(--t2);
   border:1.5px solid var(--border2);
 }
-.btn-ghost:active{opacity:.7}
 .btn-primary{
   background:linear-gradient(130deg,var(--accent),#c0244a);
   color:#fff;box-shadow:0 0 18px var(--glow);
 }
-.btn-primary:active{transform:scale(.97)}
 .btn-sm{padding:7px 14px;font-size:12px}
 .btn-block{width:100%;padding:13px}
 .btn-danger{
@@ -119,16 +113,14 @@ img{display:block;max-width:100%}
   border:1px solid rgba(245,166,35,.2);
 }
 
-/* avatar button */
 .ava-btn{
   width:34px;height:34px;border-radius:50%;flex:0 0 34px;
   background:linear-gradient(130deg,var(--accent),var(--purple));
   display:flex;align-items:center;justify-content:center;
   font-size:12px;font-weight:700;color:#fff;
-  cursor:pointer;border:2px solid var(--s2);
+  cursor:pointer;border:2px solid var(--s2);position:relative;z-index:10;
 }
 
-/* ── BOTTOM NAV ── */
 #bottomnav{
   position:fixed;bottom:0;left:0;right:0;z-index:200;
   height:60px;
@@ -136,7 +128,7 @@ img{display:block;max-width:100%}
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-around;
-  padding:0 4px;
+  padding:0 4px;pointer-events:auto;
 }
 .ntab{
   flex:1;display:flex;flex-direction:column;align-items:center;
@@ -144,24 +136,24 @@ img{display:block;max-width:100%}
   color:var(--t3);
   font-size:9px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;
   padding:4px 0;transition:color .2s;
-  cursor:pointer;
+  cursor:pointer;position:relative;z-index:10;pointer-events:auto;
+  background:none;border:none;
 }
-.ntab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:all .2s}
+.ntab svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;transition:all .2s;pointer-events:none}
 .ntab.active{color:var(--accent)}
 .ntab.active svg{filter:drop-shadow(0 0 5px var(--accent))}
-/* center confess button */
 .ntab-plus{
   flex:0 0 52px;width:52px;height:52px;
   border-radius:50%;margin-top:-18px;
   background:linear-gradient(130deg,var(--accent),var(--purple));
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 0 24px var(--glow),0 4px 12px rgba(0,0,0,.5);
-  cursor:pointer;transition:transform .15s;
+  cursor:pointer;transition:transform .15s;position:relative;z-index:10;
+  border:none;pointer-events:auto;
 }
 .ntab-plus:active{transform:scale(.93)}
-.ntab-plus svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round}
+.ntab-plus svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2.5;stroke-linecap:round;pointer-events:none}
 
-/* ── FEED ── */
 .feed-header{padding:18px 0 10px}
 .live-pill{
   display:inline-flex;align-items:center;gap:5px;
@@ -181,7 +173,6 @@ img{display:block;max-width:100%}
 .feed-title em{color:var(--accent);font-style:italic}
 .feed-sub{font-size:13px;color:var(--t3);line-height:1.4;margin-bottom:16px}
 
-/* filter strip */
 .ftabs{
   display:flex;gap:7px;overflow-x:auto;
   padding-bottom:12px;scrollbar-width:none;
@@ -194,6 +185,7 @@ img{display:block;max-width:100%}
   color:var(--t3);
   background:var(--s2);border:1.5px solid var(--border);
   cursor:pointer;white-space:nowrap;transition:all .18s;
+  position:relative;z-index:10;pointer-events:auto;
 }
 .ftab.on{
   background:var(--accent);color:#fff;
@@ -201,18 +193,16 @@ img{display:block;max-width:100%}
   box-shadow:0 0 12px var(--glow);
 }
 
-/* ── POST CARD ── */
 .card{
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r);margin-bottom:12px;overflow:hidden;
-  transition:border-color .2s;
+  transition:border-color .2s;position:relative;z-index:1;
   animation:cIn .35s ease both;
 }
 @keyframes cIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .card:active{border-color:var(--border2)}
-.card-body{padding:15px}
+.card-body{padding:15px;position:relative;z-index:2}
 
-/* card meta */
 .card-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
 .card-author{display:flex;align-items:center;gap:8px}
 .c-ava{
@@ -231,15 +221,13 @@ img{display:block;max-width:100%}
 .cbadge-h{background:rgba(232,56,96,.1);color:var(--accent);border:1px solid rgba(232,56,96,.2)}
 .cbadge-n{background:rgba(155,95,255,.1);color:var(--purple);border:1px solid rgba(155,95,255,.2)}
 
-/* card title */
 .c-title{
   font-family:var(--fd);font-size:17px;font-weight:700;
   line-height:1.3;margin-bottom:8px;cursor:pointer;
-  transition:color .15s;
+  transition:color .15s;position:relative;z-index:10;pointer-events:auto;
 }
 .c-title:active{color:var(--accent2)}
 
-/* preview */
 .c-preview{font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:10px}
 .c-preview-blur{
   position:relative;overflow:hidden;max-height:58px;
@@ -252,9 +240,9 @@ img{display:block;max-width:100%}
   display:flex;align-items:center;gap:5px;
   font-size:13px;color:var(--accent);font-weight:600;
   cursor:pointer;margin-top:4px;margin-bottom:8px;
+  position:relative;z-index:10;pointer-events:auto;
 }
 
-/* tags */
 .c-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
 .tag{
   font-size:11px;padding:3px 9px;border-radius:100px;
@@ -262,8 +250,7 @@ img{display:block;max-width:100%}
   border:1px solid var(--border);
 }
 
-/* ── VOTE BAR ── */
-.vote-wrap{margin-bottom:13px}
+.vote-wrap{margin-bottom:13px;position:relative;z-index:2}
 .vbar{height:6px;border-radius:3px;background:var(--s3);overflow:hidden;display:flex;margin-bottom:6px}
 .vs{height:100%;transition:width .5s cubic-bezier(.4,0,.2,1)}
 .vs-he{background:var(--he)}
@@ -277,7 +264,7 @@ img{display:block;max-width:100%}
   flex:1;padding:7px 2px;border-radius:var(--rs);
   font-family:var(--fb);font-size:11px;font-weight:700;text-align:center;
   border:1.5px solid transparent;cursor:pointer;transition:all .18s;
-  background:var(--s3);
+  background:var(--s3);position:relative;z-index:10;pointer-events:auto;
 }
 .vbtn-he{color:var(--he);border-color:rgba(232,88,88,.2)}
 .vbtn-he.on,.vbtn-he:active{background:rgba(232,88,88,.12);border-color:var(--he)}
@@ -286,20 +273,18 @@ img{display:block;max-width:100%}
 .vbtn-both{color:var(--both);border-color:rgba(107,142,255,.2)}
 .vbtn-both.on,.vbtn-both:active{background:rgba(107,142,255,.12);border-color:var(--both)}
 
-/* ── REACTIONS ── */
 .rxrow{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
 .rxbtn{
   display:flex;align-items:center;gap:3px;
   background:var(--s3);border:1px solid var(--border);
   border-radius:100px;padding:5px 10px;
   font-size:13px;cursor:pointer;transition:all .15s;
-  color:var(--t2);font-weight:500;
+  color:var(--t2);font-weight:500;position:relative;z-index:10;pointer-events:auto;
 }
 .rxbtn span{font-size:11px;font-weight:600}
 .rxbtn.on{background:var(--s2);border-color:var(--accent);color:var(--text)}
 .rxbtn:active{transform:scale(1.12)}
 
-/* card footer */
 .c-foot{
   display:flex;align-items:center;justify-content:space-between;
   padding-top:10px;border-top:1px solid var(--border);
@@ -308,18 +293,18 @@ img{display:block;max-width:100%}
   display:flex;align-items:center;gap:4px;
   font-size:12px;color:var(--t3);
   padding:4px 7px;border-radius:var(--rs);cursor:pointer;
-  transition:all .15s;
+  transition:all .15s;position:relative;z-index:10;pointer-events:auto;
 }
 .c-stat:active{background:var(--s3);color:var(--t2)}
-.c-stat svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.c-stat svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 
-/* ── POST DETAIL ── */
 .back-btn{
   display:flex;align-items:center;gap:6px;
   color:var(--t3);font-size:13px;font-weight:600;
   padding:14px 0 0;margin-bottom:14px;cursor:pointer;
+  position:relative;z-index:10;pointer-events:auto;
 }
-.back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.back-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .back-btn:active{color:var(--text)}
 .d-author{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .d-ava{
@@ -340,14 +325,12 @@ img{display:block;max-width:100%}
 }
 .divider{height:1px;background:var(--border);margin:18px 0}
 
-/* vote panel in detail */
 .vpanel{
   background:var(--s2);border:1px solid var(--border);
   border-radius:var(--r);padding:16px;margin-bottom:20px;
 }
 .vpanel-title{font-size:13px;font-weight:700;color:var(--t2);margin-bottom:10px}
 
-/* ── COMMENTS ── */
 .cm-header{
   display:flex;align-items:center;justify-content:space-between;
   margin-bottom:14px;
@@ -357,6 +340,7 @@ img{display:block;max-width:100%}
   background:var(--s3);border:1px solid var(--border);
   color:var(--t2);font-size:12px;font-family:var(--fb);
   padding:5px 10px;border-radius:var(--rs);cursor:pointer;
+  position:relative;z-index:10;pointer-events:auto;
 }
 .cm-box{
   background:var(--s2);border:1.5px solid var(--border);
@@ -385,7 +369,7 @@ img{display:block;max-width:100%}
   display:flex;align-items:center;gap:3px;
   font-size:11px;color:var(--t3);
   padding:3px 6px;border-radius:4px;cursor:pointer;
-  transition:all .15s;
+  transition:all .15s;position:relative;z-index:10;pointer-events:auto;
 }
 .cm-act:active{color:var(--t2);background:var(--s3)}
 .cm-act.up.on{color:#4ade80}.cm-act.dn.on{color:var(--accent)}
@@ -418,13 +402,12 @@ img{display:block;max-width:100%}
 .rbox-ta::placeholder{color:var(--t3)}
 .rbox-foot{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
 
-/* ── AUTH MODAL ── */
 .overlay{
   position:fixed;inset:0;z-index:500;
   background:rgba(0,0,0,.88);
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   display:flex;align-items:flex-end;justify-content:center;
-  padding:0;animation:ovIn .2s ease;
+  padding:0;animation:ovIn .2s ease;pointer-events:auto;
 }
 @keyframes ovIn{from{opacity:0}to{opacity:1}}
 .modal{
@@ -434,7 +417,7 @@ img{display:block;max-width:100%}
   width:100%;max-width:520px;
   overflow:hidden;
   animation:shUp .28s cubic-bezier(.4,0,.2,1);
-  max-height:92vh;overflow-y:auto;
+  max-height:92vh;overflow-y:auto;position:relative;z-index:501;
 }
 @keyframes shUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
 .m-head{padding:22px 22px 0;text-align:center}
@@ -448,7 +431,7 @@ img{display:block;max-width:100%}
   width:30px;height:30px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   color:var(--t3);font-size:15px;cursor:pointer;
-  font-family:var(--fb);
+  font-family:var(--fb);z-index:10;pointer-events:auto;
 }
 .fgrp{margin-bottom:13px}
 .flabel{display:block;font-size:12px;font-weight:600;color:var(--t3);margin-bottom:5px}
@@ -461,9 +444,8 @@ img{display:block;max-width:100%}
 .finput:focus{border-color:var(--accent);outline:none}
 .finput::placeholder{color:var(--t3)}
 .m-foot{text-align:center;font-size:13px;color:var(--t3);margin-top:14px}
-.m-foot a{color:var(--accent);font-weight:600;cursor:pointer}
+.m-foot a{color:var(--accent);font-weight:600;cursor:pointer;pointer-events:auto;position:relative;z-index:10}
 
-/* paywall modal */
 .pw-preview{
   background:var(--s2);border-radius:var(--rs);
   padding:13px;margin-bottom:18px;
@@ -475,7 +457,6 @@ img{display:block;max-width:100%}
   background:linear-gradient(to bottom,transparent 20%,var(--surface) 88%);
 }
 
-/* ── CONFESS FORM ── */
 .cf-header{text-align:center;padding:22px 0 18px}
 .cf-icon{font-size:44px;margin-bottom:8px}
 .cf-title{font-family:var(--fd);font-size:24px;font-weight:900;margin-bottom:5px}
@@ -490,6 +471,7 @@ img{display:block;max-width:100%}
   font-family:var(--fb);font-size:12px;font-weight:700;text-align:center;
   background:var(--s2);border:1.5px solid var(--border);
   color:var(--t3);cursor:pointer;transition:all .18s;
+  position:relative;z-index:10;pointer-events:auto;
 }
 .type-btn.on{
   background:var(--accent);border-color:var(--accent);color:#fff;
@@ -524,7 +506,6 @@ img{display:block;max-width:100%}
 .hint{font-size:11px;color:var(--t3);margin:5px 0 14px}
 .cc{font-size:11px;color:var(--t3);text-align:right;margin-bottom:12px}
 
-/* ── TRENDING ── */
 .tr-sec{margin-bottom:24px}
 .tr-sec-title{
   font-size:14px;font-weight:700;color:var(--t2);
@@ -534,7 +515,7 @@ img{display:block;max-width:100%}
   background:var(--surface);border:1px solid var(--border);
   border-radius:var(--r);padding:13px;margin-bottom:9px;
   display:flex;align-items:flex-start;gap:12px;cursor:pointer;
-  transition:all .18s;
+  transition:all .18s;position:relative;z-index:10;pointer-events:auto;
 }
 .tr-card:active{background:var(--s2);border-color:var(--border2)}
 .tr-num{
@@ -547,7 +528,6 @@ img{display:block;max-width:100%}
 .tr-ttl{font-size:14px;font-weight:700;line-height:1.35;margin-bottom:4px}
 .tr-stats{font-size:11px;color:var(--t3);display:flex;gap:10px}
 
-/* ── NOTIFICATIONS ── */
 .nf-item{
   display:flex;align-items:flex-start;gap:12px;
   padding:14px 16px;border-bottom:1px solid var(--border);
@@ -564,7 +544,6 @@ img{display:block;max-width:100%}
 .nf-time{font-size:11px;color:var(--t3);margin-top:3px}
 .udot{width:7px;height:7px;border-radius:50%;background:var(--accent);flex:0 0 7px;margin-top:5px}
 
-/* ── PROFILE ── */
 .pf-header{
   text-align:center;padding:28px 0 18px;
   border-bottom:1px solid var(--border);margin-bottom:18px;
@@ -583,7 +562,6 @@ img{display:block;max-width:100%}
 .ps-n{font-family:var(--fd);font-size:22px;font-weight:700}
 .ps-l{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
 
-/* ── REPORT MODAL ── */
 .rpt-btn{
   display:flex;align-items:center;gap:6px;
   font-size:11px;color:var(--t3);cursor:pointer;
@@ -591,7 +569,6 @@ img{display:block;max-width:100%}
 }
 .rpt-btn:active{color:var(--accent)}
 
-/* ── TOAST ── */
 #toasts{
   position:fixed;top:64px;right:14px;z-index:999;
   display:flex;flex-direction:column;gap:7px;
@@ -611,7 +588,6 @@ img{display:block;max-width:100%}
 .toast.err{border-color:rgba(232,56,96,.3);color:var(--accent2)}
 .toast.info{border-color:rgba(155,95,255,.3);color:var(--purple)}
 
-/* ── MISC ── */
 .spin{
   display:inline-block;width:20px;height:20px;border-radius:50%;
   border:2px solid var(--border2);border-top-color:var(--accent);
@@ -635,47 +611,34 @@ img{display:block;max-width:100%}
 </head>
 <body>
 
-<!-- TOP NAV -->
 <nav id="topnav">
   <div class="nav-inner">
     <div class="logo">Heart<em>Confia</em> 💔</div>
     <div class="nav-right" id="navRight">
-      <button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Login</button>
-      <button class="btn btn-primary btn-sm" onclick="showAuth('signup')">Join Free</button>
+      <button class="btn btn-ghost btn-sm" id="btnLogin" onclick="showAuth('login')">Login</button>
+      <button class="btn btn-primary btn-sm" id="btnSignup" onclick="showAuth('signup')">Join Free</button>
     </div>
   </div>
 </nav>
 
-<!-- TOAST CONTAINER -->
 <div id="toasts"></div>
 
 <div id="app">
-
-  <!-- HOME FEED -->
   <div id="pg-home" class="page active">
     <div class="container">
       <div class="feed-header">
         <div class="live-pill">Live Confessions</div>
         <h1 class="feed-title">Where hearts <em>break</em><br>in public 💔</h1>
         <p class="feed-sub">Anonymous confessions from real relationships. Judge. Debate. Relate.</p>
-        <div class="ftabs" id="ftabs">
-          <button class="ftab on" data-f="all">🔥 All</button>
-          <button class="ftab" data-f="confession">💔 Confessions</button>
-          <button class="ftab" data-f="advice">🧠 Advice</button>
-          <button class="ftab" data-f="cheating">😳 Cheating</button>
-          <button class="ftab" data-f="breakup">💀 Breakups</button>
-          <button class="ftab" data-f="toxic">🔥 Toxic</button>
-          <button class="ftab" data-f="trust">🤝 Trust</button>
-        </div>
+        <div class="ftabs" id="ftabs"></div>
       </div>
       <div id="feedWrap"></div>
       <div id="loadMoreWrap" class="hidden" style="text-align:center;padding:16px 0">
-        <button class="btn btn-ghost" onclick="loadMore()">Load more stories</button>
+        <button class="btn btn-ghost" id="btnLoadMore" onclick="loadMore()">Load more stories</button>
       </div>
     </div>
   </div>
 
-  <!-- TRENDING -->
   <div id="pg-trending" class="page">
     <div class="container">
       <div class="feed-header">
@@ -686,7 +649,6 @@ img{display:block;max-width:100%}
     </div>
   </div>
 
-  <!-- CONFESS -->
   <div id="pg-confess" class="page">
     <div class="container">
       <div class="cf-header">
@@ -698,7 +660,6 @@ img{display:block;max-width:100%}
     </div>
   </div>
 
-  <!-- NOTIFICATIONS -->
   <div id="pg-notifications" class="page">
     <div class="container" style="padding-top:16px">
       <h2 class="feed-title" style="margin-bottom:16px">🔔 Notifications</h2>
@@ -706,58 +667,52 @@ img{display:block;max-width:100%}
     </div>
   </div>
 
-  <!-- PROFILE -->
   <div id="pg-profile" class="page">
     <div class="container">
       <div id="pfWrap"></div>
     </div>
   </div>
 
-  <!-- DETAIL -->
   <div id="pg-detail" class="page">
     <div class="container">
       <div id="dtWrap"></div>
     </div>
   </div>
+</div>
 
-</div><!-- #app -->
-
-<!-- BOTTOM NAV -->
 <nav id="bottomnav">
-  <button class="ntab active" id="nt-home" onclick="go('home')">
+  <button class="ntab active" data-page="home">
     <svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
     Feed
   </button>
-  <button class="ntab" id="nt-trending" onclick="go('trending')">
+  <button class="ntab" data-page="trending">
     <svg viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
     Trending
   </button>
-  <button class="ntab-plus" id="nt-confess" onclick="go('confess')" aria-label="Post Confession">
+  <button class="ntab-plus" data-page="confess">
     <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
   </button>
-  <button class="ntab" id="nt-notifications" onclick="go('notifications')">
+  <button class="ntab" data-page="notifications">
     <svg viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
     Alerts
   </button>
-  <button class="ntab" id="nt-profile" onclick="go('profile')">
+  <button class="ntab" data-page="profile">
     <svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
     Profile
   </button>
 </nav>
 
-<!-- AUTH MODAL -->
-<div id="authOv" class="overlay hidden" onclick="closeOvOutside(event,'authOv')">
+<div id="authOv" class="overlay hidden">
   <div class="modal" style="position:relative">
-    <button class="m-close" onclick="closeAuth()">✕</button>
+    <button class="m-close" id="btnCloseAuth">✕</button>
     <div class="m-head" id="authHead"></div>
     <div class="m-body" id="authBody"></div>
   </div>
 </div>
 
-<!-- PAYWALL MODAL -->
-<div id="pwOv" class="overlay hidden" onclick="closeOvOutside(event,'pwOv')">
+<div id="pwOv" class="overlay hidden">
   <div class="modal" style="position:relative">
-    <button class="m-close" onclick="closePw()">✕</button>
+    <button class="m-close" id="btnClosePw">✕</button>
     <div class="m-head">
       <div class="m-icon">🔒</div>
       <h2 class="m-title">Keep reading…</h2>
@@ -765,16 +720,15 @@ img{display:block;max-width:100%}
     </div>
     <div class="m-body">
       <div class="pw-preview" id="pwPreview">The rest of this story is intense. You're not ready for what happened next.</div>
-      <button class="btn btn-primary btn-block" onclick="closePw();showAuth('signup')">Create Free Account</button>
-      <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="closePw();showAuth('login')">Already a member? Login</button>
+      <button class="btn btn-primary btn-block" id="btnPwSignup">Create Free Account</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:8px" id="btnPwLogin">Already a member? Login</button>
     </div>
   </div>
 </div>
 
-<!-- REPORT MODAL -->
-<div id="rptOv" class="overlay hidden" onclick="closeOvOutside(event,'rptOv')">
+<div id="rptOv" class="overlay hidden">
   <div class="modal" style="position:relative">
-    <button class="m-close" onclick="document.getElementById('rptOv').classList.add('hidden')">✕</button>
+    <button class="m-close" id="btnCloseRpt">✕</button>
     <div class="m-head">
       <div class="m-icon">🚩</div>
       <h2 class="m-title">Report Content</h2>
@@ -784,928 +738,533 @@ img{display:block;max-width:100%}
 </div>
 
 <script>
-/* ═════════════════════════════════════════
-   HEARTCONFIA — App Logic
-   Bug-fixed, production-ready
-═════════════════════════════════════════ */
+(function(){
+  const SB_URL = 'YOUR_SUPABASE_URL';
+  const SB_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-// ── CONFIG ── replace with your actual values
-const SB_URL  = 'YOUR_SUPABASE_URL';
-const SB_KEY  = 'YOUR_SUPABASE_ANON_KEY';
-
-// ── SUPABASE — safe init, never crashes ──
-let sb = null;
-(function initSB(){
+  let sb = null;
   try{
-    if(SB_URL.startsWith('https') && typeof window.supabase!=='undefined'){
-      sb = window.supabase.createClient(SB_URL, SB_KEY);
+    if(SB_URL.startsWith('https') && typeof supabase !== 'undefined'){
+      sb = supabase.createClient(SB_URL, SB_KEY);
     }
-  } catch(e){ console.warn('Supabase not connected, running in demo mode'); }
-})();
+  } catch(e){}
 
-// ── STATE ──
-let CU = null;          // current user
-let curPage = 'home';
-let curFilter = 'all';
-let postsPage = 0;
-const PER_PAGE = 10;
-let detailPost = null;
+  let CU = null;
+  let curPage = 'home';
+  let curFilter = 'all';
+  let postsPage = 0;
+  const PER_PAGE = 10;
+  let detailPost = null;
 
-// ── DATA — Seed Posts ──
-const POSTS = [
-  {
-    id:'p1',author:'Heart_4821',type:'confession',
-    title:"I checked his phone at 2AM and saw something I still wish I never saw…",
-    content:`I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years. Three years of building something I thought was real.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... "last night was everything."\n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — "the roommate."\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.`,
-    tags:['cheating','betrayal','trust'],created_at:ago(2),
-    rx:{💔:247,😭:189,😡:312,😳:98,😂:5,🔥:45},
-    votes:{he:412,she:23,both:89},views:1840,cmt:143,trending:true,
-    preview:"He called me 'the roommate' to her. After 3 years. After we talked about kids last month."
-  },{
-    id:'p2',author:'Confess_7732',type:'advice',
-    title:"She deleted 6 months of messages the day I asked her to be my girlfriend. What do I do?",
-    content:`We've been talking every single day for 6 months. I thought we were building something serious. Yesterday I finally asked her if she wanted to make things official.\n\nShe said "yes, of course" and kissed me.\n\nBut this morning I noticed something. When I opened our WhatsApp chat, it starts from yesterday. The ENTIRE history — 6 months of messages — is gone from my side. She claims she "doesn't know what happened" and that it was a "phone glitch."\n\nI didn't say anything. I smiled and went to work.\n\nBut I need to know: what was in those messages that she needed to delete the exact night I made us official?\n\nDo I ask directly? Do I pretend I didn't notice? Do I just… end this before it starts?`,
-    tags:['trust','advice','suspicious'],created_at:ago(5),
-    rx:{💔:89,😭:34,😡:156,😳:412,😂:22,🔥:78},
-    votes:{he:67,she:298,both:145},views:2100,cmt:89,trending:true,
-    preview:"6 months of messages. Gone. The same night I asked her to be mine."
-  },{
-    id:'p3',author:'Vibe_1190',type:'confession',
-    title:"My boyfriend proposed to me while actively dating someone else. I found out 3 days later.",
-    content:`He got down on one knee on a Friday. I said yes, cried, called my mum, posted on Instagram. Classic fairytale moment.\n\nMonday morning his side girl posted a photo with the caption "he told me she doesn't mean anything." The photo was from the same Saturday — the day after he proposed to me.\n\nI've been engaged for 72 hours and already a cheater's fiancée.\n\nI haven't taken the ring off yet. I don't know why. Maybe because the moment I do, none of it was real. The proposal, the future, the person I thought I knew.\n\nHe's been calling. Texting. Showing up. His family is calling me too — apparently they "knew nothing."\n\nSomeone tell me: am I wrong for still having the ring on?`,
-    tags:['cheating','engagement','betrayal'],created_at:ago(8),
-    rx:{💔:891,😭:567,😡:1203,😳:456,😂:12,🔥:234},
-    votes:{he:1456,she:34,both:123},views:8900,cmt:312,trending:true,
-    preview:"He proposed Friday. She posted a photo with him Saturday. I found out Monday."
-  },{
-    id:'p4',author:'Heart_9012',type:'confession',
-    title:"I've been emotionally cheating for 8 months and I think I'm in love with both of them",
-    content:`Before you judge me — I know. I already know.\n\nMy girlfriend of 4 years is the most stable, loving person I've ever met. She shows up every time.\n\nBut I've been talking to someone else since last year. We've never touched. We've never even been in the same city. But the conversations… I've never felt more understood in my life.\n\nI tell her things I can't say to anyone. She tells me things she says she's never told anyone.\n\nMy girlfriend doesn't know. Last week she started looking at apartments for us to move in together.\n\nI don't know how to choose. Does that make me the worst person alive?\n\nBefore you answer — yes, I already know the answer. I just can't accept it yet.`,
-    tags:['cheating','emotional','advice'],created_at:ago(12),
-    rx:{💔:234,😭:145,😡:567,😳:89,😂:34,🔥:189},
-    votes:{he:678,she:89,both:234},views:4300,cmt:201,trending:false,
-    preview:"We've never touched. Never been in the same city. But I've never felt more understood."
-  },{
-    id:'p5',author:'Shadow_3341',type:'advice',
-    title:"He paid for my surgery, my rent, and my family's debt. Now he wants to leave. What are my rights?",
-    content:`We've been together for 2 years. Not married. But he has been the only reason my family has been surviving.\n\nWhen my mum got sick, he paid the hospital bill without me asking. When my landlord was threatening eviction, he paid 6 months upfront. He sorted my younger brother's school fees for an entire year.\n\nI never asked for any of this. He did it because he wanted to.\n\nLast week he said he wants to "explore his options" because he met someone at work who "challenges him intellectually."\n\nNow he wants to pull back financially and emotionally, but still "be friends."\n\nHere's my problem: my family is still in crisis. The obligations he took on are not done.\n\nAm I wrong for feeling like he doesn't get to just walk away from all of this?`,
-    tags:['advice','money','breakup'],created_at:ago(18),
-    rx:{💔:456,😭:389,😡:234,😳:178,😂:67,🔥:123},
-    votes:{he:234,she:456,both:567},views:3200,cmt:178,trending:false,
-    preview:"He paid for everything. Surgery. Rent. My family. Now he wants to leave."
-  },{
-    id:'p6',author:'Anon_5529',type:'confession',
-    title:"I read my dead ex's journal 2 years after she passed. I wish I hadn't.",
-    content:`She passed away suddenly two years ago. Car accident. She was 26. We had been broken up for 4 months.\n\nHer mother gave me her journal last week. Said she would have wanted me to have it.\n\nI thought I was going to cry reading love. Instead I found something else.\n\nShe had known I cheated. She never told me she knew. She wrote about it 14 times — processing it, forgiving me, choosing to stay silent because she "didn't want to lose me."\n\nWe broke up for "other reasons." She never brought it up once.\n\nShe chose peace over confrontation. She chose me over herself.\n\nAnd I never got to apologize. I never even knew she was carrying that.\n\nI don't know how to live with this.`,
-    tags:['grief','guilt','confession'],created_at:ago(24),
-    rx:{💔:1234,😭:2345,😡:156,😳:234,😂:12,🔥:89},
-    votes:{he:1890,she:12,both:145},views:12000,cmt:567,trending:true,
-    preview:"She knew I cheated. She never told me. She died never telling me."
-  },{
-    id:'p7',author:'Confess_8801',type:'advice',
-    title:"Found a pregnancy test in my boyfriend's car. I'm not pregnant. He lives alone.",
-    content:`We've been dating 7 months. I thought things were going well.\n\nYesterday I was moving his gym bag in the backseat and a pregnancy test box fell out. Open box. Used test.\n\nI'm not pregnant. I haven't been near a pregnancy test in months.\n\nHe lives alone. No sisters. No female roommates. No "explanation" that makes sense.\n\nI put the box back exactly where it was. I got in the passenger seat. He drove us to dinner. I smiled the whole time.\n\nNow I'm home and I can't decide whether to ask him directly or just disappear from his life without explanation.\n\nWhat would you do?`,
-    tags:['suspicious','advice','cheating'],created_at:ago(30),
-    rx:{💔:345,😭:123,😡:789,😳:1203,😂:45,🔥:234},
-    votes:{he:890,she:78,both:234},views:5600,cmt:234,trending:true,
-    preview:"I put the box back. I smiled through dinner. Now I'm home, staring at my phone."
-  },{
-    id:'p8',author:'Ghost_2270',type:'confession',
-    title:"My wife and I haven't had a real conversation in 8 months. We're still living together.",
-    content:`We don't fight. We don't argue. We just… exist in the same space.\n\nWe've been married 5 years. We share a bed, eat dinner together, watch TV. We say "good morning" and "goodnight."\n\nBut 8 months ago something shifted. She stopped telling me about her day. I stopped asking.\n\nI'm not unhappy enough to leave. She doesn't seem unhappy enough to leave either. We're just… comfortable in the silence.\n\nOur friends think we're a model couple. We look perfect from outside.\n\nSometimes I look at her across the dinner table and I wonder if she's lonelier inside this marriage than she was before it.\n\nIs this just what long-term relationships become? Or are we already over and just refusing to admit it?`,
-    tags:['marriage','distance','toxic'],created_at:ago(36),
-    rx:{💔:789,😭:456,😡:34,😳:234,😂:12,🔥:67},
-    votes:{he:145,she:123,both:890},views:7800,cmt:345,trending:false,
-    preview:"We share a bed, eat together, watch TV. We haven't really talked in 8 months."
-  },{
-    id:'p9',author:'Truth_9931',type:'confession',
-    title:"He told me he loved me 73 times before I realized he was saying it to 3 other women too",
-    content:`I counted. 73 times in 4 months.\n\nI kept every voice note where he said those words like they were only mine.\n\nThen one of the other women contacted me. She had counted too: 71 times.\n\nThere was a third. 68 times.\n\nWe all compared screenshots. We were all his "everything." We all got the same "I've never felt this way before" speech. Word. For. Word.\n\nHe had copy-pasted love to all of us.\n\nWhat does that even mean? Were the feelings fake? Or does he feel it so easily that it means nothing?\n\nThe scariest part isn't that he lied. It's that even knowing what I know now, those messages still feel real to me.`,
-    tags:['cheating','manipulation','confession'],created_at:ago(48),
-    rx:{💔:567,😭:234,😡:1456,😳:345,😂:89,🔥:456},
-    votes:{he:2100,she:34,both:234},views:11000,cmt:478,trending:true,
-    preview:"73 times he said it to me. 71 times to her. 68 to another. Copy-pasted love."
-  },{
-    id:'p10',author:'Anon_4410',type:'advice',
-    title:"He blocked me on everything 6 hours after I told him I was pregnant. What do I do?",
-    content:`We were together for 2 years. I found out I was pregnant last week. I was scared, but I thought we'd figure it out together.\n\nI called him. He was quiet for a long time. He said "let me think."\n\n6 hours later: blocked on WhatsApp. Blocked on Instagram. My number redirects to voicemail.\n\nHis friends say they "don't know where he is." His mum hasn't returned my messages.\n\nI'm 6 weeks. I'm alone. I'm scared. I'm angry in a way I didn't know was possible.\n\nI'm not here to shame him — I haven't posted his name anywhere. I'm genuinely just asking: legally, practically, emotionally — what do I do from here?\n\nI'm not even sure if I want to keep the pregnancy yet. But I know I don't want to make that decision alone because someone ran.`,
-    tags:['abandonment','advice','betrayal'],created_at:ago(60),
-    rx:{💔:1123,😭:890,😡:2345,😳:456,😂:23,🔥:345},
-    votes:{he:3400,she:45,both:189},views:18000,cmt:689,trending:true,
-    preview:"Two years together. I told him I was pregnant. 6 hours later: blocked everywhere."
-  }
-];
-
-const COMMENTS = {
-  p1:[
-    {id:'c1',author:'Vibe_9923',text:"The fact that you're still in that apartment is actually survival mode. Your mind is protecting you from a decision you're not ready to make. Take your time. But please, take care of yourself first.",up:234,dn:12,pin:true,time:'1h ago',replies:[]},
-    {id:'c2',author:'Truth_4401',text:"'The roommate.' I felt sick reading that. He didn't just betray you — he was EMBARRASSED by you. That's different and so much worse.",up:456,dn:34,pin:false,time:'45m ago',replies:[
-      {id:'r1',author:'Anon_3312',text:"This. There's a difference between cheating and erasure. He erased her existence.",up:89,dn:5,time:'30m ago'}
-    ]},
-    {id:'c3',author:'Ghost_7712',text:"Please don't let him know you know until you have a plan. Somewhere to go. Someone who knows. Don't give him the chance to spin this narrative first.",up:189,dn:8,pin:false,time:'2h ago',replies:[]},
-  ],
-  p3:[
-    {id:'c4',author:'Heart_0012',text:"Keep the ring on as long as you need to. There's no timeline for this kind of grief. You didn't just lose a boyfriend — you lost a future you believed in.",up:567,dn:23,pin:true,time:'6h ago',replies:[]},
-    {id:'c5',author:'Anon_3312',text:"He proposed Friday and was with her Saturday. He didn't even wait 24 hours. This wasn't weakness. This was a plan.",up:789,dn:45,pin:false,time:'7h ago',replies:[
-      {id:'r2',author:'Shadow_8834',text:"Exactly. The proposal might have even been a way to lock her down while keeping the other girl.",up:123,dn:12,time:'6h ago'}
-    ]},
-  ],
-  p2:[
-    {id:'c6',author:'Confess_2281',text:"Nobody has that kind of lucky timing with a 'glitch.' The real question is: what are you going to do with that knowledge?",up:345,dn:23,pin:true,time:'4h ago',replies:[]},
-    {id:'c7',author:'Vibe_5591',text:"Screenshot the current chat with today's date, save it somewhere. Then smile and say nothing. Let her feel safe. Then investigate.",up:289,dn:34,pin:false,time:'4h ago',replies:[]},
-  ],
-  p6:[
-    {id:'c8',author:'Shadow_1199',text:"I'm not religious but I genuinely hope wherever she is, she knows you know. And that she forgives you anyway. Because it sounds like she already did.",up:1234,dn:45,pin:true,time:'20h ago',replies:[]},
-    {id:'c9',author:'Ghost_4421',text:"She protected you from the pain of knowing. Even after what you did. That's one of the saddest and most loving things I've ever read.",up:876,dn:23,pin:false,time:'22h ago',replies:[]},
-  ]
-};
-
-const EMOJIS = ['💔','😭','😡','😳','😂','🔥'];
-
-// ── HELPERS ──
-function ago(h){return new Date(Date.now()-h*3600000).toISOString()}
-function fmt(n){
-  if(n>=1e6) return (n/1e6).toFixed(1)+'M';
-  if(n>=1000) return (n/1000).toFixed(1)+'k';
-  return String(n);
-}
-function tAgo(d){
-  const s=Math.floor((Date.now()-new Date(d))/1000);
-  if(s<60) return 'just now';
-  if(s<3600) return Math.floor(s/60)+'m ago';
-  if(s<86400) return Math.floor(s/3600)+'h ago';
-  return Math.floor(s/86400)+'d ago';
-}
-function toast(msg,type='info'){
-  const c=document.getElementById('toasts');
-  const t=document.createElement('div');
-  t.className=`toast ${type}`;t.textContent=msg;
-  c.appendChild(t);setTimeout(()=>t.remove(),3100);
-}
-function resize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
-
-// ── NAVIGATION ──
-function go(page){
-  // deactivate all
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
-  // activate page
-  const pg=document.getElementById('pg-'+page);
-  if(pg) pg.classList.add('active');
-  // activate tab button
-  const nb=document.getElementById('nt-'+page);
-  if(nb) nb.classList.add('active');
-  curPage=page;
-  window.scrollTo(0,0);
-  // render content
-  if(page==='home') renderFeed();
-  else if(page==='trending') renderTrending();
-  else if(page==='confess') renderConfess();
-  else if(page==='notifications') renderNotifs();
-  else if(page==='profile') renderProfile();
-}
-
-// ── AUTH ──
-function showAuth(mode){
-  const ov=document.getElementById('authOv');
-  const head=document.getElementById('authHead');
-  const body=document.getElementById('authBody');
-  ov.classList.remove('hidden');
-  if(mode==='signup'){
-    head.innerHTML=`<div class="m-icon">💔</div><h2 class="m-title">Join HeartConfia</h2><p class="m-sub">Anonymous. Free. No judgment.</p>`;
-    body.innerHTML=`
-      <div class="fgrp"><label class="flabel">Email</label><input type="email" class="finput" id="ae" placeholder="your@email.com" autocomplete="email"/></div>
-      <div class="fgrp"><label class="flabel">Password</label><input type="password" class="finput" id="ap" placeholder="At least 6 characters" autocomplete="new-password"/></div>
-      <p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.5">Your email stays private. You'll appear as <strong style="color:var(--t2)">Heart_4821</strong></p>
-      <button class="btn btn-primary btn-block" onclick="doSignup()">Create Free Account</button>
-      <div class="m-foot">Already have an account? <a onclick="showAuth('login')">Login</a></div>`;
-  } else {
-    head.innerHTML=`<div class="m-icon">🔐</div><h2 class="m-title">Welcome back</h2><p class="m-sub">Continue reading the confessions</p>`;
-    body.innerHTML=`
-      <div class="fgrp"><label class="flabel">Email</label><input type="email" class="finput" id="ae" placeholder="your@email.com" autocomplete="email"/></div>
-      <div class="fgrp"><label class="flabel">Password</label><input type="password" class="finput" id="ap" placeholder="Your password" autocomplete="current-password"/></div>
-      <button class="btn btn-primary btn-block" onclick="doLogin()">Login</button>
-      <div class="m-foot">New here? <a onclick="showAuth('signup')">Create account</a></div>`;
-  }
-  // focus first input
-  setTimeout(()=>{const f=document.getElementById('ae');if(f)f.focus()},200);
-}
-function closeAuth(){document.getElementById('authOv').classList.add('hidden')}
-function closePw(){document.getElementById('pwOv').classList.add('hidden')}
-function closeOvOutside(e,id){if(e.target.id===id) document.getElementById(id).classList.add('hidden')}
-
-async function doSignup(){
-  const email=(document.getElementById('ae').value||'').trim();
-  const pass=document.getElementById('ap').value||'';
-  if(!email||!pass){toast('Please fill all fields','err');return}
-  if(pass.length<6){toast('Password needs 6+ characters','err');return}
-  if(!email.includes('@')){toast('Enter a valid email','err');return}
-  if(sb){
-    try{
-      const {data,error}=await sb.auth.signUp({email,password:pass});
-      if(error) throw error;
-      const username=mkUsername();
-      await sb.from('users').upsert({id:data.user.id,email,username,created_at:new Date().toISOString()});
-      CU={id:data.user.id,email,username,created_at:new Date().toISOString()};
-      closeAuth();updateNav();
-      toast('Account created! Check your email to verify 💔','ok');
-    }catch(e){toast(e.message||'Signup failed','err')}
-  } else {
-    // demo mode
-    const u={id:'demo-'+Date.now(),email,username:mkUsername(),created_at:new Date().toISOString()};
-    CU=u;try{localStorage.setItem('hc_u',JSON.stringify(u))}catch(e){}
-    closeAuth();updateNav();
-    toast('Welcome to HeartConfia! 💔','ok');
-  }
-}
-
-async function doLogin(){
-  const email=(document.getElementById('ae').value||'').trim();
-  const pass=document.getElementById('ap').value||'';
-  if(!email||!pass){toast('Please fill all fields','err');return}
-  if(sb){
-    try{
-      const {data,error}=await sb.auth.signInWithPassword({email,password:pass});
-      if(error) throw error;
-      const {data:profile}=await sb.from('users').select('*').eq('id',data.user.id).single();
-      CU=profile||{id:data.user.id,email,username:mkUsername()};
-      closeAuth();updateNav();
-      toast('Welcome back! 💔','ok');
-    }catch(e){toast(e.message||'Login failed','err')}
-  } else {
-    try{
-      const saved=localStorage.getItem('hc_u');
-      if(saved){CU=JSON.parse(saved);closeAuth();updateNav();toast('Welcome back! 💔','ok')}
-      else toast('No account found. Sign up first.','err');
-    }catch(e){toast('Login failed','err')}
-  }
-}
-
-function doLogout(){
-  CU=null;try{localStorage.removeItem('hc_u')}catch(e){}
-  if(sb) sb.auth.signOut();
-  updateNav();toast('Logged out','info');
-  go('home');
-}
-
-function updateNav(){
-  const r=document.getElementById('navRight');
-  if(CU){
-    const ini=(CU.username||'U').slice(0,2).toUpperCase();
-    r.innerHTML=`<div class="ava-btn" onclick="go('profile')">${ini}</div>`;
-  } else {
-    r.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Login</button><button class="btn btn-primary btn-sm" onclick="showAuth('signup')">Join Free</button>`;
-  }
-}
-
-function mkUsername(){
-  const px=['Heart','Confess','Vibe','Shadow','Ghost','Truth','Anon','Soul','Quiet','Storm'];
-  return px[Math.floor(Math.random()*px.length)]+'_'+(Math.floor(Math.random()*9000)+1000);
-}
-
-// ── FEED ──
-function getFiltered(){
-  if(curFilter==='all') return POSTS;
-  return POSTS.filter(p=>p.tags.some(t=>t.toLowerCase().includes(curFilter))||p.type===curFilter);
-}
-
-function renderFeed(){
-  const w=document.getElementById('feedWrap');
-  const posts=getFiltered();
-  if(!posts.length){
-    w.innerHTML=`<div class="empty"><div class="empty-ic">💔</div><p class="empty-tx">No confessions here yet</p></div>`;
-    return;
-  }
-  const slice=posts.slice(0,PER_PAGE);
-  w.innerHTML=slice.map((p,i)=>cardHTML(p,i)).join('');
-  const lm=document.getElementById('loadMoreWrap');
-  if(lm) lm.classList.toggle('hidden',posts.length<=PER_PAGE);
-}
-
-function loadMore(){
-  postsPage++;
-  const posts=getFiltered();
-  const slice=posts.slice(postsPage*PER_PAGE,(postsPage+1)*PER_PAGE);
-  const w=document.getElementById('feedWrap');
-  if(slice.length){
-    const tmp=document.createElement('div');
-    tmp.innerHTML=slice.map((p,i)=>cardHTML(p,i+postsPage*PER_PAGE)).join('');
-    while(tmp.firstChild) w.appendChild(tmp.firstChild);
-  }
-  const lm=document.getElementById('loadMoreWrap');
-  if(lm) lm.classList.toggle('hidden',(postsPage+1)*PER_PAGE>=posts.length);
-}
-
-// filter tab clicks
-document.getElementById('ftabs').addEventListener('click',function(e){
-  const btn=e.target.closest('.ftab');
-  if(!btn) return;
-  document.querySelectorAll('.ftab').forEach(b=>b.classList.remove('on'));
-  btn.classList.add('on');
-  curFilter=btn.dataset.f;
-  postsPage=0;
-  renderFeed();
-});
-
-function cardHTML(p,idx){
-  const delay=Math.min(idx*40,300);
-  const total=p.votes.he+p.votes.she+p.votes.both||1;
-  const heP=Math.round(p.votes.he/total*100);
-  const sheP=Math.round(p.votes.she/total*100);
-  const bothP=100-heP-sheP;
-  const ini=p.author.slice(0,2).toUpperCase();
-  const guest=!CU;
-  let badge='';
-  if(p.trending) badge=idx%2===0
-    ?`<span class="cbadge cbadge-t">🔥 Trending</span>`
-    :`<span class="cbadge cbadge-h">💀 Hot</span>`;
-  else badge=`<span class="cbadge cbadge-n">✨ New</span>`;
-
-  const rxHTML=EMOJIS.map(e=>`<button class="rxbtn" data-pid="${p.id}" data-e="${e}" onclick="doRx('${p.id}','${e}',this)">${e} <span>${fmt(p.rx[e]||0)}</span></button>`).join('');
-  const tagsHTML=p.tags.map(t=>`<span class="tag">${t}</span>`).join('');
-
-  const preview=guest
-    ?`<div class="c-preview c-preview-blur">${p.preview}</div>
-      <div class="c-lock-cta" onclick="showPw('${p.id}')">🔒 Read the full story →</div>`
-    :`<div class="c-preview">${p.preview}</div>`;
-
-  return `<article class="card" style="animation-delay:${delay}ms">
-  <div class="card-body">
-    <div class="card-meta">
-      <div class="card-author">
-        <div class="c-ava">${ini}</div>
-        <div>
-          <div class="c-name">${p.author}</div>
-          <div class="c-time">${tAgo(p.created_at)}</div>
-        </div>
-      </div>
-      ${badge}
-    </div>
-    <div class="c-title" onclick="openPost('${p.id}')">${p.title}</div>
-    ${preview}
-    <div class="c-tags">${tagsHTML}</div>
-    <div class="vote-wrap">
-      <div class="vbar">
-        <div class="vs vs-he" style="width:${heP}%"></div>
-        <div class="vs vs-she" style="width:${sheP}%"></div>
-        <div class="vs vs-both" style="width:${bothP}%"></div>
-      </div>
-      <div class="vlabels">
-        <span class="vl vl-he">🟥 He ${heP}%</span>
-        <span class="vl vl-she">🟪 She ${sheP}%</span>
-        <span class="vl vl-both">⚪ Both ${bothP}%</span>
-      </div>
-      <div class="vbtns">
-        <button class="vbtn vbtn-he" onclick="doVote('${p.id}','he',this)">🟥 He wrong</button>
-        <button class="vbtn vbtn-she" onclick="doVote('${p.id}','she',this)">🟪 She wrong</button>
-        <button class="vbtn vbtn-both" onclick="doVote('${p.id}','both',this)">⚪ Both</button>
-      </div>
-    </div>
-    <div class="rxrow">${rxHTML}</div>
-    <div class="c-foot">
-      <button class="c-stat" onclick="openPost('${p.id}')">
-        <svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        ${fmt(p.cmt)}
-      </button>
-      <button class="c-stat">
-        <svg viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-        ${fmt(p.views)}
-      </button>
-      <button class="c-stat rpt-btn" onclick="showRpt('${p.id}')">
-        <svg viewBox="0 0 24 24"><path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
-        Report
-      </button>
-    </div>
-  </div>
-</article>`;
-}
-
-// ── POST DETAIL ──
-function openPost(id){
-  const p=POSTS.find(x=>x.id===id);
-  if(!p) return;
-  if(!CU){showPw(id);return}
-  detailPost=p;p.views++;
-  go('detail');
-  renderDetail(p);
-}
-
-function renderDetail(p){
-  const w=document.getElementById('dtWrap');
-  const total=p.votes.he+p.votes.she+p.votes.both||1;
-  const heP=Math.round(p.votes.he/total*100);
-  const sheP=Math.round(p.votes.she/total*100);
-  const bothP=100-heP-sheP;
-  const ini=p.author.slice(0,2).toUpperCase();
-  const cmts=COMMENTS[p.id]||[];
-  const rxHTML=EMOJIS.map(e=>`<button class="rxbtn" onclick="doRx('${p.id}','${e}',this)">${e} <span>${fmt(p.rx[e]||0)}</span></button>`).join('');
-  const tagsHTML=p.tags.map(t=>`<span class="tag">${t}</span>`).join('');
-
-  w.innerHTML=`
-    <button class="back-btn" onclick="go('home')">
-      <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      Back to feed
-    </button>
-    <div class="d-author">
-      <div class="d-ava">${ini}</div>
-      <div>
-        <div class="d-name">${p.author}</div>
-        <div class="d-meta">${tAgo(p.created_at)} · ${fmt(p.views)} views</div>
-      </div>
-    </div>
-    <div class="c-tags" style="margin-bottom:12px">${tagsHTML}</div>
-    <h1 class="d-title">${p.title}</h1>
-    <div class="d-body">${p.content}</div>
-    <div class="rxrow" style="margin-bottom:18px">${rxHTML}</div>
-    <div class="vpanel">
-      <div class="vpanel-title">⚖️ Who is wrong here?</div>
-      <div class="vbar" style="height:8px;margin-bottom:8px">
-        <div class="vs vs-he" id="dvhe" style="width:${heP}%"></div>
-        <div class="vs vs-she" id="dvsh" style="width:${sheP}%"></div>
-        <div class="vs vs-both" id="dvbo" style="width:${bothP}%"></div>
-      </div>
-      <div class="vlabels" style="margin-bottom:6px">
-        <span class="vl vl-he" id="dlhe">🟥 He ${heP}%</span>
-        <span class="vl vl-she" id="dlsh">🟪 She ${sheP}%</span>
-        <span class="vl vl-both" id="dlbo">⚪ Both ${bothP}%</span>
-      </div>
-      <div style="font-size:11px;color:var(--t3);margin-bottom:10px">${fmt(total)} votes total</div>
-      <div class="vbtns">
-        <button class="vbtn vbtn-he" onclick="doVote('${p.id}','he',this)">🟥 He is wrong</button>
-        <button class="vbtn vbtn-she" onclick="doVote('${p.id}','she',this)">🟪 She is wrong</button>
-        <button class="vbtn vbtn-both" onclick="doVote('${p.id}','both',this)">⚪ Both wrong</button>
-      </div>
-    </div>
-    <div class="divider"></div>
-    <div class="cm-header">
-      <span class="cm-title">💬 ${fmt(p.cmt)} Comments</span>
-      <select class="sort-sel" onchange="sortCmts(this.value,'${p.id}')">
-        <option value="heated">Most Heated</option>
-        <option value="recent">Recent</option>
-        <option value="top">Top Rated</option>
-      </select>
-    </div>
-    <div class="cm-box">
-      <textarea class="cm-ta" id="cmIn" placeholder="What's your verdict? Don't hold back…" oninput="resize(this)"></textarea>
-      <div class="cm-bfoot">
-        <button class="btn btn-primary btn-sm" onclick="postCmt('${p.id}')">Post Comment</button>
-      </div>
-    </div>
-    <div id="cmList">${cmts.map(c=>cmtHTML(c)).join('')||'<div class="empty"><div class="empty-ic">💬</div><p class="empty-tx">Be first to comment</p></div>'}</div>
-  `;
-}
-
-function cmtHTML(c,isReply=false){
-  const repliesHTML=!isReply&&c.replies&&c.replies.length
-    ?`<div class="replies-wrap">${c.replies.map(r=>cmtHTML(r,true)).join('')}</div>`:''
-  ;
-  return `<div class="${isReply?'reply-item':'cm-item'}" id="cmt-${c.id}">
-  <div class="${isReply?'reply-bubble':'cm-bubble'}">
-    <div class="cm-head">
-      <span class="cm-auth">${c.author}${c.pin?'<span class="pin-badge" style="margin-left:6px">📌 Pinned</span>':''}</span>
-      <span class="cm-time">${c.time||'just now'}</span>
-    </div>
-    <div class="cm-text">${c.text}</div>
-    <div class="cm-acts">
-      <button class="cm-act up" onclick="voteCmt('${c.id}','up',this)">▲ ${c.up||0}</button>
-      <button class="cm-act dn" onclick="voteCmt('${c.id}','dn',this)">▼ ${c.dn||0}</button>
-      ${!isReply?`<button class="cm-act" onclick="toggleRbox('${c.id}')">↩ Reply</button>`:''}
-      <button class="cm-act rpt-btn" onclick="showRpt('${c.id}','comment')">🚩</button>
-    </div>
-  </div>
-  ${repliesHTML}
-  ${!isReply?`<div id="rb-${c.id}" class="rbox hidden">
-    <textarea class="rbox-ta" id="ri-${c.id}" placeholder="Reply to ${c.author}…" oninput="resize(this)"></textarea>
-    <div class="rbox-foot">
-      <button class="btn btn-ghost btn-sm" onclick="toggleRbox('${c.id}')">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="postReply('${c.id}')">Reply</button>
-    </div>
-  </div>`:''}
-</div>`;
-}
-
-function toggleRbox(id){
-  const b=document.getElementById('rb-'+id);
-  if(b){b.classList.toggle('hidden');if(!b.classList.contains('hidden')){const i=document.getElementById('ri-'+id);if(i)i.focus()}}
-}
-
-function sortCmts(val,pid){
-  const cmts=[...(COMMENTS[pid]||[])];
-  if(val==='heated') cmts.sort((a,b)=>(b.up+b.dn)-(a.up+a.dn));
-  else if(val==='top') cmts.sort((a,b)=>b.up-a.up);
-  else cmts.reverse();
-  const l=document.getElementById('cmList');
-  if(l) l.innerHTML=cmts.map(c=>cmtHTML(c)).join('');
-}
-
-function postCmt(pid){
-  if(!CU){showAuth('login');return}
-  const el=document.getElementById('cmIn');
-  const text=(el.value||'').trim();
-  if(!text){toast('Write something first!','err');return}
-  const c={id:'c'+Date.now(),author:CU.username,text,up:0,dn:0,pin:false,time:'just now',replies:[]};
-  if(!COMMENTS[pid]) COMMENTS[pid]=[];
-  COMMENTS[pid].unshift(c);
-  const p=POSTS.find(x=>x.id===pid);if(p)p.cmt++;
-  el.value='';el.style.height='auto';
-  const l=document.getElementById('cmList');
-  if(l){const tmp=document.createElement('div');tmp.innerHTML=cmtHTML(c);l.prepend(tmp.firstElementChild)}
-  toast('Comment posted 💬','ok');
-}
-
-function postReply(cid){
-  if(!CU){showAuth('login');return}
-  if(!detailPost) return;
-  const el=document.getElementById('ri-'+cid);
-  const text=(el.value||'').trim();
-  if(!text) return;
-  const pid=detailPost.id;
-  const cmts=COMMENTS[pid]||[];
-  const c=cmts.find(x=>x.id===cid);
-  if(!c) return;
-  if(!c.replies) c.replies=[];
-  const r={id:'r'+Date.now(),author:CU.username,text,up:0,dn:0,time:'just now'};
-  c.replies.push(r);
-  el.value='';el.style.height='auto';
-  toggleRbox(cid);
-  let rw=document.querySelector(`#cmt-${cid} .replies-wrap`);
-  if(!rw){
-    rw=document.createElement('div');rw.className='replies-wrap';
-    document.getElementById('cmt-'+cid).appendChild(rw);
-  }
-  const tmp=document.createElement('div');tmp.innerHTML=cmtHTML(r,true);
-  rw.appendChild(tmp.firstElementChild);
-  toast('Reply added','ok');
-}
-
-function voteCmt(cid,dir,btn){
-  if(!CU){showAuth('login');return}
-  btn.classList.toggle('on');
-  const n=btn.textContent.replace(/[▲▼\s]/g,'');
-  const cur=parseInt(n)||0;
-  const sym=dir==='up'?'▲':'▼';
-  btn.textContent=sym+' '+(btn.classList.contains('on')?cur+1:Math.max(0,cur-1));
-}
-
-// ── VOTING ──
-function doVote(pid,type,btn){
-  if(!CU){showAuth('signup');return}
-  const p=POSTS.find(x=>x.id===pid);if(!p) return;
-  const btns=btn.closest('.vbtns').querySelectorAll('.vbtn');
-  const was=btn.classList.contains('on');
-  btns.forEach(b=>b.classList.remove('on'));
-  if(!was){
-    btn.classList.add('on');
-    p.votes[type]++;
-    toast('Vote recorded 🗳️','info');
-    refreshVoteBars(pid,p.votes);
-  }
-}
-
-function refreshVoteBars(pid,v){
-  const t=v.he+v.she+v.both||1;
-  const heP=Math.round(v.he/t*100);
-  const sheP=Math.round(v.she/t*100);
-  const bothP=100-heP-sheP;
-  // in feed card (multiple cards possible)
-  document.querySelectorAll(`[data-pid="${pid}"]`).forEach(()=>{});
-  // simpler: re-target by finding card
-  const card=document.getElementById('post-'+pid);
-  if(card){
-    const segs=card.querySelectorAll('.vs');
-    if(segs[0])segs[0].style.width=heP+'%';
-    if(segs[1])segs[1].style.width=sheP+'%';
-    if(segs[2])segs[2].style.width=bothP+'%';
-  }
-  // in detail
-  const dvhe=document.getElementById('dvhe');const dvsh=document.getElementById('dvsh');const dvbo=document.getElementById('dvbo');
-  if(dvhe)dvhe.style.width=heP+'%';if(dvsh)dvsh.style.width=sheP+'%';if(dvbo)dvbo.style.width=bothP+'%';
-  const dlhe=document.getElementById('dlhe');const dlsh=document.getElementById('dlsh');const dlbo=document.getElementById('dlbo');
-  if(dlhe)dlhe.textContent=`🟥 He ${heP}%`;if(dlsh)dlsh.textContent=`🟪 She ${sheP}%`;if(dlbo)dlbo.textContent=`⚪ Both ${bothP}%`;
-}
-
-// ── REACTIONS ──
-function doRx(pid,emoji,btn){
-  if(!CU){showAuth('signup');return}
-  const p=POSTS.find(x=>x.id===pid);if(!p) return;
-  const was=btn.classList.contains('on');
-  btn.classList.toggle('on');
-  const sp=btn.querySelector('span');
-  const cur=parseInt(sp.textContent.replace(/[km]/,''))||0;
-  if(was){p.rx[emoji]=Math.max(0,(p.rx[emoji]||1)-1);sp.textContent=fmt(p.rx[emoji])}
-  else{p.rx[emoji]=(p.rx[emoji]||0)+1;sp.textContent=fmt(p.rx[emoji]);btn.style.transform='scale(1.2)';setTimeout(()=>btn.style.transform='',180)}
-}
-
-// ── PAYWALL ──
-function showPw(pid){
-  const p=POSTS.find(x=>x.id===pid);
-  const pr=document.getElementById('pwPreview');
-  if(pr&&p) pr.textContent=p.preview||'Sign up to read the full story.';
-  document.getElementById('pwOv').classList.remove('hidden');
-}
-
-// ── TRENDING ──
-function renderTrending(){
-  const w=document.getElementById('trendWrap');
-  const cats=[
-    {ico:'🔥',lbl:'Trending Now',posts:POSTS.filter(p=>p.trending).slice(0,5)},
-    {ico:'💔',lbl:'Saddest Stories',posts:[...POSTS].sort((a,b)=>(b.rx['😭']||0)-(a.rx['😭']||0)).slice(0,3)},
-    {ico:'😡',lbl:'Most Toxic Drama',posts:[...POSTS].sort((a,b)=>(b.rx['😡']||0)-(a.rx['😡']||0)).slice(0,3)},
-    {ico:'🧠',lbl:'Most Debated',posts:[...POSTS].sort((a,b)=>b.cmt-a.cmt).slice(0,3)},
-    {ico:'👀',lbl:'Most Viewed Today',posts:[...POSTS].sort((a,b)=>b.views-a.views).slice(0,3)},
+  const POSTS = [
+    {id:'p1',author:'Heart_4821',type:'confession',title:"I checked his phone at 2AM and saw something I still wish I never saw…",content:"I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years. Three years of building something I thought was real.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... \"last night was everything.\"\n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — \"the roommate.\"\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.",tags:['cheating','betrayal','trust'],created_at:ago(2),rx:{'💔':247,'😭':189,'😡':312,'😳':98,'😂':5,'🔥':45},votes:{he:412,she:23,both:89},views:1840,cmt:143,trending:true,preview:"He called me 'the roommate' to her. After 3 years. After we talked about kids last month."},
+    {id:'p2',author:'Confess_7732',type:'advice',title:"She deleted 6 months of messages the day I asked her to be my girlfriend. What do I do?",content:"We've been talking every single day for 6 months. I thought we were building something serious. Yesterday I finally asked her if she wanted to make things official.\n\nShe said \"yes, of course\" and kissed me.\n\nBut this morning I noticed something. When I opened our WhatsApp chat, it starts from yesterday. The ENTIRE history — 6 months of messages — is gone from my side. She claims she \"doesn't know what happened\" and that it was a \"phone glitch.\"\n\nI didn't say anything. I smiled and went to work.\n\nBut I need to know: what was in those messages that she needed to delete the exact night I made us official?\n\nDo I ask directly? Do I pretend I didn't notice? Do I just… end this before it starts?",tags:['trust','advice','suspicious'],created_at:ago(5),rx:{'💔':89,'😭':34,'😡':156,'😳':412,'😂':22,'🔥':78},votes:{he:67,she:298,both:145},views:2100,cmt:89,trending:true,preview:"6 months of messages. Gone. The same night I asked her to be mine."},
+    {id:'p3',author:'Vibe_1190',type:'confession',title:"My boyfriend proposed to me while actively dating someone else. I found out 3 days later.",content:"He got down on one knee on a Friday. I said yes, cried, called my mum, posted on Instagram. Classic fairytale moment.\n\nMonday morning his side girl posted a photo with the caption \"he told me she doesn't mean anything.\" The photo was from the same Saturday — the day after he proposed to me.\n\nI've been engaged for 72 hours and already a cheater's fiancée.\n\nI haven't taken the ring off yet. I don't know why. Maybe because the moment I do, none of it was real. The proposal, the future, the person I thought I knew.\n\nHe's been calling. Texting. Showing up. His family is calling me too — apparently they \"knew nothing.\"\n\nSomeone tell me: am I wrong for still having the ring on?",tags:['cheating','engagement','betrayal'],created_at:ago(8),rx:{'💔':891,'😭':567,'😡':1203,'😳':456,'😂':12,'🔥':234},votes:{he:1456,she:34,both:123},views:8900,cmt:312,trending:true,preview:"He proposed Friday. She posted a photo with him Saturday. I found out Monday."},
+    {id:'p4',author:'Heart_9012',type:'confession',title:"I've been emotionally cheating for 8 months and I think I'm in love with both of them",content:"Before you judge me — I know. I already know.\n\nMy girlfriend of 4 years is the most stable, loving person I've ever met. She shows up every time.\n\nBut I've been talking to someone else since last year. We've never touched. We've never even been in the same city. But the conversations… I've never felt more understood in my life.\n\nI tell her things I can't say to anyone. She tells me things she says she's never told anyone.\n\nMy girlfriend doesn't know. Last week she started looking at apartments for us to move in together.\n\nI don't know how to choose. Does that make me the worst person alive?\n\nBefore you answer — yes, I already know the answer. I just can't accept it yet.",tags:['cheating','emotional','advice'],created_at:ago(12),rx:{'💔':234,'😭':145,'😡':567,'😳':89,'😂':34,'🔥':189},votes:{he:678,she:89,both:234},views:4300,cmt:201,trending:false,preview:"We've never touched. Never been in the same city. But I've never felt more understood."},
+    {id:'p5',author:'Shadow_3341',type:'advice',title:"He paid for my surgery, my rent, and my family's debt. Now he wants to leave. What are my rights?",content:"We've been together for 2 years. Not married. But he has been the only reason my family has been surviving.\n\nWhen my mum got sick, he paid the hospital bill without me asking. When my landlord was threatening eviction, he paid 6 months upfront. He sorted my younger brother's school fees for an entire year.\n\nI never asked for any of this. He did it because he wanted to.\n\nLast week he said he wants to \"explore his options\" because he met someone at work who \"challenges him intellectually.\"\n\nNow he wants to pull back financially and emotionally, but still \"be friends.\"\n\nHere's my problem: my family is still in crisis. The obligations he took on are not done.\n\nAm I wrong for feeling like he doesn't get to just walk away from all of this?",tags:['advice','money','breakup'],created_at:ago(18),rx:{'💔':456,'😭':389,'😡':234,'😳':178,'😂':67,'🔥':123},votes:{he:234,she:456,both:567},views:3200,cmt:178,trending:false,preview:"He paid for everything. Surgery. Rent. My family. Now he wants to leave."},
+    {id:'p6',author:'Anon_5529',type:'confession',title:"I read my dead ex's journal 2 years after she passed. I wish I hadn't.",content:"She passed away suddenly two years ago. Car accident. She was 26. We had been broken up for 4 months.\n\nHer mother gave me her journal last week. Said she would have wanted me to have it.\n\nI thought I was going to cry reading love. Instead I found something else.\n\nShe had known I cheated. She never told me she knew. She wrote about it 14 times — processing it, forgiving me, choosing to stay silent because she \"didn't want to lose me.\"\n\nWe broke up for \"other reasons.\" She never brought it up once.\n\nShe chose peace over confrontation. She chose me over herself.\n\nAnd I never got to apologize. I never even knew she was carrying that.\n\nI don't know how to live with this.",tags:['grief','guilt','confession'],created_at:ago(24),rx:{'💔':1234,'😭':2345,'😡':156,'😳':234,'😂':12,'🔥':89},votes:{he:1890,she:12,both:145},views:12000,cmt:567,trending:true,preview:"She knew I cheated. She never told me. She died never telling me."},
+    {id:'p7',author:'Confess_8801',type:'advice',title:"Found a pregnancy test in my boyfriend's car. I'm not pregnant. He lives alone.",content:"We've been dating 7 months. I thought things were going well.\n\nYesterday I was moving his gym bag in the backseat and a pregnancy test box fell out. Open box. Used test.\n\nI'm not pregnant. I haven't been near a pregnancy test in months.\n\nHe lives alone. No sisters. No female roommates. No \"explanation\" that makes sense.\n\nI put the box back exactly where it was. I got in the passenger seat. He drove us to dinner. I smiled the whole time.\n\nNow I'm home and I can't decide whether to ask him directly or just disappear from his life without explanation.\n\nWhat would you do?",tags:['suspicious','advice','cheating'],created_at:ago(30),rx:{'💔':345,'😭':123,'😡':789,'😳':1203,'😂':45,'🔥':234},votes:{he:890,she:78,both:234},views:5600,cmt:234,trending:true,preview:"I put the box back. I smiled through dinner. Now I'm home, staring at my phone."},
+    {id:'p8',author:'Ghost_2270',type:'confession',title:"My wife and I haven't had a real conversation in 8 months. We're still living together.",content:"We don't fight. We don't argue. We just… exist in the same space.\n\nWe've been married 5 years. We share a bed, eat dinner together, watch TV. We say \"good morning\" and \"goodnight.\"\n\nBut 8 months ago something shifted. She stopped telling me about her day. I stopped asking.\n\nI'm not unhappy enough to leave. She doesn't seem unhappy enough to leave either. We're just… comfortable in the silence.\n\nOur friends think we're a model couple. We look perfect from outside.\n\nSometimes I look at her across the dinner table and I wonder if she's lonelier inside this marriage than she was before it.\n\nIs this just what long-term relationships become? Or are we already over and just refusing to admit it?",tags:['marriage','distance','toxic'],created_at:ago(36),rx:{'💔':789,'😭':456,'😡':34,'😳':234,'😂':12,'🔥':67},votes:{he:145,she:123,both:890},views:7800,cmt:345,trending:false,preview:"We share a bed, eat together, watch TV. We haven't really talked in 8 months."},
+    {id:'p9',author:'Truth_9931',type:'confession',title:"He told me he loved me 73 times before I realized he was saying it to 3 other women too",content:"I counted. 73 times in 4 months.\n\nI kept every voice note where he said those words like they were only mine.\n\nThen one of the other women contacted me. She had counted too: 71 times.\n\nThere was a third. 68 times.\n\nWe all compared screenshots. We were all his \"everything.\" We all got the same \"I've never felt this way before\" speech. Word. For. Word.\n\nHe had copy-pasted love to all of us.\n\nWhat does that even mean? Were the feelings fake? Or does he feel it so easily that it means nothing?\n\nThe scariest part isn't that he lied. It's that even knowing what I know now, those messages still feel real to me.",tags:['cheating','manipulation','confession'],created_at:ago(48),rx:{'💔':567,'😭':234,'😡':1456,'😳':345,'😂':89,'🔥':456},votes:{he:2100,she:34,both:234},views:11000,cmt:478,trending:true,preview:"73 times he said it to me. 71 times to her. 68 to another. Copy-pasted love."},
+    {id:'p10',author:'Anon_4410',type:'advice',title:"He blocked me on everything 6 hours after I told him I was pregnant. What do I do?",content:"We were together for 2 years. I found out I was pregnant last week. I was scared, but I thought we'd figure it out together.\n\nI called him. He was quiet for a long time. He said \"let me think.\"\n\n6 hours later: blocked on WhatsApp. Blocked on Instagram. My number redirects to voicemail.\n\nHis friends say they \"don't know where he is.\" His mum hasn't returned my messages.\n\nI'm 6 weeks. I'm alone. I'm scared. I'm angry in a way I didn't know was possible.\n\nI'm not here to shame him — I haven't posted his name anywhere. I'm genuinely just asking: legally, practically, emotionally — what do I do from here?\n\nI'm not even sure if I want to keep the pregnancy yet. But I know I don't want to make that decision alone because someone ran.",tags:['abandonment','advice','betrayal'],created_at:ago(60),rx:{'💔':1123,'😭':890,'😡':2345,'😳':456,'😂':23,'🔥':345},votes:{he:3400,she:45,both:189},views:18000,cmt:689,trending:true,preview:"Two years together. I told him I was pregnant. 6 hours later: blocked everywhere."}
   ];
-  w.innerHTML=cats.map(cat=>`
-    <div class="tr-sec">
-      <div class="tr-sec-title">${cat.ico} ${cat.lbl}</div>
-      ${cat.posts.map((p,i)=>`
-        <div class="tr-card" onclick="openPost('${p.id}')">
-          <div class="tr-num">${i+1}</div>
-          <div>
-            <div class="tr-ttl">${p.title}</div>
-            <div class="tr-stats">
-              <span>💬 ${fmt(p.cmt)}</span>
-              <span>👁 ${fmt(p.views)}</span>
-              <span>🔥 ${fmt(Object.values(p.rx).reduce((a,b)=>a+b,0))}</span>
-            </div>
-          </div>
-        </div>`).join('')}
-    </div>`).join('');
-}
 
-// ── CONFESS FORM ──
-function renderConfess(){
-  const w=document.getElementById('cfWrap');
-  if(!CU){
-    w.innerHTML=`<div class="empty"><div class="empty-ic">🔒</div><p class="empty-tx" style="margin-bottom:16px">Sign up to share your story anonymously</p><button class="btn btn-primary" onclick="showAuth('signup')">Create Free Account</button></div>`;
-    return;
-  }
-  w.innerHTML=`<div class="cf-form">
-    <div class="type-row">
-      <button class="type-btn on" onclick="selType(this)">💔 Confession</button>
-      <button class="type-btn" onclick="selType(this)">🧠 Advice</button>
-      <button class="type-btn" onclick="selType(this)">⚖️ Debate</button>
-    </div>
-    <input type="text" class="ti" id="ptitle" placeholder="Write a title that stops the scroll…" maxlength="120" oninput="updCC()"/>
-    <div class="cc" id="cc">0 / 120</div>
-    <textarea class="ta" id="pbody" placeholder="Tell your story. Be specific. The details are what make people feel it…" oninput="resize(this)"></textarea>
-    <input type="text" class="tags-i" id="ptags" placeholder="Tags: cheating, breakup, trust (comma-separated)"/>
-    <div class="hint">Good tags get you more readers.</div>
-    <button class="btn btn-primary btn-block" onclick="submitPost()">🖤 Post Anonymously</button>
-    <p style="font-size:11px;color:var(--t3);text-align:center;margin-top:10px">You appear as <strong style="color:var(--t2)">${CU.username}</strong></p>
-  </div>`;
-}
-function selType(btn){document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('on'));btn.classList.add('on')}
-function updCC(){const v=(document.getElementById('ptitle').value||'').length;const el=document.getElementById('cc');if(el)el.textContent=`${v} / 120`}
-function submitPost(){
-  if(!CU){showAuth('login');return}
-  const title=(document.getElementById('ptitle').value||'').trim();
-  const body=(document.getElementById('pbody').value||'').trim();
-  const tags=(document.getElementById('ptags').value||'').split(',').map(t=>t.trim()).filter(Boolean);
-  if(!title||!body){toast('Title and story are required','err');return}
-  if(body.length<50){toast('Tell more — at least 50 characters','err');return}
-  const np={
-    id:'p'+Date.now(),author:CU.username,type:'confession',
-    title,content:body,tags,created_at:new Date().toISOString(),
-    rx:{💔:0,😭:0,😡:0,😳:0,😂:0,🔥:0},
-    votes:{he:0,she:0,both:0},views:1,cmt:0,trending:false,
-    preview:body.slice(0,120)+'…'
+  const COMMENTS = {
+    p1:[
+      {id:'c1',author:'Vibe_9923',text:"The fact that you're still in that apartment is actually survival mode. Your mind is protecting you from a decision you're not ready to make. Take your time. But please, take care of yourself first.",up:234,dn:12,pin:true,time:'1h ago',replies:[]},
+      {id:'c2',author:'Truth_4401',text:"'The roommate.' I felt sick reading that. He didn't just betray you — he was EMBARRASSED by you. That's different and so much worse.",up:456,dn:34,pin:false,time:'45m ago',replies:[
+        {id:'r1',author:'Anon_3312',text:"This. There's a difference between cheating and erasure. He erased her existence.",up:89,dn:5,time:'30m ago'}
+      ]},
+      {id:'c3',author:'Ghost_7712',text:"Please don't let him know you know until you have a plan. Somewhere to go. Someone who knows. Don't give him the chance to spin this narrative first.",up:189,dn:8,pin:false,time:'2h ago',replies:[]},
+    ],
+    p3:[
+      {id:'c4',author:'Heart_0012',text:"Keep the ring on as long as you need to. There's no timeline for this kind of grief. You didn't just lose a boyfriend — you lost a future you believed in.",up:567,dn:23,pin:true,time:'6h ago',replies:[]},
+      {id:'c5',author:'Anon_3312',text:"He proposed Friday and was with her Saturday. He didn't even wait 24 hours. This wasn't weakness. This was a plan.",up:789,dn:45,pin:false,time:'7h ago',replies:[
+        {id:'r2',author:'Shadow_8834',text:"Exactly. The proposal might have even been a way to lock her down while keeping the other girl.",up:123,dn:12,time:'6h ago'}
+      ]},
+    ],
+    p2:[
+      {id:'c6',author:'Confess_2281',text:"Nobody has that kind of lucky timing with a 'glitch.' The real question is: what are you going to do with that knowledge?",up:345,dn:23,pin:true,time:'4h ago',replies:[]},
+      {id:'c7',author:'Vibe_5591',text:"Screenshot the current chat with today's date, save it somewhere. Then smile and say nothing. Let her feel safe. Then investigate.",up:289,dn:34,pin:false,time:'4h ago',replies:[]},
+    ],
+    p6:[
+      {id:'c8',author:'Shadow_1199',text:"I'm not religious but I genuinely hope wherever she is, she knows you know. And that she forgives you anyway. Because it sounds like she already did.",up:1234,dn:45,pin:true,time:'20h ago',replies:[]},
+      {id:'c9',author:'Ghost_4421',text:"She protected you from the pain of knowing. Even after what you did. That's one of the saddest and most loving things I've ever read.",up:876,dn:23,pin:false,time:'22h ago',replies:[]},
+    ]
   };
-  POSTS.unshift(np);
-  document.getElementById('ptitle').value='';
-  document.getElementById('pbody').value='';
-  document.getElementById('ptags').value='';
-  toast('Story posted anonymously 💔','ok');
-  go('home');
-}
 
-// ── NOTIFICATIONS ──
-function renderNotifs(){
-  const w=document.getElementById('nfWrap');
-  if(!CU){
-    w.innerHTML=`<div class="empty"><div class="empty-ic">🔔</div><p class="empty-tx" style="margin-bottom:14px">Login to see notifications</p><button class="btn btn-primary btn-sm" onclick="showAuth('login')">Login</button></div>`;
-    return;
-  }
-  const nfs=[
-    {ico:'💬',text:`<strong>Truth_4401</strong> replied to your comment`,time:'2m ago',u:true},
-    {ico:'🔥',text:`Your post is <strong>Trending Now</strong> — 143 comments!`,time:'1h ago',u:true},
-    {ico:'💔',text:`<strong>Ghost_7712</strong> reacted 💔 to your post`,time:'2h ago',u:false},
-    {ico:'⚖️',text:`<strong>847 people</strong> voted — He is wrong: 89%`,time:'3h ago',u:false},
-    {ico:'😡',text:`<strong>Vibe_9923</strong> upvoted your comment`,time:'5h ago',u:false},
+  const EMOJIS = ['💔','😭','😡','😳','😂','🔥'];
+  const FILTERS = [
+    {val:'all',label:'🔥 All'},
+    {val:'confession',label:'💔 Confessions'},
+    {val:'advice',label:'🧠 Advice'},
+    {val:'cheating',label:'😳 Cheating'},
+    {val:'breakup',label:'💀 Breakups'},
+    {val:'toxic',label:'🔥 Toxic'},
+    {val:'trust',label:'🤝 Trust'}
   ];
-  w.innerHTML=nfs.map(n=>`<div class="nf-item${n.u?' unread':''}">
-    <div class="nf-icon">${n.ico}</div>
-    <div style="flex:1">
-      <div class="nf-text">${n.text}</div>
-      <div class="nf-time">${n.time}</div>
-    </div>
-    ${n.u?'<div class="udot"></div>':''}
-  </div>`).join('');
-}
 
-// ── PROFILE ──
-function renderProfile(){
-  const w=document.getElementById('pfWrap');
-  if(!CU){
-    w.innerHTML=`<div class="pf-header"><div class="cf-icon">👤</div><h2 style="margin:12px 0 6px">Your Profile</h2><p style="color:var(--t3);margin-bottom:16px;font-size:13px">Create an account to build your identity</p><button class="btn btn-primary" onclick="showAuth('signup')">Join HeartConfia</button></div>`;
-    return;
+  function ago(h){return new Date(Date.now()-h*3600000).toISOString()}
+  function fmt(n){if(n>=1e6) return (n/1e6).toFixed(1)+'M';if(n>=1000) return (n/1000).toFixed(1)+'k';return String(n)}
+  function tAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60) return 'just now';if(s<3600) return Math.floor(s/60)+'m ago';if(s<86400) return Math.floor(s/3600)+'h ago';return Math.floor(s/86400)+'d ago'}
+  function toast(msg,type='info'){const c=document.getElementById('toasts');const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(function(){t.remove()},3100)}
+  function resize(el){el.style.height='auto';el.style.height=el.scrollHeight+'px'}
+  function sel(selector){return document.querySelector(selector)}
+  function selAll(selector){return document.querySelectorAll(selector)}
+
+  function go(page){
+    selAll('.page').forEach(function(p){p.classList.remove('active')});
+    selAll('.ntab').forEach(function(b){b.classList.remove('active')});
+    var pg = document.getElementById('pg-'+page);
+    if(pg) pg.classList.add('active');
+    var nb = document.querySelector('#bottomnav [data-page="'+page+'"]');
+    if(nb) nb.classList.add('active');
+    curPage = page;
+    window.scrollTo(0,0);
+    if(page==='home') renderFeed();
+    else if(page==='trending') renderTrending();
+    else if(page==='confess') renderConfess();
+    else if(page==='notifications') renderNotifs();
+    else if(page==='profile') renderProfile();
   }
-  const ini=(CU.username||'U').slice(0,2).toUpperCase();
-  const myPosts=POSTS.filter(p=>p.author===CU.username);
-  const totalRx=myPosts.reduce((s,p)=>s+Object.values(p.rx).reduce((a,b)=>a+b,0),0);
-  const joinDate=new Date(CU.created_at||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'});
-  w.innerHTML=`
-    <div class="pf-header">
-      <div class="pf-ava">${ini}</div>
-      <div class="pf-name">${CU.username}</div>
-      <div class="pf-joined">Member since ${joinDate}</div>
-      <div class="pf-stats">
-        <div class="ps"><div class="ps-n">${myPosts.length}</div><div class="ps-l">Posts</div></div>
-        <div class="ps"><div class="ps-n">${fmt(totalRx)}</div><div class="ps-l">Reactions</div></div>
-        <div class="ps"><div class="ps-n">0</div><div class="ps-l">Comments</div></div>
-      </div>
-    </div>
-    <div class="sec-title">My Confessions</div>
-    ${myPosts.length?myPosts.map((p,i)=>cardHTML(p,i)).join(''):'<div class="empty"><div class="empty-ic">🖤</div><p class="empty-tx">You haven\'t shared anything yet</p></div>'}
-    <div style="text-align:center;padding:24px 0">
-      <button class="btn btn-ghost" style="color:var(--accent)" onclick="doLogout()">Sign Out</button>
-    </div>`;
-}
 
-// ── REPORT ──
-function showRpt(id,type='post'){
-  if(!CU){showAuth('login');return}
-  const reasons=['Spam or fake','Harassment or hate','Misinformation','Inappropriate content','Privacy violation','Other'];
-  document.getElementById('rptBody').innerHTML=`
-    <p style="font-size:13px;color:var(--t3);margin-bottom:14px">Why are you reporting this ${type}?</p>
-    ${reasons.map(r=>`<button class="btn btn-ghost" style="width:100%;text-align:left;margin-bottom:8px;justify-content:flex-start" onclick="submitRpt('${id}','${r}')">${r}</button>`).join('')}`;
-  document.getElementById('rptOv').classList.remove('hidden');
-}
-function submitRpt(id,reason){
-  document.getElementById('rptOv').classList.add('hidden');
-  toast(`Reported: "${reason}" — Thanks for keeping us safe 🛡️`,'info');
-}
+  function showAuth(mode){
+    var ov = document.getElementById('authOv');
+    var head = document.getElementById('authHead');
+    var body = document.getElementById('authBody');
+    ov.classList.remove('hidden');
+    if(mode==='signup'){
+      head.innerHTML = '<div class="m-icon">💔</div><h2 class="m-title">Join HeartConfia</h2><p class="m-sub">Anonymous. Free. No judgment.</p>';
+      body.innerHTML = '<div class="fgrp"><label class="flabel">Email</label><input type="email" class="finput" id="ae" placeholder="your@email.com" autocomplete="email"/></div><div class="fgrp"><label class="flabel">Password</label><input type="password" class="finput" id="ap" placeholder="At least 6 characters" autocomplete="new-password"/></div><p style="font-size:12px;color:var(--t3);margin-bottom:14px;line-height:1.5">Your email stays private. You\'ll appear as <strong style="color:var(--t2)">Heart_4821</strong></p><button class="btn btn-primary btn-block" id="btnDoSignup">Create Free Account</button><div class="m-foot">Already have an account? <a id="linkToLogin">Login</a></div>';
+    } else {
+      head.innerHTML = '<div class="m-icon">🔐</div><h2 class="m-title">Welcome back</h2><p class="m-sub">Continue reading the confessions</p>';
+      body.innerHTML = '<div class="fgrp"><label class="flabel">Email</label><input type="email" class="finput" id="ae" placeholder="your@email.com" autocomplete="email"/></div><div class="fgrp"><label class="flabel">Password</label><input type="password" class="finput" id="ap" placeholder="Your password" autocomplete="current-password"/></div><button class="btn btn-primary btn-block" id="btnDoLogin">Login</button><div class="m-foot">New here? <a id="linkToSignup">Create account</a></div>';
+    }
+    setTimeout(function(){
+      var f = document.getElementById('ae'); if(f) f.focus();
+      var s = document.getElementById('btnDoSignup'); if(s) s.addEventListener('click', doSignup);
+      var l = document.getElementById('btnDoLogin'); if(l) l.addEventListener('click', doLogin);
+      var ls = document.getElementById('linkToSignup'); if(ls) ls.addEventListener('click', function(){showAuth('signup')});
+      var ll = document.getElementById('linkToLogin'); if(ll) ll.addEventListener('click', function(){showAuth('login')});
+    },100);
+  }
 
-// ── REALTIME (Supabase) ──
-function setupRealtime(){
-  if(!sb) return;
-  sb.channel('hc-posts')
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},payload=>{
-      POSTS.unshift({...payload.new,rx:{💔:0,😭:0,😡:0,😳:0,😂:0,🔥:0},votes:{he:0,she:0,both:0},cmt:0,views:1});
-      if(curPage==='home') renderFeed();
-      toast('New confession just dropped 💔','info');
-    })
-    .on('postgres_changes',{event:'INSERT',schema:'public',table:'votes'},payload=>{
-      const p=POSTS.find(x=>x.id===payload.new.post_id);
-      if(p){p.votes[payload.new.vote_type]++;refreshVoteBars(p.id,p.votes)}
-    })
-    .subscribe();
-}
+  function closeAuth(){document.getElementById('authOv').classList.add('hidden')}
+  function closePw(){document.getElementById('pwOv').classList.add('hidden')}
+  function closeRpt(){document.getElementById('rptOv').classList.add('hidden')}
 
-// ── INIT ──
-document.addEventListener('DOMContentLoaded',function(){
-  // restore session
-  try{
-    const saved=localStorage.getItem('hc_u');
-    if(saved){CU=JSON.parse(saved);updateNav()}
-  }catch(e){}
+  function mkUsername(){
+    var px = ['Heart','Confess','Vibe','Shadow','Ghost','Truth','Anon','Soul','Quiet','Storm'];
+    return px[Math.floor(Math.random()*px.length)]+'_'+(Math.floor(Math.random()*9000)+1000);
+  }
 
-  // supabase session
-  if(sb){
-    sb.auth.getSession().then(({data:{session}})=>{
-      if(session&&session.user){
-        sb.from('users').select('*').eq('id',session.user.id).single().then(({data})=>{
-          if(data){CU=data;updateNav();setupRealtime()}
+  function doSignup(){
+    var email = (document.getElementById('ae').value||'').trim();
+    var pass = document.getElementById('ap').value||'';
+    if(!email||!pass){toast('Please fill all fields','err');return}
+    if(pass.length<6){toast('Password needs 6+ characters','err');return}
+    if(!email.includes('@')){toast('Enter a valid email','err');return}
+    if(sb){
+      sb.auth.signUp({email:email,password:pass}).then(function(res){
+        if(res.error){toast(res.error.message,'err');return}
+        var u = {id:res.data.user.id,email:email,username:mkUsername(),created_at:new Date().toISOString()};
+        CU = u; closeAuth(); updateNav();
+        toast('Account created! Check your email to verify 💔','ok');
+      }).catch(function(e){toast(e.message,'err')});
+    } else {
+      var u = {id:'demo-'+Date.now(),email:email,username:mkUsername(),created_at:new Date().toISOString()};
+      CU = u; try{localStorage.setItem('hc_u',JSON.stringify(u))}catch(e){}
+      closeAuth(); updateNav();
+      toast('Welcome to HeartConfia! 💔','ok');
+    }
+  }
+
+  function doLogin(){
+    var email = (document.getElementById('ae').value||'').trim();
+    var pass = document.getElementById('ap').value||'';
+    if(!email||!pass){toast('Please fill all fields','err');return}
+    if(sb){
+      sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
+        if(res.error){toast(res.error.message,'err');return}
+        sb.from('users').select('*').eq('id',res.data.user.id).single().then(function(r){
+          CU = r.data || {id:res.data.user.id,email:email,username:mkUsername()};
+          closeAuth(); updateNav();
+          toast('Welcome back! 💔','ok');
         });
-      }
-    }).catch(()=>{});
+      }).catch(function(e){toast(e.message,'err')});
+    } else {
+      try{
+        var saved = localStorage.getItem('hc_u');
+        if(saved){CU=JSON.parse(saved);closeAuth();updateNav();toast('Welcome back! 💔','ok')}
+        else toast('No account found. Sign up first.','err');
+      }catch(e){toast('Login failed','err')}
+    }
   }
 
-  // render initial feed
-  renderFeed();
-});
+  function doLogout(){
+    CU = null; try{localStorage.removeItem('hc_u')}catch(e){}
+    if(sb) sb.auth.signOut();
+    updateNav(); toast('Logged out','info'); go('home');
+  }
+
+  function updateNav(){
+    var r = document.getElementById('navRight');
+    if(CU){
+      var ini = (CU.username||'U').slice(0,2).toUpperCase();
+      r.innerHTML = '<div class="ava-btn" id="btnProfileNav">'+ini+'</div>';
+      setTimeout(function(){
+        var b = document.getElementById('btnProfileNav'); if(b) b.addEventListener('click',function(){go('profile')});
+      },50);
+    } else {
+      r.innerHTML = '<button class="btn btn-ghost btn-sm" id="btnLoginNav">Login</button><button class="btn btn-primary btn-sm" id="btnSignupNav">Join Free</button>';
+      setTimeout(function(){
+        var bl = document.getElementById('btnLoginNav'); if(bl) bl.addEventListener('click',function(){showAuth('login')});
+        var bs = document.getElementById('btnSignupNav'); if(bs) bs.addEventListener('click',function(){showAuth('signup')});
+      },50);
+    }
+  }
+
+  function getFiltered(){
+    if(curFilter==='all') return POSTS;
+    return POSTS.filter(function(p){return p.tags.some(function(t){return t.toLowerCase().includes(curFilter)})||p.type===curFilter});
+  }
+
+  function renderFeed(){
+    var w = document.getElementById('feedWrap');
+    var posts = getFiltered();
+    if(!posts.length){w.innerHTML='<div class="empty"><div class="empty-ic">💔</div><p class="empty-tx">No confessions here yet</p></div>';return}
+    var slice = posts.slice(0,PER_PAGE);
+    w.innerHTML = slice.map(function(p,i){return cardHTML(p,i)}).join('');
+    var lm = document.getElementById('loadMoreWrap');
+    if(lm) lm.classList.toggle('hidden',posts.length<=PER_PAGE);
+  }
+
+  function loadMore(){
+    postsPage++;
+    var posts = getFiltered();
+    var slice = posts.slice(postsPage*PER_PAGE,(postsPage+1)*PER_PAGE);
+    var w = document.getElementById('feedWrap');
+    if(slice.length){
+      var tmp = document.createElement('div');
+      tmp.innerHTML = slice.map(function(p,i){return cardHTML(p,i+postsPage*PER_PAGE)}).join('');
+      while(tmp.firstChild) w.appendChild(tmp.firstChild);
+    }
+    var lm = document.getElementById('loadMoreWrap');
+    if(lm) lm.classList.toggle('hidden',(postsPage+1)*PER_PAGE>=posts.length);
+  }
+
+  function cardHTML(p,idx){
+    var delay = Math.min(idx*40,300);
+    var total = p.votes.he+p.votes.she+p.votes.both||1;
+    var heP = Math.round(p.votes.he/total*100);
+    var sheP = Math.round(p.votes.she/total*100);
+    var bothP = 100-heP-sheP;
+    var ini = p.author.slice(0,2).toUpperCase();
+    var guest = !CU;
+    var badge = p.trending ? (idx%2===0?'<span class="cbadge cbadge-t">🔥 Trending</span>':'<span class="cbadge cbadge-h">💀 Hot</span>') : '<span class="cbadge cbadge-n">✨ New</span>';
+    var rxHTML = EMOJIS.map(function(e){return '<button class="rxbtn" data-pid="'+p.id+'" data-e="'+e+'">'+e+' <span>'+fmt(p.rx[e]||0)+'</span></button>'}).join('');
+    var tagsHTML = p.tags.map(function(t){return '<span class="tag">'+t+'</span>'}).join('');
+    var preview = guest ? '<div class="c-preview c-preview-blur">'+p.preview+'</div><div class="c-lock-cta" data-pid="'+p.id+'">🔒 Read the full story →</div>' : '<div class="c-preview">'+p.preview+'</div>';
+    return '<article class="card" style="animation-delay:'+delay+'ms"><div class="card-body"><div class="card-meta"><div class="card-author"><div class="c-ava">'+ini+'</div><div><div class="c-name">'+p.author+'</div><div class="c-time">'+tAgo(p.created_at)+'</div></div></div>'+badge+'</div><div class="c-title" data-pid="'+p.id+'">'+p.title+'</div>'+preview+'<div class="c-tags">'+tagsHTML+'</div><div class="vote-wrap"><div class="vbar"><div class="vs vs-he" style="width:'+heP+'%"></div><div class="vs vs-she" style="width:'+sheP+'%"></div><div class="vs vs-both" style="width:'+bothP+'%"></div></div><div class="vlabels"><span class="vl vl-he">🟥 He '+heP+'%</span><span class="vl vl-she">🟪 She '+sheP+'%</span><span class="vl vl-both">⚪ Both '+bothP+'%</span></div><div class="vbtns"><button class="vbtn vbtn-he" data-pid="'+p.id+'" data-v="he">🟥 He wrong</button><button class="vbtn vbtn-she" data-pid="'+p.id+'" data-v="she">🟪 She wrong</button><button class="vbtn vbtn-both" data-pid="'+p.id+'" data-v="both">⚪ Both</button></div></div><div class="rxrow">'+rxHTML+'</div><div class="c-foot"><button class="c-stat" data-pid="'+p.id+'"><svg viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>'+fmt(p.cmt)+'</button><button class="c-stat"><svg viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>'+fmt(p.views)+'</button><button class="c-stat rpt-btn" data-pid="'+p.id+'"><svg viewBox="0 0 24 24"><path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>Report</button></div></div></article>';
+  }
+
+  function openPost(id){
+    var p = POSTS.find(function(x){return x.id===id});
+    if(!p) return;
+    if(!CU){showPw(id);return}
+    detailPost = p; p.views++;
+    go('detail'); renderDetail(p);
+  }
+
+  function renderDetail(p){
+    var w = document.getElementById('dtWrap');
+    var total = p.votes.he+p.votes.she+p.votes.both||1;
+    var heP = Math.round(p.votes.he/total*100);
+    var sheP = Math.round(p.votes.she/total*100);
+    var bothP = 100-heP-sheP;
+    var ini = p.author.slice(0,2).toUpperCase();
+    var cmts = COMMENTS[p.id]||[];
+    var rxHTML = EMOJIS.map(function(e){return '<button class="rxbtn" data-pid="'+p.id+'" data-e="'+e+'">'+e+' <span>'+fmt(p.rx[e]||0)+'</span></button>'}).join('');
+    var tagsHTML = p.tags.map(function(t){return '<span class="tag">'+t+'</span>'}).join('');
+    w.innerHTML = '<button class="back-btn" id="btnBackFeed"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back to feed</button><div class="d-author"><div class="d-ava">'+ini+'</div><div><div class="d-name">'+p.author+'</div><div class="d-meta">'+tAgo(p.created_at)+' · '+fmt(p.views)+' views</div></div></div><div class="c-tags" style="margin-bottom:12px">'+tagsHTML+'</div><h1 class="d-title">'+p.title+'</h1><div class="d-body">'+p.content+'</div><div class="rxrow" style="margin-bottom:18px">'+rxHTML+'</div><div class="vpanel"><div class="vpanel-title">⚖️ Who is wrong here?</div><div class="vbar" style="height:8px;margin-bottom:8px"><div class="vs vs-he" id="dvhe" style="width:'+heP+'%"></div><div class="vs vs-she" id="dvsh" style="width:'+sheP+'%"></div><div class="vs vs-both" id="dvbo" style="width:'+bothP+'%"></div></div><div class="vlabels" style="margin-bottom:6px"><span class="vl vl-he" id="dlhe">🟥 He '+heP+'%</span><span class="vl vl-she" id="dlsh">🟪 She '+sheP+'%</span><span class="vl vl-both" id="dlbo">⚪ Both '+bothP+'%</span></div><div style="font-size:11px;color:var(--t3);margin-bottom:10px">'+fmt(total)+' votes total</div><div class="vbtns"><button class="vbtn vbtn-he" data-pid="'+p.id+'" data-v="he">🟥 He is wrong</button><button class="vbtn vbtn-she" data-pid="'+p.id+'" data-v="she">🟪 She is wrong</button><button class="vbtn vbtn-both" data-pid="'+p.id+'" data-v="both">⚪ Both wrong</button></div></div><div class="divider"></div><div class="cm-header"><span class="cm-title">💬 '+fmt(p.cmt)+' Comments</span><select class="sort-sel" id="sortSel" data-pid="'+p.id+'"><option value="heated">Most Heated</option><option value="recent">Recent</option><option value="top">Top Rated</option></select></div><div class="cm-box"><textarea class="cm-ta" id="cmIn" placeholder="What\'s your verdict? Don\'t hold back…"></textarea><div class="cm-bfoot"><button class="btn btn-primary btn-sm" id="btnPostCmt">Post Comment</button></div></div><div id="cmList">'+cmts.map(function(c){return cmtHTML(c)}).join('')||'<div class="empty"><div class="empty-ic">💬</div><p class="empty-tx">Be first to comment</p></div>'+'</div>';
+    setTimeout(function(){
+      var bb = document.getElementById('btnBackFeed'); if(bb) bb.addEventListener('click',function(){go('home')});
+      var bp = document.getElementById('btnPostCmt'); if(bp) bp.addEventListener('click',function(){postCmt(p.id)});
+      var ss = document.getElementById('sortSel'); if(ss) ss.addEventListener('change',function(){sortCmts(this.value,p.id)});
+      var ta = document.getElementById('cmIn'); if(ta){ta.addEventListener('input',function(){resize(this)})}
+    },50);
+  }
+
+  function cmtHTML(c,isReply){
+    var repliesHTML = !isReply && c.replies && c.replies.length ? '<div class="replies-wrap">'+c.replies.map(function(r){return cmtHTML(r,true)}).join('')+'</div>' : '';
+    return '<div class="'+(isReply?'reply-item':'cm-item')+'" id="cmt-'+c.id+'"><div class="'+(isReply?'reply-bubble':'cm-bubble')+'"><div class="cm-head"><span class="cm-auth">'+c.author+(c.pin?'<span class="pin-badge" style="margin-left:6px">📌 Pinned</span>':'')+'</span><span class="cm-time">'+(c.time||'just now')+'</span></div><div class="cm-text">'+c.text+'</div><div class="cm-acts"><button class="cm-act up" data-cid="'+c.id+'">▲ '+(c.up||0)+'</button><button class="cm-act dn" data-cid="'+c.id+'">▼ '+(c.dn||0)+'</button>'+(isReply?'':'<button class="cm-act" data-cid="'+c.id+'" data-action="reply">↩ Reply</button>')+'<button class="cm-act rpt-btn" data-cid="'+c.id+'">🚩</button></div></div>'+repliesHTML+(isReply?'':'<div id="rb-'+c.id+'" class="rbox hidden"><textarea class="rbox-ta" id="ri-'+c.id+'" placeholder="Reply to '+c.author+'…"></textarea><div class="rbox-foot"><button class="btn btn-ghost btn-sm" data-cid="'+c.id+'" data-action="cancel-reply">Cancel</button><button class="btn btn-primary btn-sm" data-cid="'+c.id+'" data-action="post-reply">Reply</button></div></div>')+'</div>';
+  }
+
+  function toggleRbox(id){
+    var b = document.getElementById('rb-'+id);
+    if(b){b.classList.toggle('hidden');if(!b.classList.contains('hidden')){var i=document.getElementById('ri-'+id);if(i)i.focus()}}
+  }
+
+  function sortCmts(val,pid){
+    var cmts = (COMMENTS[pid]||[]).slice();
+    if(val==='heated') cmts.sort(function(a,b){return (b.up+b.dn)-(a.up+a.dn)});
+    else if(val==='top') cmts.sort(function(a,b){return b.up-a.up});
+    else cmts.reverse();
+    var l = document.getElementById('cmList');
+    if(l) l.innerHTML = cmts.map(function(c){return cmtHTML(c)}).join('');
+  }
+
+  function postCmt(pid){
+    if(!CU){showAuth('login');return}
+    var el = document.getElementById('cmIn');
+    var text = (el.value||'').trim();
+    if(!text){toast('Write something first!','err');return}
+    var c = {id:'c'+Date.now(),author:CU.username,text:text,up:0,dn:0,pin:false,time:'just now',replies:[]};
+    if(!COMMENTS[pid]) COMMENTS[pid]=[];
+    COMMENTS[pid].unshift(c);
+    var p = POSTS.find(function(x){return x.id===pid}); if(p) p.cmt++;
+    el.value=''; el.style.height='auto';
+    var l = document.getElementById('cmList');
+    if(l){var tmp=document.createElement('div');tmp.innerHTML=cmtHTML(c);l.prepend(tmp.firstElementChild)}
+    toast('Comment posted 💬','ok');
+  }
+
+  function postReply(cid){
+    if(!CU){showAuth('login');return}
+    if(!detailPost) return;
+    var el = document.getElementById('ri-'+cid);
+    var text = (el.value||'').trim();
+    if(!text) return;
+    var pid = detailPost.id;
+    var cmts = COMMENTS[pid]||[];
+    var c = cmts.find(function(x){return x.id===cid});
+    if(!c) return;
+    if(!c.replies) c.replies=[];
+    var r = {id:'r'+Date.now(),author:CU.username,text:text,up:0,dn:0,time:'just now'};
+    c.replies.push(r);
+    el.value=''; el.style.height='auto';
+    toggleRbox(cid);
+    var rw = document.querySelector('#cmt-'+cid+' .replies-wrap');
+    if(!rw){rw=document.createElement('div');rw.className='replies-wrap';document.getElementById('cmt-'+cid).appendChild(rw)}
+    var tmp=document.createElement('div');tmp.innerHTML=cmtHTML(r,true);
+    rw.appendChild(tmp.firstElementChild);
+    toast('Reply added','ok');
+  }
+
+  function voteCmt(cid,dir,btn){
+    if(!CU){showAuth('login');return}
+    btn.classList.toggle('on');
+    var key = dir==='up'?'up':'dn';
+    var sym = dir==='up'?'▲':'▼';
+    var cur = parseInt(btn.textContent.replace(/[▲▼\s]/g,''))||0;
+    btn.textContent = sym+' '+(btn.classList.contains('on')?cur+1:Math.max(0,cur-1));
+  }
+
+  function doVote(pid,type,btn){
+    if(!CU){showAuth('signup');return}
+    var p = POSTS.find(function(x){return x.id===pid}); if(!p) return;
+    var vbtns = btn.parentElement.querySelectorAll('.vbtn');
+    var was = btn.classList.contains('on');
+    vbtns.forEach(function(b){b.classList.remove('on')});
+    if(!was){btn.classList.add('on');p.votes[type]++;toast('Vote recorded 🗳️','info');refreshVoteBars(pid,p.votes)}
+  }
+
+  function refreshVoteBars(pid,v){
+    var t = v.he+v.she+v.both||1;
+    var heP = Math.round(v.he/t*100);
+    var sheP = Math.round(v.she/t*100);
+    var bothP = 100-heP-sheP;
+    var dvhe=document.getElementById('dvhe');var dvsh=document.getElementById('dvsh');var dvbo=document.getElementById('dvbo');
+    if(dvhe)dvhe.style.width=heP+'%';if(dvsh)dvsh.style.width=sheP+'%';if(dvbo)dvbo.style.width=bothP+'%';
+    var dlhe=document.getElementById('dlhe');var dlsh=document.getElementById('dlsh');var dlbo=document.getElementById('dlbo');
+    if(dlhe)dlhe.textContent='🟥 He '+heP+'%';if(dlsh)dlsh.textContent='🟪 She '+sheP+'%';if(dlbo)dlbo.textContent='⚪ Both '+bothP+'%';
+  }
+
+  function doRx(pid,emoji,btn){
+    if(!CU){showAuth('signup');return}
+    var p = POSTS.find(function(x){return x.id===pid}); if(!p) return;
+    var was = btn.classList.contains('on');
+    btn.classList.toggle('on');
+    var sp = btn.querySelector('span');
+    var cur = parseInt(sp.textContent.replace(/[km]/,''))||0;
+    if(was){p.rx[emoji]=Math.max(0,(p.rx[emoji]||1)-1);sp.textContent=fmt(p.rx[emoji])}
+    else{p.rx[emoji]=(p.rx[emoji]||0)+1;sp.textContent=fmt(p.rx[emoji]);btn.style.transform='scale(1.2)';setTimeout(function(){btn.style.transform=''},180)}
+  }
+
+  function showPw(pid){
+    var p = POSTS.find(function(x){return x.id===pid});
+    var pr = document.getElementById('pwPreview');
+    if(pr&&p) pr.textContent = p.preview||'Sign up to read the full story.';
+    document.getElementById('pwOv').classList.remove('hidden');
+  }
+
+  function renderTrending(){
+    var w = document.getElementById('trendWrap');
+    var cats = [
+      {ico:'🔥',lbl:'Trending Now',posts:POSTS.filter(function(p){return p.trending}).slice(0,5)},
+      {ico:'💔',lbl:'Saddest Stories',posts:[].concat(POSTS).sort(function(a,b){return (b.rx['😭']||0)-(a.rx['😭']||0)}).slice(0,3)},
+      {ico:'😡',lbl:'Most Toxic Drama',posts:[].concat(POSTS).sort(function(a,b){return (b.rx['😡']||0)-(a.rx['😡']||0)}).slice(0,3)},
+      {ico:'🧠',lbl:'Most Debated',posts:[].concat(POSTS).sort(function(a,b){return b.cmt-a.cmt}).slice(0,3)},
+      {ico:'👀',lbl:'Most Viewed Today',posts:[].concat(POSTS).sort(function(a,b){return b.views-a.views}).slice(0,3)}
+    ];
+    w.innerHTML = cats.map(function(cat){return '<div class="tr-sec"><div class="tr-sec-title">'+cat.ico+' '+cat.lbl+'</div>'+cat.posts.map(function(p,i){return '<div class="tr-card" data-pid="'+p.id+'"><div class="tr-num">'+(i+1)+'</div><div><div class="tr-ttl">'+p.title+'</div><div class="tr-stats"><span>💬 '+fmt(p.cmt)+'</span><span>👁 '+fmt(p.views)+'</span><span>🔥 '+fmt(Object.values(p.rx).reduce(function(a,b){return a+b},0))+'</span></div></div></div>'}).join('')+'</div>'}).join('');
+  }
+
+  function renderConfess(){
+    var w = document.getElementById('cfWrap');
+    if(!CU){w.innerHTML='<div class="empty"><div class="empty-ic">🔒</div><p class="empty-tx" style="margin-bottom:16px">Sign up to share your story anonymously</p><button class="btn btn-primary" id="btnCfSignup">Create Free Account</button></div>';setTimeout(function(){var b=document.getElementById('btnCfSignup');if(b)b.addEventListener('click',function(){showAuth('signup')})},50);return}
+    w.innerHTML = '<div class="cf-form"><div class="type-row"><button class="type-btn on" data-type="confession">💔 Confession</button><button class="type-btn" data-type="advice">🧠 Advice</button><button class="type-btn" data-type="debate">⚖️ Debate</button></div><input type="text" class="ti" id="ptitle" placeholder="Write a title that stops the scroll…" maxlength="120"/><div class="cc" id="cc">0 / 120</div><textarea class="ta" id="pbody" placeholder="Tell your story. Be specific. The details are what make people feel it…"></textarea><input type="text" class="tags-i" id="ptags" placeholder="Tags: cheating, breakup, trust (comma-separated)"/><div class="hint">Good tags get you more readers.</div><button class="btn btn-primary btn-block" id="btnSubmitPost">🖤 Post Anonymously</button><p style="font-size:11px;color:var(--t3);text-align:center;margin-top:10px">You appear as <strong style="color:var(--t2)">'+CU.username+'</strong></p></div>';
+    setTimeout(function(){
+      var pt = document.getElementById('ptitle'); if(pt) pt.addEventListener('input',updCC);
+      var pb = document.getElementById('pbody'); if(pb) pb.addEventListener('input',function(){resize(this)});
+      var bs = document.getElementById('btnSubmitPost'); if(bs) bs.addEventListener('click',submitPost);
+    },50);
+  }
+
+  function selType(btn){
+    btn.parentElement.querySelectorAll('.type-btn').forEach(function(b){b.classList.remove('on')});
+    btn.classList.add('on');
+  }
+
+  function updCC(){
+    var v = (document.getElementById('ptitle').value||'').length;
+    var el = document.getElementById('cc'); if(el) el.textContent = v+' / 120';
+  }
+
+  function submitPost(){
+    if(!CU){showAuth('login');return}
+    var title = (document.getElementById('ptitle').value||'').trim();
+    var body = (document.getElementById('pbody').value||'').trim();
+    var tags = (document.getElementById('ptags').value||'').split(',').map(function(t){return t.trim()}).filter(Boolean);
+    if(!title||!body){toast('Title and story are required','err');return}
+    if(body.length<50){toast('Tell more — at least 50 characters','err');return}
+    var np = {id:'p'+Date.now(),author:CU.username,type:'confession',title:title,content:body,tags:tags,created_at:new Date().toISOString(),rx:{'💔':0,'😭':0,'😡':0,'😳':0,'😂':0,'🔥':0},votes:{he:0,she:0,both:0},views:1,cmt:0,trending:false,preview:body.slice(0,120)+'…'};
+    POSTS.unshift(np);
+    document.getElementById('ptitle').value='';document.getElementById('pbody').value='';document.getElementById('ptags').value='';
+    toast('Story posted anonymously 💔','ok');go('home');
+  }
+
+  function renderNotifs(){
+    var w = document.getElementById('nfWrap');
+    if(!CU){w.innerHTML='<div class="empty"><div class="empty-ic">🔔</div><p class="empty-tx" style="margin-bottom:14px">Login to see notifications</p><button class="btn btn-primary btn-sm" id="btnNfLogin">Login</button></div>';setTimeout(function(){var b=document.getElementById('btnNfLogin');if(b)b.addEventListener('click',function(){showAuth('login')})},50);return}
+    var nfs=[{ico:'💬',text:'<strong>Truth_4401</strong> replied to your comment',time:'2m ago',u:true},{ico:'🔥',text:'Your post is <strong>Trending Now</strong> — 143 comments!',time:'1h ago',u:true},{ico:'💔',text:'<strong>Ghost_7712</strong> reacted 💔 to your post',time:'2h ago',u:false},{ico:'⚖️',text:'<strong>847 people</strong> voted — He is wrong: 89%',time:'3h ago',u:false},{ico:'😡',text:'<strong>Vibe_9923</strong> upvoted your comment',time:'5h ago',u:false}];
+    w.innerHTML = nfs.map(function(n){return '<div class="nf-item'+(n.u?' unread':'')+'"><div class="nf-icon">'+n.ico+'</div><div style="flex:1"><div class="nf-text">'+n.text+'</div><div class="nf-time">'+n.time+'</div></div>'+(n.u?'<div class="udot"></div>':'')+'</div>'}).join('');
+  }
+
+  function renderProfile(){
+    var w = document.getElementById('pfWrap');
+    if(!CU){w.innerHTML='<div class="pf-header"><div class="cf-icon">👤</div><h2 style="margin:12px 0 6px">Your Profile</h2><p style="color:var(--t3);margin-bottom:16px;font-size:13px">Create an account to build your identity</p><button class="btn btn-primary" id="btnPfSignup">Join HeartConfia</button></div>';setTimeout(function(){var b=document.getElementById('btnPfSignup');if(b)b.addEventListener('click',function(){showAuth('signup')})},50);return}
+    var ini = (CU.username||'U').slice(0,2).toUpperCase();
+    var myPosts = POSTS.filter(function(p){return p.author===CU.username});
+    var totalRx = myPosts.reduce(function(s,p){return s+Object.values(p.rx).reduce(function(a,b){return a+b},0)},0);
+    var joinDate = new Date(CU.created_at||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'});
+    w.innerHTML = '<div class="pf-header"><div class="pf-ava">'+ini+'</div><div class="pf-name">'+CU.username+'</div><div class="pf-joined">Member since '+joinDate+'</div><div class="pf-stats"><div class="ps"><div class="ps-n">'+myPosts.length+'</div><div class="ps-l">Posts</div></div><div class="ps"><div class="ps-n">'+fmt(totalRx)+'</div><div class="ps-l">Reactions</div></div><div class="ps"><div class="ps-n">0</div><div class="ps-l">Comments</div></div></div></div><div class="sec-title">My Confessions</div>'+(myPosts.length?myPosts.map(function(p,i){return cardHTML(p,i)}).join(''):'<div class="empty"><div class="empty-ic">🖤</div><p class="empty-tx">You haven\'t shared anything yet</p></div>')+'<div style="text-align:center;padding:24px 0"><button class="btn btn-ghost" style="color:var(--accent)" id="btnLogout">Sign Out</button></div>';
+    setTimeout(function(){var b=document.getElementById('btnLogout');if(b)b.addEventListener('click',doLogout)},50);
+  }
+
+  function showRpt(id,type){
+    if(!CU){showAuth('login');return}
+    type = type||'post';
+    var reasons = ['Spam or fake','Harassment or hate','Misinformation','Inappropriate content','Privacy violation','Other'];
+    document.getElementById('rptBody').innerHTML = '<p style="font-size:13px;color:var(--t3);margin-bottom:14px">Why are you reporting this '+type+'?</p>'+reasons.map(function(r){return '<button class="btn btn-ghost" style="width:100%;text-align:left;margin-bottom:8px;justify-content:flex-start" data-reason="'+r+'" data-id="'+id+'">'+r+'</button>'}).join('');
+    document.getElementById('rptOv').classList.remove('hidden');
+  }
+
+  function submitRpt(id,reason){
+    document.getElementById('rptOv').classList.add('hidden');
+    toast('Reported: "'+reason+'" — Thanks for keeping us safe 🛡️','info');
+  }
+
+  function renderFilters(){
+    var ftabs = document.getElementById('ftabs');
+    ftabs.innerHTML = FILTERS.map(function(f){return '<button class="ftab'+(f.val===curFilter?' on':'')+'" data-f="'+f.val+'">'+f.label+'</button>'}).join('');
+    ftabs.querySelectorAll('.ftab').forEach(function(b){b.addEventListener('click',function(){curFilter=this.dataset.f;postsPage=0;renderFeed();renderFilters()})});
+  }
+
+  function setupRealtime(){
+    if(!sb) return;
+    sb.channel('hc-posts').on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},function(payload){POSTS.unshift({rx:{'💔':0,'😭':0,'😡':0,'😳':0,'😂':0,'🔥':0},votes:{he:0,she:0,both:0},cmt:0,views:1});if(curPage==='home')renderFeed();toast('New confession just dropped 💔','info')}).on('postgres_changes',{event:'INSERT',schema:'public',table:'votes'},function(payload){var p=POSTS.find(function(x){return x.id===payload.new.post_id});if(p){p.votes[payload.new.vote_type]++;refreshVoteBars(p.id,p.votes)}}).subscribe();
+  }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    renderFilters();
+
+    try{
+      var saved = localStorage.getItem('hc_u');
+      if(saved){CU=JSON.parse(saved);updateNav()}
+    }catch(e){}
+
+    if(sb){
+      sb.auth.getSession().then(function(res){
+        if(res.data.session&&res.data.session.user){
+          sb.from('users').select('*').eq('id',res.data.session.user.id).single().then(function(r){if(r.data){CU=r.data;updateNav();setupRealtime()}});
+        }
+      }).catch(function(){});
+    }
+
+    document.getElementById('bottomnav').addEventListener('click',function(e){
+      var btn = e.target.closest('button');
+      if(!btn) return;
+      var page = btn.dataset.page;
+      if(page){e.preventDefault();go(page);return}
+    });
+
+    document.addEventListener('click',function(e){
+      var target = e.target.closest('[data-pid]');
+      if(!target) return;
+      var pid = target.dataset.pid;
+      if(target.classList.contains('c-title')||target.classList.contains('c-lock-cta')){
+        e.preventDefault(); e.stopPropagation(); openPost(pid); return;
+      }
+      if(target.classList.contains('tr-card')){
+        e.preventDefault(); e.stopPropagation(); openPost(pid); return;
+      }
+      if(target.classList.contains('vbtn')){
+        e.preventDefault(); e.stopPropagation(); doVote(pid,target.dataset.v,target); return;
+      }
+      if(target.classList.contains('rxbtn')){
+        e.preventDefault(); e.stopPropagation(); doRx(pid,target.dataset.e,target); return;
+      }
+      if(target.classList.contains('c-stat')&&!target.classList.contains('rpt-btn')){
+        e.preventDefault(); e.stopPropagation(); openPost(pid); return;
+      }
+      if(target.classList.contains('rpt-btn')){
+        e.preventDefault(); e.stopPropagation(); showRpt(pid); return;
+      }
+    });
+
+    document.addEventListener('click',function(e){
+      var target = e.target.closest('[data-cid]');
+      if(!target) return;
+      var cid = target.dataset.cid;
+      if(target.classList.contains('up')||target.classList.contains('dn')){
+        e.preventDefault(); e.stopPropagation(); voteCmt(cid,target.classList.contains('up')?'up':'dn',target); return;
+      }
+      if(target.dataset.action==='reply'){e.preventDefault();e.stopPropagation();toggleRbox(cid);return}
+      if(target.dataset.action==='cancel-reply'){e.preventDefault();e.stopPropagation();toggleRbox(cid);return}
+      if(target.dataset.action==='post-reply'){e.preventDefault();e.stopPropagation();postReply(cid);return}
+    });
+
+    document.addEventListener('click',function(e){
+      var target = e.target.closest('[data-type]');
+      if(target&&target.classList.contains('type-btn')){e.preventDefault();e.stopPropagation();selType(target);return}
+      var target2 = e.target.closest('[data-reason]');
+      if(target2){e.preventDefault();e.stopPropagation();submitRpt(target2.dataset.id,target2.dataset.reason);return}
+    });
+
+    document.getElementById('btnCloseAuth').addEventListener('click',closeAuth);
+    document.getElementById('btnClosePw').addEventListener('click',closePw);
+    document.getElementById('btnCloseRpt').addEventListener('click',closeRpt);
+    document.getElementById('btnPwSignup').addEventListener('click',function(){closePw();showAuth('signup')});
+    document.getElementById('btnPwLogin').addEventListener('click',function(){closePw();showAuth('login')});
+
+    document.getElementById('authOv').addEventListener('click',function(e){if(e.target===this)closeAuth()});
+    document.getElementById('pwOv').addEventListener('click',function(e){if(e.target===this)closePw()});
+    document.getElementById('rptOv').addEventListener('click',function(e){if(e.target===this)closeRpt()});
+
+    renderFeed();
+  });
+})();
 </script>
-
-<!--
-╔══════════════════════════════════════════════╗
-║  HEARTCONFIA — SUPABASE SQL SCHEMA           ║
-║  Paste this into Supabase SQL Editor         ║
-╚══════════════════════════════════════════════╝
-
-CREATE TABLE users (
-  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT NOT NULL,
-  username TEXT NOT NULL UNIQUE,
-  is_banned BOOLEAN DEFAULT FALSE,
-  is_admin BOOLEAN DEFAULT FALSE,
-  post_count INT DEFAULT 0,
-  comment_count INT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  author_username TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('confession','advice','debate')),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  preview_text TEXT,
-  tags TEXT[] DEFAULT '{}',
-  is_hidden BOOLEAN DEFAULT FALSE,
-  view_count INT DEFAULT 0,
-  comment_count INT DEFAULT 0,
-  trending_score FLOAT DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX idx_posts_created ON posts(created_at DESC);
-CREATE INDEX idx_posts_trending ON posts(trending_score DESC);
-
-CREATE TABLE votes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  vote_type TEXT NOT NULL CHECK (vote_type IN ('he','she','both')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(post_id, user_id)
-);
-
-CREATE TABLE reactions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  emoji TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(post_id, user_id, emoji)
-);
-
-CREATE TABLE comments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  parent_id UUID REFERENCES comments(id) ON DELETE CASCADE,
-  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  author_username TEXT NOT NULL,
-  content TEXT NOT NULL,
-  upvotes INT DEFAULT 0,
-  downvotes INT DEFAULT 0,
-  is_pinned BOOLEAN DEFAULT FALSE,
-  is_hidden BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX idx_comments_post ON comments(post_id, created_at DESC);
-
-CREATE TABLE notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  type TEXT NOT NULL,
-  body TEXT NOT NULL,
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
-CREATE TABLE reports (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
-  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
-  reason TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- RLS
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "read_posts" ON posts FOR SELECT USING (NOT is_hidden);
-CREATE POLICY "insert_posts" ON posts FOR INSERT WITH CHECK (auth.uid() = author_id);
-CREATE POLICY "vote_once" ON votes FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "read_votes" ON votes FOR SELECT USING (TRUE);
-CREATE POLICY "react" ON reactions FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "read_reactions" ON reactions FOR SELECT USING (TRUE);
-CREATE POLICY "read_comments" ON comments FOR SELECT USING (NOT is_hidden);
-CREATE POLICY "insert_comments" ON comments FOR INSERT WITH CHECK (auth.uid() = author_id);
-CREATE POLICY "own_notifs" ON notifications FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "insert_report" ON reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
-
-ALTER PUBLICATION supabase_realtime ADD TABLE posts;
-ALTER PUBLICATION supabase_realtime ADD TABLE votes;
-ALTER PUBLICATION supabase_realtime ADD TABLE reactions;
-ALTER PUBLICATION supabase_realtime ADD TABLE comments;
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
-
-══════════════════════════════════════════════
-  DEPLOYMENT — 5 STEPS
-══════════════════════════════════════════════
-1. supabase.com → New Project → run SQL above
-2. Authentication → Email → Enable
-3. Find SB_URL + SB_KEY in Project Settings → API
-4. Replace YOUR_SUPABASE_URL and YOUR_SUPABASE_ANON_KEY at top of <script>
-5. Drag this file to netlify.com/drop → live instantly
--->
 </body>
 </html>
