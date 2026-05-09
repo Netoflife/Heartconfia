@@ -3,1414 +3,2018 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>HeartConfia 💔</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>HeartConfia 💔 — Anonymous Relationship Confessions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+/* ═══════════════════════════════════════════
+   HEARTCONFIA — Design System
+   Aesthetic: Intimate Dark Editorial
+   Feels like reading someone's diary at 2AM
+═══════════════════════════════════════════ */
 :root{
-  --bg:#07070d;--c1:#0f0f18;--c2:#161622;--c3:#1e1e30;
-  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);
-  --t1:#f0eeff;--t2:#9d99b8;--t3:#5a566f;
-  --rose:#ff3d5a;--rdim:rgba(255,61,90,.14);
-  --vio:#8b5cf6;--amb:#f59e0b;--tel:#10b981;
-  --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --bg:#0a0608;
+  --surface:#110d0f;
+  --surface2:#1a1318;
+  --surface3:#221820;
+  --border:#2e1f28;
+  --border2:#3d2a38;
+  --accent:#e8385a;
+  --accent2:#ff6b8a;
+  --accent-glow:rgba(232,56,90,0.18);
+  --purple:#9b59ff;
+  --purple-glow:rgba(155,89,255,0.15);
+  --gold:#f5a623;
+  --text:#f0e6ea;
+  --text2:#b89aa8;
+  --text3:#7a5c6e;
+  --he:#e85858;
+  --she:#9b59ff;
+  --both:#6b8eff;
+  --font-display:'Playfair Display',serif;
+  --font-body:'DM Sans',sans-serif;
+  --font-mono:'Space Mono',monospace;
+  --r:14px;
+  --r-sm:8px;
 }
-html,body{background:var(--bg);color:var(--t1);font-family:var(--font);min-height:100vh;overflow-x:hidden}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:15px;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+/* Grain texture overlay */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.4;
+}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(–bg)}
+::-webkit-scrollbar-thumb{background:var(–border2);border-radius:2px}
+
+/* ── TYPOGRAPHY ── */
+h1,h2,h3{font-family:var(–font-display)}
+a{color:inherit;text-decoration:none}
+button{font-family:var(–font-body);cursor:pointer;border:none;outline:none}
+input,textarea{font-family:var(–font-body);outline:none}
+
+/* ── LAYOUT ── */
+#app{min-height:100vh}
+.container{max-width:680px;margin:0 auto;padding:0 16px}
+.page{display:none;min-height:100vh;padding-bottom:80px}
+.page.active{display:block}
+
+/* ── TOP NAV ── */
+#topnav{
+position:sticky;top:0;z-index:100;
+background:rgba(10,6,8,0.92);
+backdrop-filter:blur(20px);
+border-bottom:1px solid var(–border);
+padding:0 16px;
+}
+.nav-inner{
+max-width:680px;margin:0 auto;
+display:flex;align-items:center;justify-content:space-between;
+height:56px;
+}
+.logo{
+font-family:var(–font-display);
+font-size:22px;font-weight:900;
+background:linear-gradient(135deg,var(–accent),var(–purple));
+-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+letter-spacing:-0.5px;
+}
+.logo span{font-style:italic}
+.nav-actions{display:flex;align-items:center;gap:8px}
+.btn{
+padding:8px 16px;border-radius:100px;
+font-size:13px;font-weight:600;
+transition:all .2s;
+}
+.btn-ghost{
+background:transparent;color:var(–text2);
+border:1px solid var(–border2);
+}
+.btn-ghost:hover{border-color:var(–accent);color:var(–accent)}
+.btn-primary{
+background:linear-gradient(135deg,var(–accent),#c0284a);
+color:#fff;
+box-shadow:0 0 20px var(–accent-glow);
+}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 24px var(–accent-glow)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.avatar-btn{
+width:34px;height:34px;border-radius:50%;
+background:linear-gradient(135deg,var(–accent),var(–purple));
+display:flex;align-items:center;justify-content:center;
+font-size:13px;font-weight:700;color:#fff;
+border:2px solid var(–surface2);
+}
+
+/* ── BOTTOM NAV ── */
+#bottomnav{
+position:fixed;bottom:0;left:0;right:0;z-index:100;
+background:rgba(10,6,8,0.96);
+backdrop-filter:blur(20px);
+border-top:1px solid var(–border);
+display:flex;align-items:center;justify-content:space-around;
+height:60px;padding:0 8px;
+}
+.nav-tab{
+flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+background:none;color:var(–text3);padding:6px 0;
+font-size:10px;font-weight:600;letter-spacing:.3px;
+text-transform:uppercase;transition:color .2s;
+}
+.nav-tab svg{width:22px;height:22px;transition:all .2s}
+.nav-tab.active{color:var(–accent)}
+.nav-tab.active svg{filter:drop-shadow(0 0 6px var(–accent))}
+.nav-tab-confess{
+background:linear-gradient(135deg,var(–accent),var(–purple));
+border-radius:50%;width:50px;height:50px;
+display:flex;align-items:center;justify-content:center;
+box-shadow:0 0 20px var(–accent-glow);
+flex:0 0 50px;margin-top:-16px;
+}
+
+/* ── FEED ── */
+.feed-header{padding:20px 0 12px}
+.feed-title{
+font-family:var(–font-display);font-size:28px;font-weight:900;
+line-height:1.1;letter-spacing:-0.5px;
+}
+.feed-title em{color:var(–accent);font-style:italic}
+.feed-subtitle{color:var(–text3);font-size:13px;margin-top:6px}
+.live-dot{
+display:inline-flex;align-items:center;gap:5px;
+background:rgba(232,56,90,0.1);border:1px solid rgba(232,56,90,0.2);
+padding:3px 10px;border-radius:100px;font-size:11px;font-weight:600;
+color:var(–accent);margin-bottom:12px;
+}
+.live-dot::before{
+content:’’;width:6px;height:6px;border-radius:50%;
+background:var(–accent);animation:pulse 1.5s infinite;
+}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
+
+/* Filter tabs */
+.filter-tabs{
+display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;
+scrollbar-width:none;margin-bottom:16px;
+}
+.filter-tabs::-webkit-scrollbar{display:none}
+.filter-tab{
+flex:0 0 auto;padding:6px 14px;border-radius:100px;
+font-size:12px;font-weight:600;
+background:var(–surface2);color:var(–text3);
+border:1px solid var(–border);transition:all .2s;
+white-space:nowrap;
+}
+.filter-tab.active{
+background:var(–accent);color:#fff;border-color:var(–accent);
+box-shadow:0 0 12px var(–accent-glow);
+}
+
+/* ── POST CARD ── */
+.post-card{
+background:var(–surface);
+border:1px solid var(–border);
+border-radius:var(–r);
+margin-bottom:12px;
+transition:all .25s;
+overflow:hidden;
+animation:cardIn .4s ease both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.post-card:hover{border-color:var(–border2);background:var(–surface2)}
+.post-card-inner{padding:16px}
+.post-meta{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.post-author{display:flex;align-items:center;gap:8px}
+.author-avatar{
+width:28px;height:28px;border-radius:50%;
+background:linear-gradient(135deg,var(–accent),var(–purple));
+display:flex;align-items:center;justify-content:center;
+font-size:10px;font-weight:700;color:#fff;flex:0 0 28px;
+}
+.author-name{font-size:12px;font-weight:600;color:var(–text2)}
+.post-time{font-size:11px;color:var(–text3)}
+.post-badge{
+font-size:10px;font-weight:700;padding:2px 8px;border-radius:100px;
+text-transform:uppercase;letter-spacing:.5px;
+}
+.badge-trending{background:rgba(245,166,35,0.1);color:var(–gold);border:1px solid rgba(245,166,35,0.2)}
+.badge-hot{background:rgba(232,56,90,0.1);color:var(–accent);border:1px solid rgba(232,56,90,0.2)}
+.badge-new{background:rgba(155,89,255,0.1);color:var(–purple);border:1px solid rgba(155,89,255,0.2)}
+.post-title{
+font-family:var(–font-display);font-size:18px;font-weight:700;
+line-height:1.3;margin-bottom:8px;
+cursor:pointer;transition:color .2s;
+}
+.post-title:hover{color:var(–accent2)}
+.post-preview{
+font-size:14px;color:var(–text2);line-height:1.6;
+margin-bottom:10px;
+}
+.post-preview.blurred{
+position:relative;overflow:hidden;max-height:60px;
+}
+.post-preview.blurred::after{
+content:’’;position:absolute;inset:0;
+background:linear-gradient(to bottom,transparent 10%,var(–surface) 80%);
+}
+.post-blur-cta{
+font-size:13px;color:var(–accent);font-weight:600;
+cursor:pointer;margin-top:4px;
+display:flex;align-items:center;gap:4px;
+}
+.post-tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+.tag{
+font-size:11px;padding:3px 9px;border-radius:100px;
+background:var(–surface3);color:var(–text3);
+border:1px solid var(–border);font-weight:500;
+}
+
+/* Vote bar */
+.vote-bar-wrap{margin-bottom:12px}
+.vote-bar-labels{display:flex;justify-content:space-between;margin-bottom:5px}
+.vote-label{font-size:11px;font-weight:600}
+.vote-bar{height:6px;border-radius:3px;background:var(–surface3);overflow:hidden;display:flex}
+.vote-seg{height:100%;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.vote-seg-he{background:var(–he)}
+.vote-seg-she{background:var(–she)}
+.vote-seg-both{background:var(–both)}
+.vote-buttons{display:flex;gap:6px;margin-top:8px}
+.vote-btn{
+flex:1;padding:7px 4px;border-radius:var(–r-sm);
+font-size:11px;font-weight:700;text-align:center;
+border:1.5px solid transparent;transition:all .2s;
+background:var(–surface3);
+}
+.vote-btn-he{color:var(–he);border-color:rgba(232,88,88,0.2)}
+.vote-btn-he:hover,.vote-btn-he.voted{background:rgba(232,88,88,0.12);border-color:var(–he)}
+.vote-btn-she{color:var(–she);border-color:rgba(155,89,255,0.2)}
+.vote-btn-she:hover,.vote-btn-she.voted{background:rgba(155,89,255,0.12);border-color:var(–she)}
+.vote-btn-both{color:var(–both);border-color:rgba(107,142,255,0.2)}
+.vote-btn-both:hover,.vote-btn-both.voted{background:rgba(107,142,255,0.12);border-color:var(–both)}
+
+/* Reactions */
+.reactions-row{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-bottom:10px}
+.reaction-btn{
+display:flex;align-items:center;gap:3px;
+background:var(–surface3);border:1px solid var(–border);
+border-radius:100px;padding:4px 9px;
+font-size:13px;cursor:pointer;transition:all .15s;
+color:var(–text2);font-weight:500;
+}
+.reaction-btn:hover{transform:scale(1.08);border-color:var(–border2)}
+.reaction-btn.active{background:var(–surface2);border-color:var(–accent);color:var(–text)}
+.reaction-count{font-size:11px}
+
+/* Post footer */
+.post-footer{
+display:flex;align-items:center;justify-content:space-between;
+padding-top:10px;border-top:1px solid var(–border);
+}
+.post-stat{
+display:flex;align-items:center;gap:4px;
+font-size:12px;color:var(–text3);
+background:none;border:none;cursor:pointer;
+padding:4px 8px;border-radius:var(–r-sm);
+transition:all .15s;
+}
+.post-stat:hover{background:var(–surface3);color:var(–text2)}
+.post-stat svg{width:14px;height:14px}
+
+/* ── POST DETAIL ── */
+.post-detail-header{padding:20px 0 0}
+.back-btn{
+display:flex;align-items:center;gap:6px;
+background:none;color:var(–text3);
+font-size:13px;font-weight:600;
+padding:6px 0;margin-bottom:16px;
+}
+.back-btn:hover{color:var(–text)}
+.detail-author{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.detail-avatar{
+width:40px;height:40px;border-radius:50%;
+background:linear-gradient(135deg,var(–accent),var(–purple));
+display:flex;align-items:center;justify-content:center;
+font-size:14px;font-weight:700;color:#fff;
+}
+.detail-author-info{}
+.detail-author-name{font-size:14px;font-weight:600;color:var(–text)}
+.detail-meta{font-size:12px;color:var(–text3)}
+.detail-title{
+font-family:var(–font-display);font-size:24px;font-weight:900;
+line-height:1.25;letter-spacing:-0.3px;margin-bottom:14px;
+}
+.detail-content{
+font-size:15px;line-height:1.75;color:var(–text2);
+margin-bottom:20px;white-space:pre-line;
+}
+.divider{height:1px;background:var(–border);margin:20px 0}
+
+/* ── COMMENTS ── */
+.comments-header{
+display:flex;align-items:center;justify-content:space-between;
+margin-bottom:14px;
+}
+.comments-title{font-size:16px;font-weight:700}
+.sort-select{
+background:var(–surface3);border:1px solid var(–border);
+color:var(–text2);font-size:12px;padding:5px 10px;
+border-radius:var(–r-sm);font-family:var(–font-body);
+}
+.comment-box{
+background:var(–surface2);border:1px solid var(–border);
+border-radius:var(–r);padding:12px;margin-bottom:16px;
+transition:border-color .2s;
+}
+.comment-box:focus-within{border-color:var(–accent)}
+.comment-textarea{
+width:100%;background:none;border:none;
+color:var(–text);font-size:14px;line-height:1.6;
+resize:none;min-height:72px;
+}
+.comment-textarea::placeholder{color:var(–text3)}
+.comment-box-footer{display:flex;justify-content:flex-end;margin-top:8px}
+.comment-item{margin-bottom:14px;animation:cardIn .3s ease both}
+.comment-bubble{
+background:var(–surface2);border:1px solid var(–border);
+border-radius:0 var(–r) var(–r) var(–r);padding:12px;
+}
+.comment-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.comment-author{font-size:12px;font-weight:700;color:var(–accent2)}
+.comment-time{font-size:11px;color:var(–text3)}
+.comment-text{font-size:14px;line-height:1.6;color:var(–text2)}
+.comment-actions{display:flex;align-items:center;gap:10px;margin-top:8px}
+.comment-action{
+display:flex;align-items:center;gap:4px;
+background:none;font-size:11px;color:var(–text3);
+padding:3px 6px;border-radius:4px;transition:all .15s;
+}
+.comment-action:hover{color:var(–text2);background:var(–surface3)}
+.comment-action.up:hover,.comment-action.up.voted{color:#4ade80}
+.comment-action.down:hover,.comment-action.down.voted{color:var(–accent)}
+.pinned-badge{
+font-size:10px;font-weight:700;color:var(–gold);
+background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.2);
+padding:2px 6px;border-radius:4px;margin-left:6px;
+}
+/* Replies */
+.replies-wrap{margin-left:24px;margin-top:8px;border-left:2px solid var(–border);padding-left:12px}
+.reply-item{margin-bottom:10px;animation:cardIn .3s ease both}
+.reply-bubble{
+background:var(–surface);border:1px solid var(–border);
+border-radius:0 var(–r-sm) var(–r-sm) var(–r-sm);padding:10px;
+}
+
+/* ── AUTH MODAL ── */
+.modal-overlay{
+position:fixed;inset:0;z-index:1000;
+background:rgba(0,0,0,0.85);
+backdrop-filter:blur(8px);
+display:flex;align-items:center;justify-content:center;
+padding:16px;animation:fadeIn .2s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{
+background:var(–surface);border:1px solid var(–border2);
+border-radius:20px;width:100%;max-width:400px;
+overflow:hidden;animation:slideUp .3s cubic-bezier(.4,0,.2,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{
+padding:24px 24px 0;text-align:center;
+}
+.modal-icon{font-size:40px;margin-bottom:8px}
+.modal-title{
+font-family:var(–font-display);font-size:24px;font-weight:900;
+margin-bottom:6px;
+}
+.modal-subtitle{font-size:14px;color:var(–text3);line-height:1.5}
+.modal-body{padding:20px 24px 24px}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(–text3);margin-bottom:5px;display:block}
+.form-input{
+width:100%;padding:12px 14px;
+background:var(–surface2);border:1.5px solid var(–border);
+border-radius:var(–r-sm);color:var(–text);font-size:14px;
+transition:border-color .2s;
+}
+.form-input:focus{border-color:var(–accent)}
+.form-input::placeholder{color:var(–text3)}
+.btn-block{width:100%;padding:13px;font-size:15px;font-weight:700;border-radius:var(–r-sm);margin-top:6px}
+.modal-footer{
+text-align:center;font-size:13px;color:var(–text3);margin-top:14px;
+}
+.modal-footer a{color:var(–accent);font-weight:600;cursor:pointer}
+.modal-close{
+position:absolute;top:16px;right:16px;
+background:var(–surface3);border:1px solid var(–border);
+width:30px;height:30px;border-radius:50%;
+display:flex;align-items:center;justify-content:center;
+color:var(–text3);font-size:16px;cursor:pointer;
+}
+.modal-close:hover{color:var(–text);background:var(–surface2)}
+
+/* Paywall modal */
+.paywall-modal .modal-header{padding:32px 24px 0}
+.paywall-blur-preview{
+background:var(–surface2);border-radius:var(–r-sm);
+padding:14px;margin-bottom:20px;
+font-size:14px;color:var(–text2);line-height:1.6;
+position:relative;overflow:hidden;
+}
+.paywall-blur-preview::after{
+content:’’;position:absolute;inset:0;
+background:linear-gradient(to bottom,transparent 20%,var(–surface) 90%);
+}
+
+/* ── CONFESS PAGE ── */
+.confess-wrap{padding:20px 0}
+.confess-header{text-align:center;margin-bottom:24px}
+.confess-icon{font-size:48px;margin-bottom:10px}
+.confess-title{font-family:var(–font-display);font-size:26px;font-weight:900;margin-bottom:6px}
+.confess-sub{font-size:14px;color:var(–text3)}
+.confess-form{
+background:var(–surface);border:1px solid var(–border);
+border-radius:var(–r);padding:20px;
+}
+.type-select{
+display:flex;gap:8px;margin-bottom:16px;
+}
+.type-btn{
+flex:1;padding:10px;border-radius:var(–r-sm);
+font-size:12px;font-weight:700;text-align:center;
+background:var(–surface2);border:1.5px solid var(–border);
+color:var(–text3);transition:all .2s;
+}
+.type-btn.active{background:var(–accent);border-color:var(–accent);color:#fff}
+.title-input{
+width:100%;padding:12px 14px;
+background:var(–surface2);border:1.5px solid var(–border);
+border-radius:var(–r-sm);color:var(–text);font-size:15px;
+font-family:var(–font-display);font-weight:700;
+transition:border-color .2s;margin-bottom:12px;
+}
+.title-input:focus{border-color:var(–accent)}
+.title-input::placeholder{color:var(–text3)}
+.content-textarea{
+width:100%;padding:12px 14px;min-height:160px;
+background:var(–surface2);border:1.5px solid var(–border);
+border-radius:var(–r-sm);color:var(–text);font-size:14px;
+line-height:1.7;resize:vertical;
+transition:border-color .2s;margin-bottom:12px;
+}
+.content-textarea:focus{border-color:var(–accent)}
+.content-textarea::placeholder{color:var(–text3)}
+.tags-input{
+width:100%;padding:10px 14px;
+background:var(–surface2);border:1.5px solid var(–border);
+border-radius:var(–r-sm);color:var(–text);font-size:13px;
+transition:border-color .2s;
+}
+.tags-input:focus{border-color:var(–accent)}
+.tags-hint{font-size:11px;color:var(–text3);margin-top:5px;margin-bottom:14px}
+.char-count{font-size:11px;color:var(–text3);text-align:right;margin-bottom:12px}
+
+/* ── TRENDING PAGE ── */
+.trending-section{margin-bottom:24px}
+.trending-section-title{
+display:flex;align-items:center;gap:8px;
+font-size:14px;font-weight:700;margin-bottom:12px;
+color:var(–text2);
+}
+.trending-rank{
+font-family:var(–font-mono);font-size:28px;font-weight:700;
+color:var(–border2);margin-right:4px;line-height:1;
+}
+.trending-card{
+background:var(–surface);border:1px solid var(–border);
+border-radius:var(–r);padding:14px;margin-bottom:10px;
+display:flex;align-items:flex-start;gap:12px;
+transition:all .2s;cursor:pointer;
+}
+.trending-card:hover{border-color:var(–border2);background:var(–surface2)}
+.trending-number{
+font-family:var(–font-mono);font-size:20px;font-weight:700;
+color:var(–border2);min-width:30px;
+}
+.trending-card.top-1 .trending-number{color:var(–gold)}
+.trending-card.top-2 .trending-number{color:var(–text2)}
+.trending-card.top-3 .trending-number{color:#cd7f32}
+.trending-info{}
+.trending-card-title{font-size:14px;font-weight:700;line-height:1.4;margin-bottom:4px}
+.trending-stats{font-size:11px;color:var(–text3);display:flex;gap:10px}
+
+/* ── NOTIFICATIONS ── */
+.notif-item{
+display:flex;align-items:flex-start;gap:12px;
+padding:14px;border-bottom:1px solid var(–border);
+transition:background .2s;
+animation:cardIn .3s ease both;
+}
+.notif-item:hover{background:var(–surface2)}
+.notif-item.unread{background:rgba(232,56,90,0.04)}
+.notif-icon{
+width:38px;height:38px;border-radius:50%;
+background:var(–surface3);display:flex;align-items:center;
+justify-content:center;font-size:18px;flex:0 0 38px;
+}
+.notif-text{font-size:13px;line-height:1.5;color:var(–text2)}
+.notif-text strong{color:var(–text);font-weight:600}
+.notif-time{font-size:11px;color:var(–text3);margin-top:3px}
+.unread-dot{width:6px;height:6px;border-radius:50%;background:var(–accent);margin-top:6px;flex:0 0 6px}
+
+/* ── PROFILE PAGE ── */
+.profile-header{
+text-align:center;padding:30px 0 20px;
+border-bottom:1px solid var(–border);margin-bottom:20px;
+}
+.profile-avatar-large{
+width:80px;height:80px;border-radius:50%;
+background:linear-gradient(135deg,var(–accent),var(–purple));
+display:flex;align-items:center;justify-content:center;
+font-size:28px;font-weight:700;color:#fff;
+margin:0 auto 14px;
+box-shadow:0 0 30px var(–accent-glow);
+}
+.profile-username{font-size:22px;font-weight:700;margin-bottom:4px}
+.profile-joined{font-size:13px;color:var(–text3)}
+.profile-stats{
+display:flex;justify-content:center;gap:32px;margin-top:16px;
+}
+.profile-stat{text-align:center}
+.profile-stat-num{font-size:22px;font-weight:700;font-family:var(–font-display)}
+.profile-stat-label{font-size:11px;color:var(–text3);text-transform:uppercase;letter-spacing:.5px}
+.profile-section-title{font-size:16px;font-weight:700;margin-bottom:12px}
+
+/* ── REPORT ── */
+.report-btn{
+background:none;color:var(–text3);font-size:11px;
+display:flex;align-items:center;gap:3px;
+padding:2px 0;
+}
+.report-btn:hover{color:var(–accent)}
+
+/* ── TOASTS ── */
+#toast-container{
+position:fixed;top:70px;right:16px;z-index:2000;
+display:flex;flex-direction:column;gap:8px;
+}
+.toast{
+background:var(–surface2);border:1px solid var(–border2);
+border-radius:var(–r-sm);padding:10px 16px;
+font-size:13px;font-weight:500;
+box-shadow:0 4px 20px rgba(0,0,0,0.4);
+animation:toastIn .3s ease,toastOut .3s ease 2.7s forwards;
+max-width:280px;
+}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+.toast.success{border-color:rgba(74,222,128,0.3);color:#4ade80}
+.toast.error{border-color:rgba(232,56,90,0.3);color:var(–accent2)}
+.toast.info{border-color:rgba(155,89,255,0.3);color:var(–purple)}
+
+/* ── SPINNER ── */
+.spinner{
+width:20px;height:20px;border-radius:50%;
+border:2px solid var(–border2);border-top-color:var(–accent);
+animation:spin .7s linear infinite;display:inline-block;
+}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-@keyframes in{from{opacity:0}to{opacity:1}}
-@keyframes hb{0%,100%{transform:scale(1)}20%{transform:scale(1.3)}40%{transform:scale(1)}}
-@keyframes tk{to{transform:translateX(-50%)}}
-@keyframes bl{0%,100%{opacity:1}50%{opacity:.3}}
-.spin{width:26px;height:26px;border:2px solid rgba(255,61,90,.25);border-top-color:var(--rose);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.loading-state{
+display:flex;align-items:center;justify-content:center;
+padding:60px 0;flex-direction:column;gap:12px;color:var(–text3);
+}
 
-/* NAV */
-nav{position:fixed;top:0;left:0;right:0;height:54px;background:rgba(7,7,13,.97);border-bottom:1px solid var(–b1);display:flex;align-items:center;padding:0 12px;gap:8px;z-index:100}
-#logo{font-size:20px;font-weight:800;color:var(–rose);cursor:pointer;flex-shrink:0;animation:hb 4s ease-in-out infinite;display:inline-block}
-#tabs{display:flex;gap:2px;flex:1;overflow-x:auto;-webkit-overflow-scrolling:touch}
-#tabs::-webkit-scrollbar{display:none}
-.tab{padding:6px 12px;border-radius:50px;font-size:13px;font-weight:500;cursor:pointer;color:var(–t2);border:none;background:transparent;white-space:nowrap;font-family:var(–font);-webkit-tap-highlight-color:transparent}
-.tab.on{color:var(–rose);background:var(–rdim);font-weight:600}
-#nav-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+/* ── EMPTY STATE ── */
+.empty-state{
+text-align:center;padding:60px 20px;
+color:var(–text3);
+}
+.empty-state-icon{font-size:48px;margin-bottom:12px;opacity:.4}
+.empty-state-text{font-size:15px}
 
-/* TICKER */
-#ticker{position:fixed;top:54px;left:0;right:0;height:28px;background:rgba(255,61,90,.07);border-bottom:1px solid rgba(255,61,90,.12);overflow:hidden;display:flex;align-items:center;z-index:99}
-#tick-inner{display:inline-flex;animation:tk 45s linear infinite;white-space:nowrap}
-.ti{font-size:11px;color:var(–t2);padding:0 20px;display:inline-flex;align-items:center;gap:7px}
-.td{width:5px;height:5px;border-radius:50%;background:var(–rose);animation:bl 1.2s ease infinite;flex-shrink:0}
+/* ── ADMIN ── */
+.admin-section{margin-bottom:24px}
+.admin-card{
+background:var(–surface);border:1px solid var(–border);
+border-radius:var(–r);padding:16px;margin-bottom:10px;
+}
+.admin-action-row{display:flex;gap:8px;margin-top:10px}
+.btn-danger{background:rgba(232,56,90,0.15);color:var(–accent);border:1px solid rgba(232,56,90,0.3)}
+.btn-danger:hover{background:rgba(232,56,90,0.25)}
+.btn-warn{background:rgba(245,166,35,0.1);color:var(–gold);border:1px solid rgba(245,166,35,0.3)}
 
-/* MAIN */
-#app{max-width:680px;margin:0 auto;padding:82px 12px 90px}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 20px;border-radius:50px;font-family:var(–font);font-size:14px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
-.btn:active{opacity:.75}
-.btn:disabled{opacity:.4;pointer-events:none}
-.bp{background:linear-gradient(135deg,#ff3d5a,#c9184a);color:#fff;box-shadow:0 4px 16px rgba(255,61,90,.3)}
-.bs{background:var(–c2);color:var(–t1);border:1px solid var(–b2)}
-.bg{background:transparent;color:var(–t2)}
-.btn-sm{padding:7px 14px;font-size:13px}
-.btn-full{width:100%;padding:13px}
-
-/* INPUTS */
-.inp{width:100%;padding:12px 14px;background:var(–c2);border:1px solid var(–b1);border-radius:12px;color:var(–t1);font-family:var(–font);font-size:15px;outline:none;-webkit-appearance:none}
-.inp:focus{border-color:var(–rose)}
-.inp::placeholder{color:var(–t3)}
-textarea.inp{resize:vertical;min-height:100px;line-height:1.65}
-
-/* CARDS */
-.card{background:var(–c1);border:1px solid var(–b1);border-radius:18px;padding:17px;margin-bottom:12px;-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden}
-.card.clickable{cursor:pointer}
-.card.clickable:active{opacity:.85}
-
-/* POST TYPES */
-.ptype{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.09em}
-.ptype-confession{color:var(–rose)}
-.ptype-advice{color:#a78bfa}
-.ptype-hot_take{color:var(–amb)}
-.ptitle{font-size:17px;font-weight:700;line-height:1.35;color:var(–t1);margin:7px 0}
-.pmeta{font-size:12px;color:var(–t3);margin-bottom:11px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.pname{color:var(–t2);font-weight:600}
-.pbody{font-size:14px;line-height:1.7;color:var(–t2);overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;margin-bottom:12px}
-
-/* BADGES */
-.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:50px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em}
-.b-hot{background:rgba(245,158,11,.14);color:#f59e0b;border:1px solid rgba(245,158,11,.3)}
-.b-sad{background:rgba(99,102,241,.14);color:#818cf8;border:1px solid rgba(99,102,241,.28)}
-.b-trnd{background:var(–rdim);color:var(–rose);border:1px solid rgba(255,61,90,.25)}
-.b-dbt{background:rgba(139,92,246,.14);color:#a78bfa;border:1px solid rgba(139,92,246,.28)}
-.b-toxic{background:rgba(239,68,68,.14);color:#f87171;border:1px solid rgba(239,68,68,.28)}
-
-/* TAGS */
-.tag{display:inline-flex;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700;text-transform:uppercase}
-.t-cheating{background:rgba(239,68,68,.12);color:#f87171}
-.t-breakup{background:var(–rdim);color:var(–rose)}
-.t-dating{background:rgba(139,92,246,.14);color:#a78bfa}
-.t-marriage{background:rgba(16,185,129,.12);color:#10b981}
-.t-situationship{background:rgba(245,158,11,.12);color:#f59e0b}
-
-/* REACTIONS */
-.rx-row{display:flex;gap:5px;flex-wrap:wrap}
-.rxb{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:50px;background:var(–c2);border:1px solid var(–b1);cursor:pointer;font-size:13px;font-weight:600;color:var(–t2);font-family:var(–font);-webkit-tap-highlight-color:transparent}
-.rxb.on{background:var(–rdim);border-color:rgba(255,61,90,.4);color:var(–rose)}
-.rxb:active{opacity:.7}
-.eng-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;background:var(–c2);border-radius:10px;margin-top:10px;font-size:13px;color:var(–t2);font-weight:500}
-
-/* WIW */
-.wiw{background:linear-gradient(135deg,rgba(255,61,90,.06),rgba(139,92,246,.06));border:1px solid rgba(255,61,90,.18);border-radius:14px;padding:15px;margin:12px 0}
-.wiw-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(–t3);margin-bottom:11px}
-.wiw-opts{display:flex;gap:7px;margin-bottom:11px}
-.wb{flex:1;padding:11px 6px;border-radius:11px;border:2px solid var(–b2);background:var(–c2);cursor:pointer;text-align:center;font-family:var(–font);font-weight:700;font-size:12px;color:var(–t2);-webkit-tap-highlight-color:transparent}
-.wb:active{opacity:.7}
-.wb-he{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.12);color:#f87171}
-.wb-she{border-color:rgba(139,92,246,.5);background:rgba(139,92,246,.12);color:#a78bfa}
-.wb-both{border-color:rgba(156,163,175,.4);background:rgba(156,163,175,.1);color:#d1d5db}
-.wi{font-size:16px;display:block;margin-bottom:3px}
-.wbar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.wbar-lbl{width:60px;font-size:11px;font-weight:600;color:var(–t2);flex-shrink:0}
-.wbar-track{flex:1;height:7px;border-radius:4px;background:var(–c3);overflow:hidden}
-.wbar-fill{height:100%;border-radius:4px;transition:width .6s}
-.wf-he{background:linear-gradient(90deg,#ef4444,#dc2626)}
-.wf-she{background:linear-gradient(90deg,#8b5cf6,#6d28d9)}
-.wf-both{background:#9ca3af}
-.wpct{font-size:11px;font-weight:700;min-width:28px;text-align:right}
-.wtot{text-align:center;font-size:12px;color:var(–t3);margin-top:7px}
-.wverd{text-align:center;padding:8px;border-radius:8px;font-size:13px;font-weight:700;margin-top:8px}
-.wv-he{background:rgba(239,68,68,.1);color:#f87171}
-.wv-she{background:rgba(139,92,246,.1);color:#a78bfa}
-.wv-both{background:rgba(156,163,175,.1);color:#d1d5db}
-
-/* PAYWALL */
-.blw{position:relative;max-height:72px;overflow:hidden}
-.blw::after{content:’’;position:absolute;bottom:0;left:0;right:0;height:55px;background:linear-gradient(transparent,var(–c1))}
-.pw{padding:18px 14px;text-align:center;border-top:1px solid rgba(255,61,90,.14);margin:0 -17px -17px;border-radius:0 0 18px 18px;background:linear-gradient(to bottom,transparent,rgba(15,15,24,.97) 15%)}
-.pw h3{font-size:16px;font-weight:700;color:var(–t1);margin-bottom:5px}
-.pw p{font-size:13px;color:var(–t2);margin-bottom:13px;line-height:1.55}
-
-/* COMMENTS */
-.cmt-sort{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto}
-.cmt-sort::-webkit-scrollbar{display:none}
-.csb{padding:6px 12px;border-radius:50px;font-size:12px;font-weight:600;border:1px solid var(–b1);background:var(–c2);color:var(–t2);cursor:pointer;white-space:nowrap;font-family:var(–font);-webkit-tap-highlight-color:transparent}
-.csb.on{background:var(–rdim);border-color:rgba(255,61,90,.4);color:var(–rose)}
-.crow{display:flex;gap:10px;margin-bottom:16px;align-items:flex-start}
-.ava{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:linear-gradient(135deg,var(–rose),var(–vio));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff}
-.ava.sm{width:26px;height:26px;font-size:10px}
-.cc{padding:12px 14px;background:var(–c2);border:1px solid var(–b1);border-radius:12px;margin-bottom:8px}
-.cc.top{border-color:rgba(245,158,11,.3)}
-.cc.hot{border-color:rgba(239,68,68,.22)}
-.cc-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
-.cc-body{font-size:14px;line-height:1.68;color:var(–t2)}
-.cc-foot{display:flex;align-items:center;gap:10px;margin-top:8px}
-.ccrxb{display:flex;align-items:center;gap:3px;padding:4px 9px;border-radius:50px;background:var(–c3);border:1px solid var(–b1);cursor:pointer;font-size:12px;font-weight:600;color:var(–t3);font-family:var(–font)}
-.ccrxb.on{color:var(–rose)}
-
-/* MODAL */
-.overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:14px;animation:in .2s}
-.modal{background:var(–c1);border:1px solid var(–b2);border-radius:20px;padding:24px;width:100%;max-width:390px;position:relative;max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.mclose{position:absolute;top:12px;right:12px;background:var(–c2);border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;color:var(–t2);font-size:13px;display:flex;align-items:center;justify-content:center;font-family:var(–font)}
-.flbl{font-size:13px;font-weight:600;color:var(–t2);margin-bottom:5px;display:block}
-.mtabs{display:flex;gap:3px;background:var(–c2);border-radius:10px;padding:3px;margin-bottom:16px}
-.mtab{flex:1;padding:8px;border-radius:8px;border:none;background:transparent;color:var(–t2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(–font)}
-.mtab.on{background:var(–rdim);color:var(–rose)}
-
-/* TOGGLE */
-.tgl{width:40px;height:22px;border-radius:11px;background:var(–c3);border:none;cursor:pointer;position:relative;flex-shrink:0;transition:background .2s}
-.tgl::after{content:’’;position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
-.tgl.on{background:var(–rose)}
-.tgl.on::after{transform:translateX(18px)}
-
-/* MISC */
-.pills{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:14px;padding-bottom:2px}
-.pills::-webkit-scrollbar{display:none}
-.pill{padding:6px 14px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:1px solid var(–b1);background:var(–c1);color:var(–t2);white-space:nowrap;font-family:var(–font);-webkit-tap-highlight-color:transparent}
-.pill.on{background:var(–rdim);border-color:rgba(255,61,90,.4);color:var(–rose)}
-.hero{text-align:center;padding:24px 0 20px}
-.hero h1{font-size:clamp(30px,10vw,50px);font-weight:800;color:var(–t1);margin-bottom:8px;line-height:1.1}
-.hero h1 span{color:var(–rose)}
-.hero p{font-size:14px;color:var(–t2);max-width:300px;margin:0 auto 20px;line-height:1.65}
-.sh{display:flex;align-items:center;gap:8px;margin-bottom:14px}
-.sttl{font-size:18px;font-weight:800;color:var(–t1)}
-.sbadge{padding:2px 9px;border-radius:50px;background:var(–rdim);color:var(–rose);font-size:12px;font-weight:700}
-.cpbar{background:linear-gradient(135deg,rgba(255,61,90,.07),rgba(139,92,246,.05));border:1px solid rgba(255,61,90,.15);border-radius:14px;padding:13px 15px;margin-bottom:14px;cursor:pointer;display:flex;align-items:center;gap:10px;-webkit-tap-highlight-color:transparent}
-.cpbar:active{opacity:.75}
-.bkbtn{display:inline-flex;align-items:center;gap:6px;color:var(–t2);font-size:14px;font-weight:600;cursor:pointer;background:none;border:none;padding:6px 0;margin-bottom:12px;font-family:var(–font)}
-.divider{height:1px;background:var(–b1);margin:16px 0}
-.err{color:var(–rose);font-size:13px;margin-top:4px}
-.empty{text-align:center;padding:50px 16px;color:var(–t3)}
-.toasts{position:fixed;bottom:18px;right:12px;z-index:500;display:flex;flex-direction:column;gap:7px;pointer-events:none}
-.toast{padding:11px 14px;border-radius:12px;background:var(–c2);border:1px solid var(–b2);font-size:13px;color:var(–t1);box-shadow:0 8px 28px rgba(0,0,0,.5);animation:up .3s;display:flex;align-items:center;gap:7px;max-width:270px}
-.toast.suc{border-color:rgba(16,185,129,.4)}
-.toast.er{border-color:rgba(255,61,90,.4)}
-.cnote{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:#f59e0b;line-height:1.6}
-.cnote code{background:rgba(245,158,11,.15);padding:1px 4px;border-radius:4px;font-family:monospace;font-size:11px}
-.streakc{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:50px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);color:#f59e0b;font-size:12px;font-weight:700;cursor:pointer}
-.upcard{background:rgba(16,185,129,.04);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:10px 13px;margin-bottom:7px}
-.uplbl{font-size:10px;color:#10b981;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em}
-.repopt{display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:10px;border:1px solid var(–b1);background:var(–c2);cursor:pointer;font-size:13px;color:var(–t2);margin-bottom:7px;-webkit-tap-highlight-color:transparent}
-.repopt.on{background:var(–rdim);border-color:rgba(255,61,90,.45);color:var(–rose)}
-.statg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:18px}
-.statb{background:var(–c2);border:1px solid var(–b1);border-radius:12px;padding:13px;text-align:center}
-.statn{font-size:24px;font-weight:800;color:var(–t1)}
-.statl{font-size:11px;color:var(–t3);margin-top:2px}
-.trn{font-size:30px;font-weight:800;line-height:1;min-width:38px}
-.trn-g{color:#d97706}.trn-s{color:#6b7280}.trn-b{color:#92400e}.trn-d{color:var(–c3)}
-.tgl-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(–b1)}
-.tgl-row:last-child{border-bottom:none}
-.rate-warn{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:11px 13px;margin-bottom:12px;font-size:13px;color:#f87171}
-.search-wrap{position:relative;margin-bottom:12px}
-.search-inp{width:100%;padding:10px 38px 10px 13px;background:var(–c2);border:1px solid var(–b1);border-radius:50px;color:var(–t1);font-family:var(–font);font-size:14px;outline:none;-webkit-appearance:none}
-.search-inp:focus{border-color:var(–rose)}
-.search-inp::placeholder{color:var(–t3)}
-.search-ico{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(–t3);pointer-events:none}
-.search-res{background:var(–c1);border:1px solid var(–b2);border-radius:12px;margin-top:5px;overflow:hidden;display:none}
-.search-res.show{display:block}
-.sr{padding:11px 13px;border-bottom:1px solid var(–b1);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.sr:last-child{border-bottom:none}
-.sr:active{background:var(–c2)}
-.sr-title{font-size:13px;font-weight:600;color:var(–t1);margin-bottom:2px;line-height:1.3}
-.sr-meta{font-size:11px;color:var(–t3)}
-.ob-overlay{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center;padding:14px}
-.ob-card{background:var(–c1);border:1px solid rgba(255,61,90,.2);border-radius:20px;padding:28px 22px;max-width:360px;width:100%;text-align:center}
-.ob-dots{display:flex;justify-content:center;gap:5px;margin-bottom:20px}
-.ob-dot{width:7px;height:7px;border-radius:50%;background:var(–c3);transition:all .3s}
-.ob-dot.on{background:var(–rose);width:22px;border-radius:4px}
-.ob-icon{font-size:46px;margin-bottom:12px}
-.ob-name{background:rgba(255,61,90,.12);border:1px solid rgba(255,61,90,.25);border-radius:8px;padding:7px 14px;display:inline-block;color:var(–rose);font-size:14px;font-weight:700;margin-bottom:14px}
-.nbtn{background:var(–c2);border:1px solid var(–b1);border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(–t2);font-size:14px;display:flex;align-items:center;justify-content:center;position:relative;-webkit-tap-highlight-color:transparent}
-.nbadge{position:absolute;top:-4px;right:-4px;background:var(–rose);color:#fff;font-size:9px;font-weight:700;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid var(–bg)}
-.npanel{position:absolute;top:calc(100% + 8px);right:0;width:265px;background:var(–c1);border:1px solid var(–b2);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.6);z-index:200;max-height:320px;overflow-y:auto;display:none}
-.npanel.show{display:block}
-.nitem{padding:11px 13px;border-bottom:1px solid var(–b1)}
-.nitem:last-child{border-bottom:none}
-.nitem.unread{background:rgba(255,61,90,.05)}
-.ndot{width:6px;height:6px;border-radius:50%;background:var(–rose);flex-shrink:0;margin-top:4px}
-
-/* Post add-on panels */
-.post-full .pbody{display:block;-webkit-line-clamp:unset}
-.mswitch{text-align:center;font-size:14px;color:var(–t2);margin-top:12px}
-.mswitch button{background:none;border:none;color:var(–rose);font-weight:700;font-size:14px;font-family:var(–font);cursor:pointer}
+/* ── RESPONSIVE ── */
 @media(max-width:480px){
-nav{padding:0 8px}
-#app{padding:82px 10px 90px}
-.modal{padding:20px 13px;border-radius:18px}
-.wiw-opts{flex-direction:column}
+.detail-title{font-size:20px}
+.post-title{font-size:16px}
+}
+
+/* ── MISC ── */
+.text-center{text-align:center}
+.text-accent{color:var(–accent)}
+.font-mono{font-family:var(–font-mono)}
+.hidden{display:none!important}
+.skeleton{
+background:linear-gradient(90deg,var(–surface2) 25%,var(–surface3) 50%,var(–surface2) 75%);
+background-size:200% 100%;
+animation:shimmer 1.5s infinite;
+border-radius:4px;
+}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.glow-accent{text-shadow:0 0 20px var(–accent-glow)}
+
+/* Verification banner */
+.verify-banner{
+background:rgba(245,166,35,0.1);border:1px solid rgba(245,166,35,0.25);
+border-radius:var(–r-sm);padding:10px 14px;margin-bottom:14px;
+font-size:13px;color:var(–gold);display:flex;align-items:center;gap:8px;
+}
+.verify-banner button{
+background:rgba(245,166,35,0.2);color:var(–gold);
+border:1px solid rgba(245,166,35,0.3);
+padding:4px 10px;border-radius:4px;font-size:12px;
+margin-left:auto;flex:0 0 auto;
 }
 </style>
 
 </head>
 <body>
+<div id="app">
 
-<!-- NAV -->
+<!-- TOP NAV -->
 
-<nav>
-  <div id="logo" onclick="goHome()">💔</div>
-  <div id="tabs">
-    <button class="tab on" data-page="home" onclick="setPage('home')">Home</button>
-    <button class="tab" data-page="confessions" onclick="setPage('confessions')">Confessions</button>
-    <button class="tab" data-page="advice" onclick="setPage('advice')">Advice</button>
-    <button class="tab" data-page="trending" onclick="setPage('trending')">🔥 Trending</button>
-    <button class="tab" data-page="profile" onclick="setPage('profile')">👤 Profile</button>
+<nav id="topnav">
+  <div class="nav-inner">
+    <div class="logo">Heart<span>Confia</span> 💔</div>
+    <div class="nav-actions" id="navActions">
+      <button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Login</button>
+      <button class="btn btn-primary btn-sm" onclick="showAuth('signup')">Join Free</button>
+    </div>
   </div>
-  <div id="nav-right"></div>
 </nav>
 
-<!-- TICKER -->
+<!-- TOAST CONTAINER -->
 
-<div id="ticker"><div id="tick-inner">Loading…</div></div>
+<div id="toast-container"></div>
 
-<!-- APP -->
+<!-- PAGES -->
 
-<div id="app"><div style="display:flex;justify-content:center;padding:60px 0"><span class="spin"></span></div></div>
+<!-- HOME FEED -->
 
-<!-- TOASTS -->
+<div id="page-home" class="page active">
+  <div class="container">
+    <div class="feed-header">
+      <div class="live-dot">Live Confessions</div>
+      <h1 class="feed-title">Where hearts <em>break</em><br>in public 💔</h1>
+      <p class="feed-subtitle">Anonymous confessions from real relationships. Judge. Debate. Relate.</p>
+    </div>
+    <div class="filter-tabs" id="filterTabs">
+      <button class="filter-tab active" data-filter="all">🔥 All</button>
+      <button class="filter-tab" data-filter="confession">💔 Confessions</button>
+      <button class="filter-tab" data-filter="advice">🧠 Advice</button>
+      <button class="filter-tab" data-filter="cheating">😳 Cheating</button>
+      <button class="filter-tab" data-filter="breakup">💀 Breakups</button>
+      <button class="filter-tab" data-filter="toxic">🔥 Toxic</button>
+      <button class="filter-tab" data-filter="trust">🤝 Trust</button>
+    </div>
+    <div id="feedContainer">
+      <div class="loading-state"><div class="spinner"></div><span>Loading confessions...</span></div>
+    </div>
+    <div id="loadMoreWrap" class="text-center hidden" style="padding:16px 0">
+      <button class="btn btn-ghost" id="loadMoreBtn" onclick="loadMorePosts()">Load more stories</button>
+    </div>
+  </div>
+</div>
 
-<div class="toasts" id="toasts"></div>
+<!-- TRENDING -->
 
-<!-- Supabase ONLY - no React -->
+<div id="page-trending" class="page">
+  <div class="container">
+    <div class="feed-header">
+      <h1 class="feed-title">🔥 Trending</h1>
+      <p class="feed-subtitle">The stories everyone is talking about right now</p>
+    </div>
+    <div id="trendingContainer">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- CONFESS -->
+
+<div id="page-confess" class="page">
+  <div class="container">
+    <div class="confess-wrap">
+      <div class="confess-header">
+        <div class="confess-icon">🖤</div>
+        <h1 class="confess-title">Share Your Story</h1>
+        <p class="confess-sub">Anonymous. Honest. Yours.</p>
+      </div>
+      <div id="confessFormWrap"></div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS -->
+
+<div id="page-notifications" class="page">
+  <div class="container">
+    <div class="feed-header">
+      <h1 class="feed-title">🔔 Notifications</h1>
+    </div>
+    <div id="notifContainer">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+
+<div id="page-profile" class="page">
+  <div class="container">
+    <div id="profileContainer">
+      <div class="loading-state"><div class="spinner"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- POST DETAIL -->
+
+<div id="page-detail" class="page">
+  <div class="container">
+    <div id="detailContainer"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+
+<nav id="bottomnav">
+  <button class="nav-tab active" data-page="home" onclick="navigate('home',this)">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+    Feed
+  </button>
+  <button class="nav-tab" data-page="trending" onclick="navigate('trending',this)">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+    Trending
+  </button>
+  <button class="nav-tab-confess" onclick="navigate('confess',document.querySelector('[data-page=confess]'))">
+    <svg fill="none" stroke="white" viewBox="0 0 24 24" width="26" height="26"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+  </button>
+  <button class="nav-tab" data-page="notifications" onclick="navigate('notifications',this)">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+    Alerts
+  </button>
+  <button class="nav-tab" data-page="profile" onclick="navigate('profile',this)">
+    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+    Profile
+  </button>
+</nav>
+
+</div><!-- end #app -->
+
+<!-- AUTH MODAL -->
+
+<div id="authModal" class="modal-overlay hidden" onclick="closeModalOutside(event)">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="closeAuth()">✕</button>
+    <div class="modal-header" id="authModalHeader"></div>
+    <div class="modal-body" id="authModalBody"></div>
+  </div>
+</div>
+
+<!-- PAYWALL MODAL -->
+
+<div id="paywallModal" class="modal-overlay hidden" onclick="closeModalOutside(event,'paywallModal')">
+  <div class="modal paywall-modal" style="position:relative">
+    <button class="modal-close" onclick="closePaywall()">✕</button>
+    <div class="modal-header">
+      <div class="modal-icon">🔒</div>
+      <h2 class="modal-title">Keep reading...</h2>
+      <p class="modal-subtitle">Sign up free to read full confessions, vote, comment and more 💔</p>
+    </div>
+    <div class="modal-body">
+      <div class="paywall-blur-preview" id="paywallPreview">
+        The rest of this story is... intense. You're not ready for what happened next.
+      </div>
+      <button class="btn btn-primary btn-block" onclick="closePaywall();showAuth('signup')">Create Free Account</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="closePaywall();showAuth('login')">Already a member? Login</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+
+<div id="reportModal" class="modal-overlay hidden" onclick="closeModalOutside(event,'reportModal')">
+  <div class="modal" style="position:relative">
+    <button class="modal-close" onclick="document.getElementById('reportModal').classList.add('hidden')">✕</button>
+    <div class="modal-header">
+      <div class="modal-icon">🚩</div>
+      <h2 class="modal-title">Report Content</h2>
+    </div>
+    <div class="modal-body" id="reportModalBody"></div>
+  </div>
+</div>
 
 <script>
-/* ══════════════════════════════════════
-   CONFIG
-══════════════════════════════════════ */
-var SB_URL     = 'https://rihritdkzvmqoeckleud.supabase.co';
-var SB_KEY     = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaHJpdGRrenZtcW9lY2tsZXVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NjE5MzYsImV4cCI6MjA5MzMzNzkzNn0.gWTE4vyCid3vE6-pxAf_ccRB7o5Gec8vd5nHJrTDe1M'; // Supabase → Settings → API → anon/public key
-var ADMIN_EMAIL= 'netlifesocial@gmail.com';
-var NOTIFY_URL = SB_URL + '/functions/v1/notify-email';
-var MAX_DAY    = 5;
-var IS_CFG     = SB_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaHJpdGRrenZtcW9lY2tsZXVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NjE5MzYsImV4cCI6MjA5MzMzNzkzNn0.gWTE4vyCid3vE6-pxAf_ccRB7o5Gec8vd5nHJrTDe1M';
-var sb         = null;
+/* ═══════════════════════════════════════
+   HEARTCONFIA — Main Application Script
+═══════════════════════════════════════ */
 
-if (IS_CFG) {
-  try { sb = window.supabase.createClient(SB_URL, SB_KEY); }
-  catch(e) { console.warn('SB init failed', e); }
-}
+// ── CONFIG ──
+const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
 
-/* ══════════════════════════════════════
-   STATE
-══════════════════════════════════════ */
-var STATE = {
-  page: 'home',
-  user: null,
-  posts: [],
-  active: null,
-  tagFilter: 'all',
-  comments: {},
-  reactions: {},
-  wiwVotes: {},
-  upvoted: {},
-  savedPosts: {},
-  notifs: [],
-  notifOpen: false,
+// Initialize Supabase (gracefully handles missing keys for demo)
+let supabase = null;
+try {
+  if (SUPABASE_URL !== 'YOUR_SUPABASE_URL') {
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+} catch(e) {}
+
+// ── APP STATE ──
+let currentUser = null;
+let currentPage = 'home';
+let currentFilter = 'all';
+let postsOffset = 0;
+const PAGE_SIZE = 10;
+let currentDetailPost = null;
+let realtimeChannels = [];
+let isAdmin = false;
+
+// ── SEED DATA (Emotional, curiosity-driven) ──
+const SEED_POSTS = [
+  {
+    id:'p1',author:'Heart_4821',type:'confession',
+    title:"I checked his phone at 2AM and saw something I still wish I never saw…",
+    content:`I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years. Three years of building something I thought was real.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... "last night was everything." \n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — "the roommate."\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.`,
+    tags:['cheating','betrayal','trust'],created_at:new Date(Date.now()-3600000*2).toISOString(),
+    reactions:{💔:247,😭:189,😡:312,😳:98,😂:5,🔥:45},
+    votes:{he:412,she:23,both:89},views:1840,comment_count:143,trending:true,
+    preview_text:"He called me 'the roommate' to her. After 3 years. After we talked about kids last month."
+  },
+  {
+    id:'p2',author:'Confess_7732',type:'advice',
+    title:"She deleted 6 months of messages the day I asked her to be my girlfriend. What do I do?",
+    content:`We've been talking every single day for 6 months. I thought we were building something serious. Yesterday I finally asked her if she wanted to make things official.\n\nShe said "yes, of course" and kissed me.\n\nBut this morning I noticed something. When I opened our WhatsApp chat, it starts from yesterday. The ENTIRE history — 6 months of messages — is gone from my side. She claims she "doesn't know what happened" and that it was a "phone glitch."\n\nI didn't say anything. I smiled and went to work.\n\nBut I need to know: what was in those messages that she needed to delete the exact night I made us official?\n\nDo I ask directly? Do I pretend I didn't notice? Do I just... end this before it starts?`,
+    tags:['trust','advice','suspicious'],created_at:new Date(Date.now()-3600000*5).toISOString(),
+    reactions:{💔:89,😭:34,😡:156,😳:412,😂:22,🔥:78},
+    votes:{he:67,she:298,both:145},views:2100,comment_count:89,trending:true,
+    preview_text:"6 months of messages. Gone. The same night I asked her to be mine."
+  },
+  {
+    id:'p3',author:'Vibe_1190',type:'confession',
+    title:"My boyfriend proposed to me while actively dating someone else. I found out 3 days later.",
+    content:`He got down on one knee on a Friday. I said yes, cried, called my mum, posted on Instagram. Classic fairytale moment.\n\nMonday morning his side girl posted a photo with the caption "he told me she doesn't mean anything." The photo was from the same Saturday — the day after he proposed to me.\n\nI've been engaged for 72 hours and already a cheater's fiancée.\n\nI haven't taken the ring off yet. I don't know why. Maybe because the moment I do, none of it was real. The proposal, the future, the person I thought I knew.\n\nHe's been calling. Texting. Showing up. His family is calling me too — apparently they "knew nothing."\n\nSomeone tell me: am I wrong for still having the ring on?`,
+    tags:['cheating','engagement','betrayal'],created_at:new Date(Date.now()-3600000*8).toISOString(),
+    reactions:{💔:891,😭:567,😡:1203,😳:456,😂:12,🔥:234},
+    votes:{he:1456,she:34,both:123},views:8900,comment_count:312,trending:true,
+    preview_text:"He proposed Friday. She posted a photo with him Saturday. I found out Monday."
+  },
+  {
+    id:'p4',author:'Heart_9012',type:'confession',
+    title:"I've been emotionally cheating for 8 months and I think I'm in love with both of them",
+    content:`Before you judge me — I know. I already know.\n\nMy girlfriend of 4 years is the most stable, loving person I've ever met. She's building a future with me. She shows up every time.\n\nBut I've been talking to someone else since last year. We've never touched. We've never even been in the same city. But the conversations... I've never felt more understood in my life.\n\nI tell her things I can't say to anyone. She tells me things she says she's never told anyone.\n\nMy girlfriend doesn't know. She thinks everything is fine. Last week she started looking at apartments for us to move in together.\n\nI don't know how to choose. I don't know if I want to choose. Does that make me the worst person alive?\n\nBefore you answer — yes, I already know the answer. I just can't accept it yet.`,
+    tags:['cheating','advice','emotional'],created_at:new Date(Date.now()-3600000*12).toISOString(),
+    reactions:{💔:234,😭:145,😡:567,😳:89,😂:34,🔥:189},
+    votes:{he:678,she:89,both:234},views:4300,comment_count:201,trending:false,
+    preview_text:"We've never touched. Never been in the same city. But I've never felt more understood in my life."
+  },
+  {
+    id:'p5',author:'Shadow_3341',type:'advice',
+    title:"He paid for my surgery, my rent, and my family's debt. Now he wants to leave. What are my rights?",
+    content:`We've been together for 2 years. Not married. But he has been the only reason my family has been surviving.\n\nWhen my mum got sick, he paid the hospital bill without me asking. When my landlord was threatening eviction, he paid 6 months upfront. He sorted my younger brother's school fees for an entire year.\n\nI never asked for any of this. He did it because he wanted to. We were genuinely in love — or at least I was.\n\nLast week he said he wants to "explore his options" because he met someone at work who "challenges him intellectually."\n\nNow he wants to pull back financially and emotionally, but still "be friends."\n\nHere's my problem: my family is still in crisis. The obligations he took on are not done. I have nowhere to turn.\n\nAm I wrong for feeling like he doesn't get to just walk away from all of this?`,
+    tags:['advice','money','breakup'],created_at:new Date(Date.now()-3600000*18).toISOString(),
+    reactions:{💔:456,😭:389,😡:234,😳:178,😂:67,🔥:123},
+    votes:{he:234,she:456,both:567},views:3200,comment_count:178,trending:false,
+    preview_text:"He paid for everything. Surgery. Rent. My family. Now he wants to leave for someone who 'challenges him intellectually.'"
+  },
+  {
+    id:'p6',author:'Anon_5529',type:'confession',
+    title:"I read my dead ex's journal 2 years after she passed. I wish I hadn't.",
+    content:`She passed away suddenly two years ago. Car accident. She was 26. We had been broken up for 4 months at the time.\n\nHer mother gave me her journal last week. Said she would have wanted me to have it. She had written about me in almost every entry.\n\nI thought I was going to cry reading love. Instead I found something else.\n\nShe had known I cheated. She never told me she knew. She wrote about it 14 times — processing it, forgiving me, choosing to stay silent because she "didn't want to lose me."\n\nWe broke up for "other reasons." She never brought it up once.\n\nShe chose peace over confrontation. She chose me over herself.\n\nAnd I never got to apologize. I never even knew she was carrying that.\n\nI don't know how to live with this.`,
+    tags:['confession','grief','guilt'],created_at:new Date(Date.now()-3600000*24).toISOString(),
+    reactions:{💔:1234,😭:2345,😡:156,😳:234,😂:12,🔥:89},
+    votes:{he:1890,she:12,both:145},views:12000,comment_count:567,trending:true,
+    preview_text:"She knew I cheated. She never told me. She died never telling me."
+  },
+  {
+    id:'p7',author:'Confess_8801',type:'advice',
+    title:"Found a pregnancy test in my boyfriend's car. I'm not pregnant. He lives alone.",
+    content:`We've been dating 7 months. I thought things were going well.\n\nYesterday I was moving his gym bag in the backseat and a pregnancy test box fell out. Open box. Used test.\n\nI'm not pregnant. I haven't been near a pregnancy test in months.\n\nHe lives alone. No sisters. No female roommates. No "explanation" that makes sense.\n\nI put the box back exactly where it was. I got in the passenger seat. He drove us to dinner. I smiled the whole time.\n\nNow I'm home and I can't decide whether to ask him directly or just disappear from his life without explanation.\n\nWhat would you do?`,
+    tags:['suspicious','advice','cheating'],created_at:new Date(Date.now()-3600000*30).toISOString(),
+    reactions:{💔:345,😭:123,😡:789,😳:1203,😂:45,🔥:234},
+    votes:{he:890,she:78,both:234},views:5600,comment_count:234,trending:true,
+    preview_text:"I put the box back. I smiled through dinner. Now I'm home, staring at my phone."
+  },
+  {
+    id:'p8',author:'Ghost_2270',type:'confession',
+    title:"My wife and I haven't had a real conversation in 8 months. We're still living together.",
+    content:`We don't fight. We don't argue. We just... exist in the same space.\n\nWe've been married 5 years. We share a bed, eat dinner together, watch TV. We say "good morning" and "goodnight."\n\nBut 8 months ago something shifted and I can't name what it was. She stopped telling me about her day. I stopped asking.\n\nI'm not unhappy enough to leave. She doesn't seem unhappy enough to leave either. We're just... comfortable in the silence.\n\nOur friends think we're a model couple. We look perfect from outside.\n\nSometimes I look at her across the dinner table and I genuinely wonder if she's lonelier inside this marriage than she was before it.\n\nIs this just what long-term relationships become? Or are we already over and just refusing to admit it?`,
+    tags:['marriage','emotional','distance'],created_at:new Date(Date.now()-3600000*36).toISOString(),
+    reactions:{💔:789,😭:456,😡:34,😳:234,😂:12,🔥:67},
+    votes:{he:145,she:123,both:890},views:7800,comment_count:345,trending:false,
+    preview_text:"We share a bed, eat together, watch TV. We haven't had a real conversation in 8 months."
+  },
+  {
+    id:'p9',author:'Truth_9931',type:'confession',
+    title:"He told me he loved me 73 times before I realized he was saying it to 3 other women too",
+    content:`I counted. 73 times in 4 months.\n\nI kept every voice note. Every voice message where he said those words like they were only mine.\n\nThen one of the other women contacted me. She had counted too: 71 times.\n\nThere was a third. 68 times.\n\nWe all compared screenshots. We were all his "everything." We all got the same "I've never felt this way before" speech. Word. For. Word.\n\nHe had copy-pasted love to all of us.\n\nWhat does that even mean? Were the feelings fake? Or does he just feel it so easily that it means nothing?\n\nThe scariest part isn't that he lied. It's that when I was reading those messages, I still felt them. Even knowing what I know now. They still felt real to me.`,
+    tags:['cheating','manipulation','confession'],created_at:new Date(Date.now()-3600000*48).toISOString(),
+    reactions:{💔:567,😭:234,😡:1456,😳:345,😂:89,🔥:456},
+    votes:{he:2100,she:34,both:234},views:11000,comment_count:478,trending:true,
+    preview_text:"73 times he said it to me. 71 times to her. 68 to another. Copy-pasted love."
+  },
+  {
+    id:'p10',author:'Anon_4410',type:'advice',
+    title:"He blocked me on everything 6 hours after I told him I was pregnant. What are my options?",
+    content:`We were together for 2 years. I found out I was pregnant last week. I was scared, but I thought we'd figure it out together.\n\nI called him. He was quiet for a long time. He said "let me think."\n\n6 hours later: blocked on WhatsApp. Blocked on Instagram. My number redirects to voicemail now.\n\nHis friends say they "don't know where he is." His mum hasn't returned my messages.\n\nI'm 6 weeks. I'm alone. I'm scared. I'm angry in a way I didn't know was possible.\n\nI'm not here to shame him publicly — I haven't posted his name or face anywhere. I'm genuinely just asking: legally, practically, emotionally — what do I do from here?\n\nI'm not even sure if I want to keep the pregnancy yet. But I know I don't want to make that decision alone because someone ran from his responsibilities.`,
+    tags:['pregnancy','abandonment','advice'],created_at:new Date(Date.now()-3600000*60).toISOString(),
+    reactions:{💔:1123,😭:890,😡:2345,😳:456,😂:23,🔥:345},
+    votes:{he:3400,she:45,both:189},views:18000,comment_count:689,trending:true,
+    preview_text:"Two years together. I told him I was pregnant. 6 hours later: blocked everywhere."
+  }
+];
+
+const SEED_COMMENTS = {
+  p1:[
+    {id:'c1',author:'Vibe_9923',text:"The fact that you're still in that apartment is actually survival mode. Your mind is protecting you from a decision you're not ready to make. Take your time. But please, take care of yourself first.",upvotes:234,downvotes:12,pinned:true,time:'1h ago'},
+    {id:'c2',author:'Truth_4401',text:"'The roommate.' I felt sick reading that. That's not just cheating. That's complete erasure. He didn't just betray you — he was EMBARRASSED by you. That's different.",upvotes:456,downvotes:34,pinned:false,time:'45m ago'},
+    {id:'c3',author:'Ghost_7712',text:"Please don't let him know you know until you have a plan. Somewhere to go. Someone who knows. Don't give him the chance to spin this narrative first.",upvotes:189,downvotes:8,pinned:false,time:'2h ago'},
+  ],
+  p3:[
+    {id:'c4',author:'Heart_0012',text:"Keep the ring on as long as you need to. There's no timeline for this kind of grief. You didn't just lose a boyfriend — you lost a future you believed in. That's not small.",upvotes:567,downvotes:23,pinned:true,time:'6h ago'},
+    {id:'c5',author:'Anon_3312',text:"He proposed to you on a FRIDAY and was with her on SATURDAY. He didn't even wait 24 hours. This wasn't a moment of weakness. This was a plan.",upvotes:789,downvotes:45,pinned:false,time:'7h ago'},
+    {id:'c6',author:'Shadow_8834',text:"The family calling you is a red flag. They're in crisis control mode, not support mode. Don't let them make this about managing his reputation.",upvotes:234,downvotes:12,pinned:false,time:'8h ago'},
+  ],
+  p2:[
+    {id:'c7',author:'Confess_2281',text:"She didn't delete those messages because of a glitch. Nobody has that kind of lucky timing. The real question is: what are you going to do with that knowledge?",upvotes:345,downvotes:23,pinned:true,time:'4h ago'},
+    {id:'c8',author:'Vibe_5591',text:"I'd do one thing: screenshot the current chat with the exact date it starts, save it somewhere. Then smile and say nothing. Let her feel safe. Then investigate carefully.",upvotes:289,downvotes:34,pinned:false,time:'4h ago'},
+  ],
 };
 
-/* ══════════════════════════════════════
-   UTILS
-══════════════════════════════════════ */
-var TAGS = ['cheating','breakup','dating','marriage','situationship'];
-var RXLIST = ['🔥','😂','😢','😡'];
-var REASONS = ['Harmful content','Harassment','Spam','Fake story','Other'];
+const REACTIONS_LIST = ['💔','😭','😡','😳','😂','🔥'];
 
-function ago(iso) {
-  var s = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (s < 60)    return 'just now';
-  if (s < 3600)  return Math.floor(s/60) + 'm ago';
-  if (s < 86400) return Math.floor(s/3600) + 'h ago';
-  return Math.floor(s/86400) + 'd ago';
-}
-function rnd(min,max){return Math.floor(Math.random()*(max-min+1))+min;}
-function makeName(){
-  var p=['Heart','Confess','Soul','Echo','Ache','Muse','Pulse','Veil','Rift','Dusk'];
-  return p[rnd(0,p.length-1)]+'_'+rnd(1000,9999);
-}
-function esc(str){return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function getStreak(){try{return JSON.parse(localStorage.getItem('hc_sk')||'{"c":0,"l":""}');}catch(e){return{c:0,l:''};}}
-function bumpStreak(){var t=new Date().toDateString();var d=getStreak();if(d.l===t)return d;var nd={c:d.l===new Date(Date.now()-86400000).toDateString()?d.c+1:1,l:t};localStorage.setItem('hc_sk',JSON.stringify(nd));return nd;}
-function feedScore(p){var rx=Object.values(p.reaction_counts||{}).reduce(function(a,v){return a+v;},0);var eng=rx+(p.comment_count||0)*3+((p.vote_a||0)+(p.vote_b||0))*1.5;var age=(Date.now()-new Date(p.created_at).getTime())/3600000;return eng/Math.pow(age+2,1.8);}
-function cscore(p){var t=(p.vote_a||0)+(p.vote_b||0);if(t<3)return 0;return Math.pow(t,1.5)/(Math.abs((p.vote_a||0)-(p.vote_b||0))+1);}
-function totalRx(p){return Object.values(p.reaction_counts||{}).reduce(function(a,v){return a+v;},0);}
-function wiwTotal(p){return (p.wiw_he||0)+(p.wiw_she||0)+(p.wiw_both||0);}
-function notify(type,payload){
-  if(!IS_CFG) return;
-  fetch(NOTIFY_URL,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY},body:JSON.stringify({type:type,payload:payload})}).catch(function(){});
-}
-function emoBadges(p){
-  var b=[];
-  var ageH=(Date.now()-new Date(p.created_at).getTime())/3600000;
-  var s=feedScore(p);
-  if(s>200&&ageH<24) b.push('<span class="badge b-hot">🔥 Trending Now</span>');
-  else if(s>80)      b.push('<span class="badge b-trnd">🔥 Trending</span>');
-  if((p.reaction_counts&&p.reaction_counts['😢']||0)>200) b.push('<span class="badge b-sad">💔 Saddest</span>');
-  if((p.reaction_counts&&p.reaction_counts['😡']||0)>300) b.push('<span class="badge b-toxic">😳 Toxic</span>');
-  return b.slice(0,2).join('');
-}
-function tagBadges(tags){
-  return (tags||[]).slice(0,2).map(function(t){return '<span class="tag t-'+t+'">'+t+'</span>';}).join('');
-}
-function tagClass(t){return 't-'+t;}
+// ── NAVIGATION ──
+function navigate(page, btnEl) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  if(btnEl) btnEl.classList.add('active');
+  currentPage = page;
+  window.scrollTo(0,0);
 
-/* ══════════════════════════════════════
-   TOAST
-══════════════════════════════════════ */
-function toast(msg, type) {
-  var id = Date.now();
-  var el = document.createElement('div');
-  el.className = 'toast' + (type==='success'?' suc':type==='error'?' er':'');
-  el.innerHTML = (type==='success'?'✅':type==='error'?'❌':'💬') + ' ' + esc(msg);
-  document.getElementById('toasts').appendChild(el);
-  setTimeout(function(){ el.remove(); }, 3200);
+  if(page==='home') renderFeed();
+  else if(page==='trending') renderTrending();
+  else if(page==='confess') renderConfessForm();
+  else if(page==='notifications') renderNotifications();
+  else if(page==='profile') renderProfile();
 }
 
-/* ══════════════════════════════════════
-   SEED DATA
-══════════════════════════════════════ */
-var STORIES = [
-  {type:'confession',title:"I picked up my girlfriend's phone to check the time and saw something I still can't forget…",content:"She'd left her messages open. I wasn't snooping — I just wanted the time.\n\nThe name at the top was someone I'd never heard of. The last message was sent at 2:47am. That's all I could read before my hands started shaking.\n\nWe've been together four years. I put the phone back down. That was three weeks ago and I haven't said a word.",tags:['cheating']},
-  {type:'confession',title:"My husband cried at our wedding. I was the reason — but not in the way anyone thought.",content:"Standing at the altar watching him cry, I felt nothing. Not nerves, not joy — just a hollow silence where love was supposed to be.\n\nI smiled through the whole ceremony. Our photos look beautiful. I kept waiting for the feeling to arrive. That was 8 months ago.",tags:['marriage']},
-  {type:'confession',title:"She doesn't know I drove past her apartment every night for a month after we broke up.",content:"Not to confront her. Just to feel close to something that used to be mine.\n\nI'd park across the street, watch the light in her window, and drive home.\n\nI've never told anyone that. I barely let myself think it.",tags:['breakup']},
-  {type:'confession',title:"I've been sleeping in the guest room for 6 months. My husband thinks it's my back.",content:"My back is fine.",tags:['marriage']},
-  {type:'confession',title:"The person I was cheating with just had a baby. It might be mine.",content:"We ended things eight months ago. I'm married. My wife wants kids. We've been trying.\n\nShe texted me last week. A photo. No words.\n\nI don't know what to do. I don't know who to tell.",tags:['cheating']},
-  {type:'confession',title:"I stayed in a 6-year relationship because I was afraid of losing the apartment.",content:"When you're 27 in a city where rent is impossible, 'I love you' starts sounding like 'I can't afford to not love you.'\n\nWe finally broke up. I'm on a futon in my cousin's living room. I've never been happier.",tags:['breakup','situationship']},
-  {type:'confession',title:"My situationship ended and I'm grieving harder than I ever did after a real breakup.",content:"We never put a label on it. So technically nothing ended. He just stopped texting the same way.\n\nI have to pretend I'm fine because we weren't even officially together.\n\nHow do you mourn something that was never named?",tags:['situationship']},
-  {type:'confession',title:"I don't think I've ever been in love. I've been in comfort, in convenience — but never love.",content:"I'm 34. Three long-term relationships. Every time someone asked if I loved them, I said yes because I wanted it to be true.\n\nI still don't know what it's supposed to feel like.",tags:['dating','situationship']},
-  {type:'advice',title:"He said 'I love you' for the first time during a fight. Does that count?",content:"We've been together 14 months. We never say it. Last night in the middle of an argument he blurted 'because I love you, that's why.'\n\nWe didn't acknowledge it. The fight ended. He fell asleep. I've been awake for three hours.",tags:['dating']},
-  {type:'advice',title:"My girlfriend went through my phone, found nothing, and now wants all my passwords.",content:"I gave her my phone password. She went through everything and found nothing.\n\nNow she wants my Instagram, Gmail, and WhatsApp. She says if I have nothing to hide I shouldn't mind.\n\nI don't know how to explain why this is wrong without sounding defensive.",tags:['dating']},
-  {type:'advice',title:"My husband said he's 'not attracted to me anymore' but wants to work on the marriage.",content:"He said it kindly. He loves me but the attraction faded and he's been holding it in.\n\nHe doesn't want to leave. He wants to 'figure it out together.'\n\nI don't know if I want to be someone's project.",tags:['marriage']},
-  {type:'advice',title:"She's been 'needing space' for 3 weeks. We still live together. What does that even mean?",content:"She said she needed to 'breathe' and 'think.' I said okay.\n\nWe're cordial. We cook. We sleep on different sides of a bed in silence. She hasn't said what she's thinking about.\n\nDo I ask? Do I wait?",tags:['dating','marriage']},
-  {type:'advice',title:"Found out my boyfriend of 2 years has been hiding $40k in debt from me.",content:"We've been having the 'moving in together' conversation for months.\n\nHe finally showed me his finances and my stomach dropped.\n\nHe apologized and said he was embarrassed. I believe him. But can I build a future with someone who hid this?",tags:['dating','marriage']},
-  {type:'advice',title:"We broke up 4 months ago and I'm fine — except I compare every person I meet to her.",content:"New dates aren't bad. Some are good. But there's always a moment where I notice something she did better, or something she would have found funny.\n\nIs this grief or something I should be more worried about?",tags:['breakup']},
-  {type:'advice',title:"My ex keeps texting me 'just to check in' and I don't know if I want him to stop.",content:"We ended mutually. No disaster. He texts maybe once every two weeks — nothing intense. How's the dog, did you see that show.\n\nMy friends say block him. But it feels like closing a door I'm not sure I want shut.",tags:['breakup']},
-];
+// ── AUTH ──
+function showAuth(mode) {
+  const modal = document.getElementById('authModal');
+  const header = document.getElementById('authModalHeader');
+  const body = document.getElementById('authModalBody');
+  modal.classList.remove('hidden');
 
-var CMTS = [
-  "The part that got me was the detail. This is someone who remembers every second of it.",
-  "I had an ex who did something almost identical. It took me four years. You're not alone.",
-  "The other person is absolutely in the wrong here. No debate.",
-  "People always assume these are black and white. Both people are usually hurting.",
-  "The courage it takes to write this out anonymously is underrated.",
-  "Red flag after red flag. Everyone around them probably saw it except the person living it.",
-  "Sometimes you're not the villain in your own story as much as you think.",
-  "This made me close my eyes for a second. I know this feeling.",
-  "The ending hit different. I wasn't expecting it to hurt like that.",
-  "OP knows exactly what they should do. The question is courage.",
-  "Someone needed to say this out loud. Thank you.",
-  "I've been on the other side of this exact situation. Just as painful.",
-];
-
-function initPosts() {
-  var ages=[2,5,8,12,18,24,36,48,72,96,2,7,11,15,19];
-  STATE.posts = STORIES.map(function(s,i){
-    var age=ages[i%ages.length]*3600000;
-    var base=rnd(80,1800);
-    return Object.assign({},s,{
-      id:'p'+i, anonymous_name:makeName(),
-      created_at:new Date(Date.now()-age).toISOString(),
-      reaction_counts:{'🔥':rnd(base*.3,base*.8),'😂':rnd(base*.05,base*.2),'😢':rnd(base*.2,base*.8),'😡':rnd(base*.05,base*.4)},
-      comment_count:rnd(15,450),
-      vote_a:rnd(20,900), vote_b:rnd(20,900),
-      wiw_he:rnd(10,500), wiw_she:rnd(10,500), wiw_both:rnd(5,180),
-      user_id:'u'+i, view_count:rnd(100,3000),
-    });
-  });
-}
-
-function initComments() {
-  STORIES.forEach(function(s,i){
-    STATE.comments['p'+i] = Array.from({length:rnd(4,7)}, function(_,j){
-      return {id:'c'+i+'_'+j, anonymous_name:makeName(), content:CMTS[rnd(0,CMTS.length-1)],
-        created_at:new Date(Date.now()-rnd(300000,7200000)).toISOString(),
-        upvotes:rnd(1,320), heated:Math.random()>.65, user_id:'cu'+j};
-    });
-  });
-}
-
-/* ══════════════════════════════════════
-   RENDER HELPERS
-══════════════════════════════════════ */
-function pctStr(v, total){ return total>0?Math.round((v/total)*100):33; }
-
-function renderWiwBars(post, myVote) {
-  var votes = STATE.wiwVotes[post.id] || {he:post.wiw_he||0,she:post.wiw_she||0,both:post.wiw_both||0};
-  var total = votes.he+votes.she+votes.both;
-  var pA=pctStr(votes.he,total), pB=pctStr(votes.she,total), pC=pctStr(votes.both,total);
-  var leading = total>0?(votes.he>votes.she&&votes.he>votes.both?'he':votes.she>votes.he&&votes.she>votes.both?'she':'both'):null;
-  var verdicts={he:'Community says: He is wrong 🟥',she:'Community says: She is wrong 🟪',both:'Community says: Both wrong ⚪'};
-  return '<div class="wbars">'
-    +'<div class="wbar-row"><span class="wbar-lbl">🟥 He</span><div class="wbar-track"><div class="wbar-fill wf-he" style="width:'+pA+'%"></div></div><span class="wpct" style="color:#f87171">'+pA+'%</span></div>'
-    +'<div class="wbar-row"><span class="wbar-lbl">🟪 She</span><div class="wbar-track"><div class="wbar-fill wf-she" style="width:'+pB+'%"></div></div><span class="wpct" style="color:#a78bfa">'+pB+'%</span></div>'
-    +'<div class="wbar-row"><span class="wbar-lbl">⚪ Both</span><div class="wbar-track"><div class="wbar-fill wf-both" style="width:'+pC+'%"></div></div><span class="wpct" style="color:#d1d5db">'+pC+'%</span></div>'
-    +'</div><div class="wtot">'+total.toLocaleString()+' votes</div>'
-    +(myVote&&leading?'<div class="wverd wv-'+leading+'">'+verdicts[leading]+'</div>':'');
-}
-
-function renderWiw(post) {
-  var pid = post.id;
-  var myVote = STATE.wiwVotes[pid] && STATE.wiwVotes[pid]._mine;
-  if (myVote || wiwTotal(post)>0) {
-    return '<div class="wiw"><div class="wiw-ttl">⚖️ Who is in the wrong?</div>'+renderWiwBars(post,myVote)+'</div>';
+  if(mode==='signup') {
+    header.innerHTML=`<div class="modal-icon">💔</div><h2 class="modal-title">Join HeartConfia</h2><p class="modal-subtitle">Anonymous. Free. No judgment.</p>`;
+    body.innerHTML=`
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" id="authEmail" placeholder="your@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="authPass" placeholder="At least 6 characters"/>
+      </div>
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px;line-height:1.5">Your email stays private. You'll get an anonymous username like <strong style="color:var(--text2)">Heart_4821</strong></p>
+      <button class="btn btn-primary btn-block" onclick="doSignup()">Create Free Account</button>
+      <div class="modal-footer">Already have an account? <a onclick="showAuth('login')">Login</a></div>
+    `;
+  } else {
+    header.innerHTML=`<div class="modal-icon">🔐</div><h2 class="modal-title">Welcome back</h2><p class="modal-subtitle">Continue reading the confessions</p>`;
+    body.innerHTML=`
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input type="email" class="form-input" id="authEmail" placeholder="your@email.com"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-input" id="authPass" placeholder="Your password"/>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="doLogin()">Login</button>
+      <div class="modal-footer">New here? <a onclick="showAuth('signup')">Create account</a></div>
+    `;
   }
-  return '<div class="wiw" id="wiw-'+pid+'">'
-    +'<div class="wiw-ttl">⚖️ Who is in the wrong?</div>'
-    +'<div class="wiw-opts">'
-    +'<button class="wb" onclick="voteWiw(\''+pid+'\',\'he\')"><span class="wi">🟥</span>He is wrong</button>'
-    +'<button class="wb" onclick="voteWiw(\''+pid+'\',\'she\')"><span class="wi">🟪</span>She is wrong</button>'
-    +'<button class="wb" onclick="voteWiw(\''+pid+'\',\'both\')"><span class="wi">⚪</span>Both wrong</button>'
-    +'</div></div>';
 }
 
-function renderReactions(post, inDetail) {
-  var pid = post.id;
-  var reactions = STATE.reactions[pid] || post.reaction_counts || {};
-  var mine = STATE.reactions[pid] && STATE.reactions[pid]._mine;
-  var rxHtml = RXLIST.map(function(r){
-    var cnt = (reactions[r]||0);
-    return '<button class="rxb'+(mine===r?' on':'')+'" onclick="doReact(event,\''+pid+'\',\''+r+'\','+!!inDetail+')">'
-      +r+'<span>'+(cnt>0?cnt.toLocaleString():'')+'</span></button>';
-  }).join('');
-  return rxHtml;
-}
-
-/* ══════════════════════════════════════
-   POST CARD HTML
-══════════════════════════════════════ */
-function postCardHtml(post, delay) {
-  var pid = post.id;
-  var rx  = totalRx(post);
-  var wiw = wiwTotal(post);
-  var saved = STATE.savedPosts[pid];
-  var eb  = emoBadges(post);
-  var tags = tagBadges(post.tags);
-  var typeLabel = post.type==='confession'?'💔 Confession':post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take';
-  var typeClass = 'ptype-'+post.type;
-
-  var cardTop = '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;gap:6px">'
-    +'<div><span class="ptype '+typeClass+'">'+typeLabel+'</span>'
-    +(eb?'<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px">'+eb+'</div>':'')
-    +'</div>'
-    +'<div style="display:flex;gap:4px;align-items:center">'
-    +tags
-    +'<button style="background:none;border:none;color:'+(saved?'#f59e0b':'var(--t3)')+';cursor:pointer;font-size:15px;padding:0 2px;line-height:1" onclick="toggleSave(event,\''+pid+'\')">'+(saved?'🔖':'🔖')+'</button>'
-    +'<button style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:16px;padding:0 2px;line-height:1" onclick="showReport(event,\''+pid+'\',null)">⋯</button>'
-    +'</div></div>';
-
-  var preview = STATE.user
-    ? '<div class="pbody">'+esc(post.content)+'</div>'
-    : '<div class="blw"><div style="font-size:14px;line-height:1.7;color:var(--t2)">'+esc(post.content.slice(0,170))+'…</div></div>'
-      +'<div class="pw"><h3>Find out what happened next 💔</h3><p>Sign up free to read the full story and join the debate.</p>'
-      +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">'
-      +'<button class="btn bp btn-sm" onclick="showAuth(\'signup\')">Sign up free</button>'
-      +'<button class="btn bs btn-sm" onclick="showAuth(\'login\')">Log in</button>'
-      +'</div></div>';
-
-  var engRow = STATE.user ? '<div class="eng-row">'
-    +'<div class="rx-row">'+renderReactions(post,false)+'</div>'
-    +'<div style="display:flex;gap:8px">'
-    +'<span>💬 '+post.comment_count.toLocaleString()+'</span>'
-    +(wiw>0?'<span style="color:'+(wiw>100?'#f59e0b':'var(--t2)')+'">⚖️ '+wiw.toLocaleString()+'</span>':'')
-    +'</div></div>' : '';
-
-  var wiwPreview = (STATE.user&&wiw>0)
-    ? '<div style="display:flex;align-items:center;gap:7px;padding:7px 11px;background:var(--c2);border-radius:9px;margin-bottom:10px;cursor:pointer;font-size:13px" onclick="openPost(\''+pid+'\')">'
-      +'<span style="color:var(--t3);font-weight:600">⚖️ Who is wrong?</span>'
-      +'<span style="color:var(--t2)">'+wiw.toLocaleString()+' voted</span>'
-      +'<span style="margin-left:auto;font-size:12px;color:var(--rose);font-weight:600">Results →</span>'
-      +'</div>' : '';
-
-  return '<div class="card clickable" id="card-'+pid+'" style="animation-delay:'+(delay||0)+'s;animation:up .4s ease both" onclick="openPost(\''+pid+'\')">'
-    +cardTop
-    +'<div class="ptitle">'+esc(post.title)+'</div>'
-    +'<div class="pmeta"><span class="pname">@'+esc(post.anonymous_name)+'</span><span>·</span><span>'+ago(post.created_at)+'</span>'
-    +(rx>0?'<span>·</span><span>'+rx.toLocaleString()+' reactions</span>':'')
-    +'</div>'
-    +preview
-    +wiwPreview
-    +engRow
-    +'</div>';
-}
-
-/* ══════════════════════════════════════
-   PAGES
-══════════════════════════════════════ */
-function getFeed() {
-  var f = STATE.page==='confessions' ? STATE.posts.filter(function(p){return p.type==='confession';})
-         :STATE.page==='advice'       ? STATE.posts.filter(function(p){return p.type==='advice';})
-         :STATE.posts;
-  if (STATE.tagFilter!=='all') f=f.filter(function(p){return (p.tags||[]).includes(STATE.tagFilter);});
-  return f.sort(function(a,b){return feedScore(b)-feedScore(a);});
-}
-
-function renderFeedPage() {
-  var feed = getFeed();
-  var isHome = STATE.page==='home';
-  var titleMap = {confessions:'Confessions',advice:'Seeking Advice'};
-  var isCfg = IS_CFG;
-
-  var hero = isHome ? '<div class="hero"><h1><span>💔</span> HeartConfia</h1><p>The stories people carry alone. Share yours. Judge theirs. Feel everything.</p>'
-    +(STATE.user?'<button class="btn bp" onclick="setPage(\'create\')">💔 Share your confession</button>'
-    :'<div style="display:flex;gap:9px;justify-content:center;flex-wrap:wrap"><button class="btn bp" onclick="showAuth(\'signup\')">💔 Join anonymously</button><button class="btn bs" onclick="showAuth(\'login\')">Log in</button></div>')
-    +'</div>' : '<div class="sh"><div class="sttl">'+titleMap[STATE.page]+'</div><span class="sbadge">'+feed.length+'</span></div>';
-
-  var search = '<div class="search-wrap"><input class="search-inp" placeholder="Search confessions…" id="search-inp" oninput="doSearch(this.value)"/><span class="search-ico">🔍</span><div class="search-res" id="search-res"></div></div>';
-
-  var pills = '<div class="pills">'
-    +'<button class="pill'+(STATE.tagFilter==='all'?' on':'')+'" onclick="setTag(\'all\')">All</button>'
-    +TAGS.map(function(t){return '<button class="pill'+(STATE.tagFilter===t?' on':'')+'" onclick="setTag(\''+t+'\')">'+t+'</button>';}).join('')
-    +'</div>';
-
-  var cpbar = STATE.user ? '<div class="cpbar" onclick="setPage(\'create\')">'
-    +'<div class="ava">'+STATE.user.anonymous_name.charAt(0)+'</div>'
-    +'<span style="font-size:13px;color:var(--t3)">Something\'s weighing on you. Share it as <strong style="color:var(--t2)">@'+esc(STATE.user.anonymous_name)+'</strong>…</span>'
-    +'</div>' : '';
-
-  var note = !isCfg ? '<div class="cnote"><strong>⚙️ One step:</strong> Go to Supabase → Settings → API, copy your <code>anon/public</code> key, replace <code>PASTE_ANON_KEY_HERE</code> in this file.</div>' : '';
-
-  var cards = feed.length===0
-    ? '<div class="empty"><div style="font-size:40px;margin-bottom:10px">🕊️</div><div>Nothing here yet</div></div>'
-    : feed.map(function(p,i){return postCardHtml(p,Math.min(i*.06,.4));}).join('');
-
-  return note+hero+search+pills+cpbar+cards;
-}
-
-function renderTrendingPage() {
-  return '<div style="text-align:center;padding:20px 0 16px">'
-    +'<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--rose);margin-bottom:7px">📊 Charts</div>'
-    +'<div style="font-size:28px;font-weight:800;color:var(--t1)">Trending</div>'
-    +'</div>'
-    +'<div class="pills" style="justify-content:center;margin-bottom:16px">'
-    +'<button class="pill on" id="trn-hot" onclick="switchTrend(\'hot\')">🔥 Hot</button>'
-    +'<button class="pill" id="trn-controversial" onclick="switchTrend(\'controversial\')">⚡ Controversial</button>'
-    +'<button class="pill" id="trn-discussed" onclick="switchTrend(\'discussed\')">💬 Debated</button>'
-    +'</div>'
-    +'<div id="trn-list">'+renderTrendList('hot')+'</div>';
-}
-
-function renderTrendList(tab) {
-  var sorted;
-  if(tab==='hot') sorted=[].concat(STATE.posts).sort(function(a,b){return feedScore(b)-feedScore(a);});
-  else if(tab==='controversial') sorted=[].concat(STATE.posts).filter(function(x){return wiwTotal(x)>3;}).sort(function(a,b){return cscore(b)-cscore(a);});
-  else sorted=[].concat(STATE.posts).sort(function(a,b){return (b.comment_count||0)-(a.comment_count||0);});
-  var trnCls=['trn-g','trn-s','trn-b','trn-d','trn-d','trn-d','trn-d','trn-d','trn-d','trn-d'];
-  return sorted.map(function(post,i){
-    var wiw=wiwTotal(post);var rx=totalRx(post);var eb=emoBadges(post);
-    return '<div class="card clickable" style="display:flex;gap:10px;align-items:flex-start;animation:up .4s ease both;animation-delay:'+(Math.min(i*.05,.3))+'s" onclick="openPost(\''+post.id+'\')">'
-      +'<div class="trn '+(trnCls[i]||'trn-d')+'">'+('#'+(i+1))+'</div>'
-      +'<div style="flex:1">'
-      +'<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px;align-items:center">'
-      +'<span class="ptype ptype-'+post.type+'">'+(post.type==='confession'?'💔':post.type==='advice'?'💬':'🌶')+' '+post.type.replace('_',' ')+'</span>'+eb
-      +'</div>'
-      +'<div class="ptitle" style="font-size:15px;margin-bottom:6px">'+esc(post.title)+'</div>'
-      +'<div class="pmeta"><span>@'+esc(post.anonymous_name)+'</span><span>·</span><span>💬 '+post.comment_count.toLocaleString()+'</span><span>·</span><span>🔥 '+rx.toLocaleString()+'</span>'
-      +(wiw>0?'<span>·</span><span>⚖️ '+wiw.toLocaleString()+'</span>':'')
-      +'</div>'
-      +'</div></div>';
-  }).join('');
-}
-
-function renderProfilePage() {
-  if(!STATE.user) return '<div class="empty" style="padding:60px 0">'
-    +'<div style="font-size:44px;margin-bottom:12px">👤</div>'
-    +'<div style="font-size:18px;font-weight:700;margin-bottom:14px">Sign in to see your profile</div>'
-    +'<div style="display:flex;gap:9px;justify-content:center"><button class="btn bp" onclick="showAuth(\'signup\')">Sign up free</button><button class="btn bs" onclick="showAuth(\'login\')">Log in</button></div>'
-    +'</div>';
-  var u=STATE.user;
-  var myPosts=STATE.posts.filter(function(p){return p.user_id===u.id;});
-  var k=myPosts.reduce(function(sum,p){return sum+totalRx(p)+(p.comment_count||0)+10;},0);
-  var streak=getStreak();
-  var notifyEmail=u.notify_email!==false;
-  return '<button class="bkbtn" onclick="setPage(\'home\')">← Back</button>'
-    +'<div style="text-align:center;margin-bottom:20px">'
-    +'<div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--vio));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;margin:0 auto 10px">'+u.anonymous_name.charAt(0)+'</div>'
-    +'<div style="font-size:20px;font-weight:800">'+esc(u.anonymous_name)+'</div>'
-    +'<div style="font-size:12px;color:var(--t3);margin-top:3px">'+esc(u.email)+'</div>'
-    +'</div>'
-    +'<div class="statg">'
-    +'<div class="statb"><div class="statn">'+k.toLocaleString()+'</div><div class="statl">💜 Karma</div></div>'
-    +'<div class="statb"><div class="statn">'+streak.c+'</div><div class="statl">🔥 Streak</div></div>'
-    +'<div class="statb"><div class="statn">'+myPosts.length+'</div><div class="statl">📝 Posts</div></div>'
-    +'</div>'
-    +'<div style="background:var(--c2);border:1px solid var(--b1);border-radius:12px;padding:14px;margin-bottom:14px">'
-    +'<div style="font-size:13px;font-weight:700;margin-bottom:10px">Notifications</div>'
-    +'<div class="tgl-row"><div><div style="font-size:14px;font-weight:600;margin-bottom:2px">📧 Email notifications</div><div style="font-size:12px;color:var(--t3)">Comment & reaction alerts</div></div>'
-    +'<button class="tgl'+(notifyEmail?' on':'')+'" id="email-tgl" onclick="toggleEmailNotif()"></button>'
-    +'</div></div>'
-    +(myPosts.length>0?'<div class="sh"><div class="sttl" style="font-size:16px">My Posts</div></div>'
-      +myPosts.map(function(p){return '<div class="card" style="margin-bottom:9px;cursor:pointer" onclick="openPost(\''+p.id+'\')">'
-        +'<div style="font-size:14px;font-weight:700;margin-bottom:5px;line-height:1.35">'+esc(p.title)+'</div>'
-        +'<div class="pmeta"><span>'+ago(p.created_at)+'</span><span>·</span><span>💬 '+p.comment_count+'</span><span>·</span><span>🔥 '+totalRx(p)+'</span></div>'
-        +'</div>';}).join(''):'')
-    +'<div class="divider"></div>'
-    +'<button class="btn bs" style="color:#ef4444;border-color:rgba(239,68,68,.3)" onclick="showDeleteAccount()">🗑 Delete account (GDPR)</button>'
-    +'<div id="del-confirm" style="display:none;background:var(--c2);border:1px solid rgba(239,68,68,.25);border-radius:12px;padding:14px;margin-top:12px">'
-    +'<p style="font-size:13px;color:var(--t2);margin-bottom:9px">Type DELETE to confirm permanent deletion.</p>'
-    +'<input class="inp" id="del-inp" placeholder="Type DELETE" style="margin-bottom:9px"/>'
-    +'<div style="display:flex;gap:8px"><button class="btn btn-sm" style="background:#dc2626;color:#fff" onclick="confirmDelete()">Confirm</button><button class="btn bs btn-sm" onclick="cancelDelete()">Cancel</button></div>'
-    +'</div>';
-}
-
-function renderDetailPage(post) {
-  var pid = post.id;
-  var rx = totalRx(post);
-  var eb = emoBadges(post);
-  var tags = tagBadges(post.tags);
-  var typeLabel = post.type==='confession'?'💔 Confession':post.type==='advice'?'💬 Seeking Advice':'🌶 Hot Take';
-  var typeClass = 'ptype-'+post.type;
-  if (!STATE.user) {
-    return '<button class="bkbtn" onclick="goBack()">← Back</button>'
-      +'<div class="card" style="cursor:default">'
-      +'<span class="ptype '+typeClass+'">'+typeLabel+'</span>'
-      +'<div class="ptitle" style="margin-top:6px;margin-bottom:10px">'+esc(post.title)+'</div>'
-      +'<div class="pmeta"><span class="pname">@'+esc(post.anonymous_name)+'</span><span>·</span><span>'+ago(post.created_at)+'</span></div>'
-      +'<div class="blw" style="max-height:90px"><div style="font-size:14px;line-height:1.75;color:var(--t2);white-space:pre-wrap">'+esc(post.content.slice(0,260))+'…</div></div>'
-      +'<div class="pw"><h3>The full story is right here 💔</h3><p>Join free to read everything, vote on who\'s wrong, and add your take.</p>'
-      +'<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"><button class="btn bp btn-sm" onclick="showAuth(\'signup\')">Sign up free</button><button class="btn bs btn-sm" onclick="showAuth(\'login\')">Log in</button></div>'
-      +'</div></div>';
+function closeAuth() { document.getElementById('authModal').classList.add('hidden'); }
+function closePaywall() { document.getElementById('paywallModal').classList.add('hidden'); }
+function closeModalOutside(e, id='authModal') {
+  if(e.target.classList.contains('modal-overlay')) {
+    document.getElementById(id).classList.add('hidden');
   }
-  // increment view
-  if(sb) sb.rpc('increment_view',{post_id:pid}).catch(function(){});
-  var reactions = STATE.reactions[pid] || post.reaction_counts || {};
-  var mine = reactions._mine;
-  var rxHtml = RXLIST.map(function(r){return '<button class="rxb'+(mine===r?' on':'')+'" onclick="doReact(event,\''+pid+'\',\''+r+'\',true)">'+r+'<span style="margin-left:3px">'+(reactions[r]||0).toLocaleString()+'</span></button>';}).join('');
-
-  return '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">'
-    +'<button class="bkbtn" style="margin-bottom:0" onclick="goBack()">← Back to feed</button>'
-    +'</div>'
-    +'<div class="card" style="cursor:default;margin-bottom:11px">'
-    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:9px;flex-wrap:wrap;gap:7px">'
-    +'<div><span class="ptype '+typeClass+'">'+typeLabel+'</span>'+(eb?'<div style="margin-top:5px">'+eb+'</div>':'')+'</div>'
-    +'<div style="display:flex;gap:4px">'+tags+'</div>'
-    +'</div>'
-    +'<div class="ptitle" style="font-size:clamp(17px,5vw,25px);margin-bottom:10px">'+esc(post.title)+'</div>'
-    +'<div class="pmeta" style="margin-bottom:14px"><span class="pname">@'+esc(post.anonymous_name)+'</span><span>·</span><span>'+ago(post.created_at)+'</span><span>·</span><span>💬 '+post.comment_count.toLocaleString()+'</span><span>·</span><span>👁 '+(post.view_count||0).toLocaleString()+'</span></div>'
-    +'<div style="font-size:15px;line-height:1.85;color:var(--t2);white-space:pre-wrap">'+esc(post.content)+'</div>'
-    +'<div class="divider"></div>'
-    +'<div class="rx-row" id="rx-detail-'+pid+'">'+rxHtml+'</div>'
-    +renderWiw(post)
-    +'</div>'
-    +'<div id="updates-'+pid+'"></div>'
-    +'<div id="comments-'+pid+'"></div>';
 }
 
-function renderComments(pid) {
-  var post = STATE.posts.find(function(p){return p.id===pid;});
-  var comments = STATE.comments[pid] || [];
-  var sortBy = STATE._commentSort || 'top';
-  var sorted = [].concat(comments).sort(function(a,b){
-    if(sortBy==='heated') return (b.heated?1:0)-(a.heated?1:0)||(b.upvotes||0)-(a.upvotes||0);
-    if(sortBy==='new') return new Date(b.created_at)-new Date(a.created_at);
-    return (b.upvotes||0)-(a.upvotes||0);
-  });
-  var topId = sorted[0]&&sorted.length>2?sorted[0].id:null;
-  var inputArea = STATE.user
-    ? '<div class="crow"><div class="ava">'+STATE.user.anonymous_name.charAt(0)+'</div>'
-      +'<div style="flex:1"><textarea class="inp" id="cmt-inp-'+pid+'" rows="3" style="min-height:68px" placeholder="Add your take…"></textarea>'
+async function doSignup() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if(!email||!pass) { showToast('Please fill all fields','error'); return; }
+  if(pass.length<6) { showToast('Password needs 6+ characters','error'); return; }
+
+  if(!supabase) {
+    // Demo mode
+    const demoUser = {
+      id:'demo-'+Date.now(),
+      email,
+      username: generateUsername(),
+      created_at: new Date().toISOString()
+    };
+    currentUser = demoUser;
+    localStorage.setItem('hc_demo_user', JSON.stringify(demoUser));
+    closeAuth();
+    updateNavForUser();
+    showToast('Welcome to HeartConfia! 💔','success');
+    return;
+  }
+
+  try {
+    const {data,error} = await supabase.auth.signUp({email,password:pass});
+    if(error) throw error;
+    const username = generateUsername();
+    await supabase.from('users').insert({id:data.user.id,email,username,created_at:new Date().toISOString()});
+    showToast('Account created! Check email to verify 💔','success');
+    closeAuth();
+    currentUser = {id:data.user.id,email,username};
+    updateNavForUser();
+  } catch(e) {
+    showToast(e.message||'Signup failed','error');
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  if(!email||!pass) { showToast('Please fill all fields','error'); return; }
+
+  if(!supabase) {
+    const saved = localStorage.getItem('hc_demo_user');
+    if(saved) {
+      currentUser = JSON.parse(saved);
+      closeAuth();
+      updateNavForUser();
+      showToast('Welcome back! 💔','success');
+    } else {
+      showToast('No account found. Sign up first.','error');
+    }
+    return;
+  }
+
+  try {
+    const {data,error} = await supabase.auth.signInWithPassword({email,password:pass});
+    if(error) throw error;
+    const {data:profile} = await supabase.from('users').select('*').eq('id',data.user.id).single();
+    currentUser = profile;
+    closeAuth();
+    updateNavForUser();
+    showToast('Welcome back! 💔','success');
+    subscribeRealtime();
+  } catch(e) {
+    showToast(e.message||'Login failed','error');
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  localStorage.removeItem('hc_demo_user');
+  if(supabase) supabase.auth.signOut();
+  updateNavForUser();
+  showToast('Logged out','info');
+  navigate('home');
+}
+
+function updateNavForUser() {
+  const nav = document.getElementById('navActions');
+  if(currentUser) {
+    const initials = (currentUser.username||'U').slice(0,2).toUpperCase();
+    nav.innerHTML=`<div class="avatar-btn" onclick="navigate('profile',document.querySelector('[data-page=profile]'))">${initials}</div>`;
+  } else {
+    nav.innerHTML=`<button class="btn btn-ghost btn-sm" onclick="showAuth('login')">Login</button><button class="btn btn-primary btn-sm" onclick="showAuth('signup')">Join Free</button>`;
+  }
+}
+
+function generateUsername() {
+  const prefixes = ['Heart','Confess','Vibe','Shadow','Ghost','Truth','Anon','Soul','Quiet','Storm'];
+  const num = Math.floor(Math.random()*9000)+1000;
+  return `${prefixes[Math.floor(Math.random()*prefixes.length)]}_${num}`;
+}
+
+// ── FEED ──
+function renderFeed() {
+  const container = document.getElementById('feedContainer');
+  const posts = getFilteredPosts();
+
+  if(!posts.length) {
+    container.innerHTML=`<div class="empty-state"><div class="empty-state-icon">💔</div><p class="empty-state-text">No confessions here yet</p></div>`;
+    return;
+  }
+
+  container.innerHTML = posts.slice(0,PAGE_SIZE).map((p,i)=>renderPostCard(p,i)).join('');
+  document.getElementById('loadMoreWrap').classList.toggle('hidden', posts.length <= PAGE_SIZE);
+}
+
+function getFilteredPosts() {
+  if(currentFilter==='all') return SEED_POSTS;
+  return SEED_POSTS.filter(p=>p.tags.some(t=>t.includes(currentFilter))||p.type===currentFilter);
+}
+
+function renderPostCard(post, index) {
+  const delay = index * 50;
+  const totalVotes = post.votes.he + post.votes.she + post.votes.both;
+  const heP = totalVotes ? Math.round(post.votes.he/totalVotes*100) : 33;
+  const sheP = totalVotes ? Math.round(post.votes.she/totalVotes*100) : 33;
+  const bothP = 100 - heP - sheP;
+
+  const badge = post.trending ? (Math.random()>.5
+    ? '<span class="post-badge badge-trending">🔥 Trending</span>'
+    : '<span class="post-badge badge-hot">💀 Hot</span>')
+    : '<span class="post-badge badge-new">✨ New</span>';
+
+  const initials = post.author.slice(0,2).toUpperCase();
+  const isGuest = !currentUser;
+
+  const reactionsHtml = REACTIONS_LIST.map(r=>{
+    const count = (post.reactions[r]||0);
+    return `<button class="reaction-btn" onclick="handleReaction('${post.id}','${r}',this)">${r} <span class="reaction-count">${fmtNum(count)}</span></button>`;
+  }).join('');
+
+  const tagsHtml = post.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+
+  const previewText = post.preview_text || post.content.slice(0,140)+'...';
+  const contentSection = isGuest
+    ? `<div class="post-preview blurred">${previewText}</div>
+       <div class="post-blur-cta" onclick="showPaywall('${post.id}')">🔒 Read full story <span>→</span></div>`
+    : `<div class="post-preview">${previewText}</div>`;
+
+  return `
+  <article class="post-card" style="animation-delay:${delay}ms" id="post-${post.id}">
+    <div class="post-card-inner">
+      <div class="post-meta">
+        <div class="post-author">
+          <div class="author-avatar">${initials}</div>
+          <div>
+            <div class="author-name">${post.author}</div>
+            <div class="post-time">${timeAgo(post.created_at)}</div>
+          </div>
+        </div>
+        ${badge}
+      </div>
+      <h2 class="post-title" onclick="openPost('${post.id}')">${post.title}</h2>
+      ${contentSection}
+      <div class="post-tags">${tagsHtml}</div>
+      
+      <!-- Vote bar -->
+      <div class="vote-bar-wrap">
+        <div class="vote-bar">
+          <div class="vote-seg vote-seg-he" style="width:${heP}%"></div>
+          <div class="vote-seg vote-seg-she" style="width:${sheP}%"></div>
+          <div class="vote-seg vote-seg-both" style="width:${bothP}%"></div>
+        </div>
+        <div class="vote-bar-labels" style="margin-top:5px">
+          <span class="vote-label" style="color:var(--he)">🟥 He ${heP}%</span>
+          <span class="vote-label" style="color:var(--she)">🟪 She ${sheP}%</span>
+          <span class="vote-label" style="color:var(--both)">⚪ Both ${bothP}%</span>
+        </div>
+        <div class="vote-buttons">
+          <button class="vote-btn vote-btn-he" onclick="handleVote('${post.id}','he',this)">🟥 He is wrong</button>
+          <button class="vote-btn vote-btn-she" onclick="handleVote('${post.id}','she',this)">🟪 She is wrong</button>
+          <button class="vote-btn vote-btn-both" onclick="handleVote('${post.id}','both',this)">⚪ Both wrong</button>
+        </div>
+      </div>
+
+      <!-- Reactions -->
+      <div class="reactions-row">${reactionsHtml}</div>
+
+      <!-- Footer -->
+      <div class="post-footer">
+        <button class="post-stat" onclick="openPost('${post.id}')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          ${fmtNum(post.comment_count)} comments
+        </button>
+        <button class="post-stat">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          ${fmtNum(post.views)}
+        </button>
+        <button class="post-stat report-btn" onclick="showReport('${post.id}')">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/></svg>
+          Report
+        </button>
+      </div>
+    </div>
+  </article>`;
+}
+
+function loadMorePosts() {
+  postsOffset += PAGE_SIZE;
+  const more = getFilteredPosts().slice(postsOffset, postsOffset+PAGE_SIZE);
+  const container = document.getElementById('feedContainer');
+  if(more.length) container.innerHTML += more.map((p,i)=>renderPostCard(p,i)).join('');
+  if(postsOffset+PAGE_SIZE >= getFilteredPosts().length) document.getElementById('loadMoreWrap').classList.add('hidden');
+}
+
+// ── FILTER TABS ──
+document.getElementById('filterTabs').addEventListener('click', e=>{
+  const btn = e.target.closest('.filter-tab');
+  if(!btn) return;
+  document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  currentFilter = btn.dataset.filter;
+  postsOffset = 0;
+  renderFeed();
+});
+
+// ── POST DETAIL ──
+function openPost(postId) {
+  const post = SEED_POSTS.find(p=>p.id===postId);
+  if(!post) return;
+  if(!currentUser) { showPaywall(postId); return; }
+  currentDetailPost = post;
+  navigate('detail', null);
+  renderDetail(post);
+  // Increment view count
+  post.views++;
+}
+
+function renderDetail(post) {
+  const container = document.getElementById('detailContainer');
+  const totalVotes = post.votes.he + post.votes.she + post.votes.both;
+  const heP = totalVotes ? Math.round(post.votes.he/totalVotes*100) : 33;
+  const sheP = totalVotes ? Math.round(post.votes.she/totalVotes*100) : 33;
+  const bothP = 100 - heP - sheP;
+  const initials = post.author.slice(0,2).toUpperCase();
+  const comments = SEED_COMMENTS[post.id] || [];
+  const tagsHtml = post.tags.map(t=>`<span class="tag">${t}</span>`).join('');
+  const reactionsHtml = REACTIONS_LIST.map(r=>{
+    const count=(post.reactions[r]||0);
+    return `<button class="reaction-btn" onclick="handleReaction('${post.id}','${r}',this)">${r} <span class="reaction-count">${fmtNum(count)}</span></button>`;
+  }).join('');
+
+  container.innerHTML=`
+    <div class="post-detail-header">
+      <button class="back-btn" onclick="navigate('home',document.querySelector('[data-page=home]'))">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+        Back to feed
+      </button>
+
+      <div class="detail-author">
+        <div class="detail-avatar">${initials}</div>
+        <div class="detail-author-info">
+          <div class="detail-author-name">${post.author}</div>
+          <div class="detail-meta">${timeAgo(post.created_at)} · ${fmtNum(post.views)} views</div>
+        </div>
+      </div>
+      <div class="post-tags" style="margin-bottom:14px">${tagsHtml}</div>
+      <h1 class="detail-title">${post.title}</h1>
+      <div class="detail-content">${post.content}</div>
+      
+      <!-- Reactions -->
+      <div class="reactions-row" style="margin-bottom:16px">${reactionsHtml}</div>
+
+      <!-- Vote section -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:20px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text2)">⚖️ Who is wrong here?</div>
+        <div class="vote-bar" style="height:8px;margin-bottom:10px">
+          <div class="vote-seg vote-seg-he" id="detail-vote-he" style="width:${heP}%"></div>
+          <div class="vote-seg vote-seg-she" id="detail-vote-she" style="width:${sheP}%"></div>
+          <div class="vote-seg vote-seg-both" id="detail-vote-both" style="width:${bothP}%"></div>
+        </div>
+        <div class="vote-bar-labels" style="margin-bottom:12px">
+          <span class="vote-label" style="color:var(--he)">🟥 He ${heP}%</span>
+          <span class="vote-label" style="color:var(--she)">🟪 She ${sheP}%</span>
+          <span class="vote-label" style="color:var(--both)">⚪ Both ${bothP}%</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:10px">${fmtNum(totalVotes)} votes total</div>
+        <div class="vote-buttons">
+          <button class="vote-btn vote-btn-he" onclick="handleVote('${post.id}','he',this)">🟥 He is wrong</button>
+          <button class="vote-btn vote-btn-she" onclick="handleVote('${post.id}','she',this)">🟪 She is wrong</button>
+          <button class="vote-btn vote-btn-both" onclick="handleVote('${post.id}','both',this)">⚪ Both wrong</button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Comments -->
+      <div class="comments-header">
+        <span class="comments-title">💬 ${fmtNum(post.comment_count)} Comments</span>
+        <select class="sort-select" onchange="sortComments(this.value,'${post.id}')">
+          <option value="heated">Most Heated</option>
+          <option value="recent">Recent</option>
+          <option value="top">Top Rated</option>
+        </select>
+      </div>
+
+      <!-- Comment box -->
+      <div class="comment-box">
+        <textarea class="comment-textarea" id="commentInput" placeholder="What do you think happened here? Drop your verdict…" oninput="autoResize(this)"></textarea>
 
 ```
-  +'<button class="btn bp" style="margin-top:7px;padding:9px 18px;font-size:13px" onclick="postComment(\''+pid+'\')">💬 Post</button></div></div>'
-: '<button class="btn bs" style="width:100%;margin-bottom:14px" onclick="showAuth(\'signup\')">Sign in to join the debate</button>';
+    <div class="comment-box-footer">
+      <button class="btn btn-primary btn-sm" onclick="submitComment('${post.id}')">Post Comment</button>
+    </div>
+  </div>
+
+  <!-- Comment list -->
+  <div id="commentsList">
+    ${comments.map(c=>renderComment(c)).join('')}
+    ${comments.length===0?'<div class="empty-state"><div class="empty-state-icon">💬</div><p class="empty-state-text">Be the first to comment</p></div>':''}
+  </div>
+</div>
 ```
 
-return ‘<div class="sh" style="margin-bottom:10px"><div class="sttl" style="font-size:17px">The Debate</div><span class="sbadge">’+comments.length+’</span></div>’
-+’<div class="cmt-sort">’
-+’<button class="csb'+(sortBy==='top'?' on':'')+'" onclick="sortComments(\''+pid+'\',\'top\')">🏆 Top</button>’
-+’<button class="csb'+(sortBy==='heated'?' on':'')+'" onclick="sortComments(\''+pid+'\',\'heated\')">🔥 Heated</button>’
-+’<button class="csb'+(sortBy==='new'?' on':'')+'" onclick="sortComments(\''+pid+'\',\'new\')">✨ New</button>’
-+’</div>’
-+inputArea
-+sorted.map(function(c){
-var isTop=c.id===topId;var isHot=c.heated&&!isTop;var uv=STATE.upvoted[c.id];
-return ‘<div class="cc'+(isTop?' top':isHot?' hot':'')+'">’
-+(isTop?’<div style="font-size:10px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">🏆 Top Comment</div>’:’’)
-+(isHot?’<div style="font-size:10px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px">🔥 Heated</div>’:’’)
-+’<div class="cc-head">’
-+’<div style="display:flex;align-items:center;gap:7px"><div class="ava sm">’+c.anonymous_name.charAt(0)+’</div><span style="font-size:13px;font-weight:700;color:var(--t1)">@’+esc(c.anonymous_name)+’</span></div>’
-+’<div style="display:flex;gap:7px;align-items:center"><span style="font-size:11px;color:var(--t3)">’+ago(c.created_at)+’</span>’
-+’<button style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;line-height:1" onclick="showReport(event,null,\''+c.id+'\')">⋯</button>’
-+’</div></div>’
-+’<p class="cc-body">’+esc(c.content)+’</p>’
-+’<div class="cc-foot">’
-+’<button class="ccrxb'+(uv?' on':'')+'" onclick="upvoteComment(\''+pid+'\',\''+c.id+'\')"><span>’+(uv?‘❤️’:‘🤍’)+’</span><span>’+(c.upvotes||0).toLocaleString()+’</span></button>’
-+’<button style="background:none;border:none;color:var(--t3);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">↩ Reply</button>’
-+(isTop?’<span style="font-size:11px;color:#f59e0b;margin-left:auto;font-weight:600">Most helpful</span>’:’’)
-+’</div></div>’;
-}).join(’’);
+`;
 }
 
-/* ══════════════════════════════════════
-PAGE RENDER
-══════════════════════════════════════ */
-function render() {
-var app = document.getElementById(‘app’);
-var html = ‘’;
-if(STATE.page===‘detail’&&STATE.active) {
-html = renderDetailPage(STATE.active);
-} else if(STATE.page===‘trending’) {
-html = renderTrendingPage();
-} else if(STATE.page===‘profile’) {
-html = renderProfilePage();
-} else if(STATE.page===‘create’) {
-html = renderCreatePage();
-} else if(STATE.page===‘admin’) {
-html = renderAdminPage();
+function renderComment(c, isReply=false) {
+const replies = !isReply && c.replies ? c.replies.map(r=>renderComment(r,true)).join(’’) : ‘’;
+return `
+
+  <div class="${isReply?'reply-item':'comment-item'}" id="comment-${c.id}">
+    <div class="${isReply?'reply-bubble':'comment-bubble'}">
+      <div class="comment-header">
+        <span class="comment-author">${c.author}${c.pinned?'<span class="pinned-badge">📌 Pinned</span>':''}</span>
+        <span class="comment-time">${c.time||'just now'}</span>
+      </div>
+      <div class="comment-text">${c.text}</div>
+      <div class="comment-actions">
+        <button class="comment-action up" onclick="voteComment('${c.id}','up',this)">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+          ${c.upvotes||0}
+        </button>
+        <button class="comment-action down" onclick="voteComment('${c.id}','down',this)">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          ${c.downvotes||0}
+        </button>
+        ${!isReply?`<button class="comment-action" onclick="showReplyBox('${c.id}')">↩ Reply</button>`:''}
+        <button class="comment-action report-btn" onclick="showReport('${c.id}','comment')">Report</button>
+      </div>
+    </div>
+    ${!isReply&&replies?`<div class="replies-wrap" id="replies-${c.id}">${replies}</div>`:''}
+    <div id="replybox-${c.id}" class="hidden" style="margin-left:24px;margin-top:8px">
+      <div class="comment-box">
+        <textarea class="comment-textarea" id="replyinput-${c.id}" placeholder="Reply to ${c.author}…" oninput="autoResize(this)" style="min-height:56px"></textarea>
+        <div class="comment-box-footer">
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('replybox-${c.id}').classList.add('hidden')">Cancel</button>
+          <button class="btn btn-primary btn-sm" style="margin-left:6px" onclick="submitReply('${c.id}','${currentDetailPost?.id}')">Reply</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function showReplyBox(commentId) {
+const box = document.getElementById(‘replybox-’+commentId);
+box.classList.toggle(‘hidden’);
+if(!box.classList.contains(‘hidden’)) document.getElementById(‘replyinput-’+commentId).focus();
+}
+
+function submitComment(postId) {
+if(!currentUser) { showAuth(‘login’); return; }
+const input = document.getElementById(‘commentInput’);
+const text = input.value.trim();
+if(!text) { showToast(‘Write something first!’,‘error’); return; }
+
+const post = SEED_POSTS.find(p=>p.id===postId);
+const newComment = {
+id:‘c’+Date.now(),
+author: currentUser.username,
+text,
+upvotes:0,downvotes:0,
+pinned:false,
+time:‘just now’
+};
+if(!SEED_COMMENTS[postId]) SEED_COMMENTS[postId]=[];
+SEED_COMMENTS[postId].unshift(newComment);
+post.comment_count++;
+input.value=’’;
+
+const list = document.getElementById(‘commentsList’);
+const newEl = document.createElement(‘div’);
+newEl.innerHTML = renderComment(newComment);
+list.prepend(newEl.firstElementChild);
+showToast(‘Comment posted 💬’,‘success’);
+}
+
+function submitReply(commentId, postId) {
+if(!currentUser) { showAuth(‘login’); return; }
+const input = document.getElementById(‘replyinput-’+commentId);
+const text = input.value.trim();
+if(!text) return;
+
+const comment = (SEED_COMMENTS[postId]||[]).find(c=>c.id===commentId);
+if(!comment) return;
+if(!comment.replies) comment.replies=[];
+const reply = {id:‘r’+Date.now(),author:currentUser.username,text,upvotes:0,downvotes:0,time:‘just now’};
+comment.replies.push(reply);
+input.value=’’;
+document.getElementById(‘replybox-’+commentId).classList.add(‘hidden’);
+
+let repliesWrap = document.getElementById(‘replies-’+commentId);
+if(!repliesWrap) {
+const parent = document.getElementById(‘comment-’+commentId);
+const wrap = document.createElement(‘div’);
+wrap.className=‘replies-wrap’;
+wrap.id=‘replies-’+commentId;
+parent.appendChild(wrap);
+repliesWrap = wrap;
+}
+const el = document.createElement(‘div’);
+el.innerHTML = renderComment(reply, true);
+repliesWrap.appendChild(el.firstElementChild);
+showToast(‘Reply added’,‘success’);
+}
+
+function voteComment(commentId, dir, btn) {
+if(!currentUser) { showAuth(‘login’); return; }
+btn.classList.toggle(‘voted’);
+const numEl = btn.childNodes[btn.childNodes.length-1];
+const current = parseInt(numEl.textContent)||0;
+numEl.textContent = btn.classList.contains(‘voted’) ? current+1 : current-1;
+}
+
+function sortComments(val, postId) {
+const comments = […(SEED_COMMENTS[postId]||[])];
+if(val===‘heated’) comments.sort((a,b)=>(b.upvotes+b.downvotes)-(a.upvotes+a.downvotes));
+else if(val===‘top’) comments.sort((a,b)=>b.upvotes-a.upvotes);
+else comments.reverse();
+const list = document.getElementById(‘commentsList’);
+list.innerHTML = comments.map(c=>renderComment(c)).join(’’);
+}
+
+// ── VOTING ──
+function handleVote(postId, type, btn) {
+if(!currentUser) { showAuth(‘signup’); return; }
+const post = SEED_POSTS.find(p=>p.id===postId);
+if(!post) return;
+
+// Toggle
+const sibs = btn.closest(’.vote-buttons’).querySelectorAll(’.vote-btn’);
+const wasVoted = btn.classList.contains(‘voted’);
+sibs.forEach(b=>b.classList.remove(‘voted’));
+
+if(!wasVoted) {
+btn.classList.add(‘voted’);
+post.votes[type]++;
+showToast(‘Vote recorded 🗳️’,‘info’);
+updateVoteBar(postId, post.votes);
+}
+}
+
+function updateVoteBar(postId, votes) {
+const total = votes.he+votes.she+votes.both;
+const heP = total?Math.round(votes.he/total*100):33;
+const sheP = total?Math.round(votes.she/total*100):33;
+const bothP = 100-heP-sheP;
+
+// Update in feed
+const card = document.getElementById(‘post-’+postId);
+if(card) {
+const segs = card.querySelectorAll(’.vote-seg’);
+if(segs[0]) segs[0].style.width=heP+’%’;
+if(segs[1]) segs[1].style.width=sheP+’%’;
+if(segs[2]) segs[2].style.width=bothP+’%’;
+const labels = card.querySelectorAll(’.vote-label’);
+if(labels[0]) labels[0].textContent=`🟥 He ${heP}%`;
+if(labels[1]) labels[1].textContent=`🟪 She ${sheP}%`;
+if(labels[2]) labels[2].textContent=`⚪ Both ${bothP}%`;
+}
+// Update in detail
+[‘he’,‘she’,‘both’].forEach((t,i)=>{
+const el=document.getElementById(‘detail-vote-’+t);
+if(el) el.style.width=[heP,sheP,bothP][i]+’%’;
+});
+}
+
+// ── REACTIONS ──
+function handleReaction(postId, emoji, btn) {
+if(!currentUser) { showAuth(‘signup’); return; }
+const post = SEED_POSTS.find(p=>p.id===postId);
+if(!post) return;
+const wasActive = btn.classList.contains(‘active’);
+btn.classList.toggle(‘active’);
+const countEl = btn.querySelector(’.reaction-count’);
+const current = parseInt(countEl.textContent)||0;
+if(wasActive) {
+post.reactions[emoji] = Math.max(0,(post.reactions[emoji]||0)-1);
+countEl.textContent = fmtNum(current-1);
 } else {
-html = renderFeedPage();
+post.reactions[emoji] = (post.reactions[emoji]||0)+1;
+countEl.textContent = fmtNum(current+1);
+// Animate
+btn.style.transform=‘scale(1.3)’;
+setTimeout(()=>btn.style.transform=’’,200);
 }
-app.innerHTML = html;
-
-// Post-render tasks
-if(STATE.page===‘detail’&&STATE.active){
-var pid=STATE.active.id;
-var cmtEl=document.getElementById(‘comments-’+pid);
-if(cmtEl) cmtEl.innerHTML=renderComments(pid);
-loadComments(pid);
-}
-if(STATE.page===‘trending’) {
-window._trendTab=‘hot’;
-}
-updateNavTabs();
-renderNavRight();
-renderTicker();
 }
 
-function renderCreatePage() {
-if(!STATE.user) return ‘<div class="empty" style="padding:60px 0"><div style="font-size:40px;margin-bottom:12px">🔒</div><div style="font-size:18px;font-weight:700;margin-bottom:12px">Sign in to share your confession</div><div style="display:flex;gap:9px;justify-content:center"><button class="btn bp" onclick="showAuth(\'signup\')">Sign up free</button><button class="btn bs" onclick="showAuth(\'login\')">Log in</button></div></div>’;
-var rateCount = STATE._rateCount||0;
-var rem = MAX_DAY-rateCount;
-return ‘<button class="bkbtn" onclick="goHome()">← Back</button>’
-+’<div style="margin-bottom:18px"><div style="font-size:clamp(20px,6vw,26px);font-weight:800;margin-bottom:5px">Share anonymously</div>’
-+’<div style="font-size:13px;color:var(--t2)">You'll appear as <strong style="color:var(--rose)">@’+esc(STATE.user.anonymous_name)+’</strong></div></div>’
-+(rateCount>0&&rem>0?’<div style="font-size:13px;color:var(--t3);margin-bottom:11px">✅ ‘+rem+’ post’+(rem!==1?‘s’:’’)+’ remaining today</div>’:’’)
-+(rateCount>=MAX_DAY&&STATE.user.id!==‘demo’?’<div class="rate-warn">⏳ Daily limit reached. Come back tomorrow.</div>’:’’)
-+’<div class="card" style="cursor:default">’
-+’<div style="display:flex;flex-direction:column;gap:13px">’
-+’<div><label class="flbl">Type</label><div style="display:flex;gap:7px;flex-wrap:wrap">’
-+’<button class="btn bp btn-sm" id="type-confession" onclick="setPostType(\'confession\')">💔 Confession</button>’
-+’<button class="btn bs btn-sm" id="type-advice" onclick="setPostType(\'advice\')">💬 Advice</button>’
-+’<button class="btn bs btn-sm" id="type-hot_take" onclick="setPostType(\'hot_take\')">🌶 Hot Take</button>’
-+’</div></div>’
-+’<div><label class="flbl">Title — make it impossible to scroll past</label>’
-+’<input class="inp" id="post-title" placeholder="e.g. I found something that changed everything…" maxlength="120"/>’
-+’<div style="text-align:right;font-size:11px;color:var(--t3);margin-top:3px" id="title-count">0/120</div></div>’
-+’<div><label class="flbl">Your story</label>’
-+’<textarea class="inp" id="post-body" rows="8" placeholder="Share everything. No one knows it\'s you."></textarea></div>’
-+’<div><label class="flbl">Tags</label><div class="pills">’
-+TAGS.map(function(t){return ‘<button class="pill" id="tag-'+t+'" onclick="toggleTag(\''+t+'\')">’+t+’</button>’;}).join(’’)
-+’</div></div>’
-+’<button class="btn bp btn-full" id="submit-post" onclick="submitPost()">💔 Post anonymously</button>’
-+’</div></div>’;
+// ── PAYWALL ──
+function showPaywall(postId) {
+const post = SEED_POSTS.find(p=>p.id===postId);
+if(post) document.getElementById(‘paywallPreview’).textContent = post.preview_text || post.content.slice(0,100)+’…’;
+document.getElementById(‘paywallModal’).classList.remove(‘hidden’);
 }
 
-function renderAdminPage() {
-return ‘<div style="margin-bottom:16px"><div style="font-size:22px;font-weight:800">🛡 Admin</div></div>’
-+’<div id="admin-list"><div style="display:flex;justify-content:center;padding:30px"><span class="spin"></span></div></div>’;
+// ── TRENDING ──
+function renderTrending() {
+const container = document.getElementById(‘trendingContainer’);
+const categories = [
+{emoji:‘🔥’,label:‘Trending Now’,posts:SEED_POSTS.filter(p=>p.trending).slice(0,5)},
+{emoji:‘💔’,label:‘Saddest Story’,posts:[…SEED_POSTS].sort((a,b)=>(b.reactions[‘😭’]||0)-(a.reactions[‘😭’]||0)).slice(0,3)},
+{emoji:‘😡’,label:‘Most Toxic Drama’,posts:[…SEED_POSTS].sort((a,b)=>(b.reactions[‘😡’]||0)-(a.reactions[‘😡’]||0)).slice(0,3)},
+{emoji:‘🧠’,label:‘Most Debated’,posts:[…SEED_POSTS].sort((a,b)=>b.comment_count-a.comment_count).slice(0,3)},
+{emoji:‘👀’,label:‘Most Viewed Today’,posts:[…SEED_POSTS].sort((a,b)=>b.views-a.views).slice(0,3)},
+];
+
+container.innerHTML = categories.map(cat=>` <div class="trending-section"> <div class="trending-section-title">${cat.emoji} ${cat.label}</div> ${cat.posts.map((p,i)=>`
+<div class="trending-card top-${i+1}" onclick="openPost('${p.id}')">
+<div class="trending-number">${i+1}</div>
+<div class="trending-info">
+<div class="trending-card-title">${p.title}</div>
+<div class="trending-stats">
+<span>💬 ${fmtNum(p.comment_count)}</span>
+<span>👁 ${fmtNum(p.views)}</span>
+<span>🔥 ${fmtNum(Object.values(p.reactions).reduce((a,b)=>a+b,0))}</span>
+</div>
+</div>
+</div>
+`).join('')} </div> `).join(’’);
 }
 
-/* ══════════════════════════════════════
-ACTIONS
-══════════════════════════════════════ */
-var _postType = ‘confession’;
-var _postTags = [];
-
-function setPostType(t) {
-_postType=t;
-[‘confession’,‘advice’,‘hot_take’].forEach(function(x){
-var btn=document.getElementById(‘type-’+x);
-if(btn){btn.className=‘btn ‘+(x===t?‘bp’:‘bs’)+’ btn-sm’;}
-});
+// ── CONFESS FORM ──
+function renderConfessForm() {
+const wrap = document.getElementById(‘confessFormWrap’);
+if(!currentUser) {
+wrap.innerHTML=` <div class="empty-state"> <div class="empty-state-icon">🔒</div> <p class="empty-state-text" style="margin-bottom:16px">Sign up to share your story anonymously</p> <button class="btn btn-primary" onclick="showAuth('signup')">Create Free Account</button> </div>`;
+return;
+}
+wrap.innerHTML=` <div class="confess-form"> <div class="type-select"> <button class="type-btn active" onclick="selectType(this,'confession')">💔 Confession</button> <button class="type-btn" onclick="selectType(this,'advice')">🧠 Need Advice</button> <button class="type-btn" onclick="selectType(this,'debate')">⚖️ Debate</button> </div> <input type="text" class="title-input" id="postTitle" placeholder="Write a title that stops the scroll…" maxlength="120" oninput="updateCharCount()"/> <div class="char-count" id="titleCharCount">0 / 120</div> <textarea class="content-textarea" id="postContent" placeholder="Tell your story. Be specific. Be honest. The details are what make people feel it…" oninput="autoResize(this)"></textarea> <input type="text" class="tags-input" id="postTags" placeholder="Tags: cheating, breakup, trust…"/> <div class="tags-hint">Separate tags with commas. Good tags get you more readers.</div> <button class="btn btn-primary btn-block" onclick="submitPost()">🖤 Post Anonymously</button> <p style="font-size:11px;color:var(--text3);text-align:center;margin-top:10px">Your real identity is never shown. You appear as <strong style="color:var(--text2)">${currentUser.username}</strong></p> </div>`;
 }
 
-function toggleTag(t) {
-var idx=_postTags.indexOf(t);
-if(idx>=0)_postTags.splice(idx,1);
-else if(_postTags.length<3)_postTags.push(t);
-TAGS.forEach(function(tag){
-var el=document.getElementById(‘tag-’+tag);
-if(el) el.className=‘pill’+(_postTags.includes(tag)?’ on’:’’);
-});
+function selectType(btn, type) {
+document.querySelectorAll(’.type-btn’).forEach(b=>b.classList.remove(‘active’));
+btn.classList.add(‘active’);
+}
+
+function updateCharCount() {
+const val = (document.getElementById(‘postTitle’).value||’’).length;
+document.getElementById(‘titleCharCount’).textContent=`${val} / 120`;
 }
 
 function submitPost() {
-var title = (document.getElementById(‘post-title’)||{}).value||’’;
-var body  = (document.getElementById(‘post-body’)||{}).value||’’;
-if(!title.trim()||!body.trim()){toast(‘Fill in title and story’,‘error’);return;}
-var rateCount=STATE._rateCount||0;
-if(rateCount>=MAX_DAY&&STATE.user.id!==‘demo’){toast(‘Daily limit reached. Come back tomorrow!’,‘error’);return;}
-var btn=document.getElementById(‘submit-post’);
-if(btn){btn.disabled=true;btn.innerHTML=’<span class="spin"></span>’;}
-var np={id:‘new-’+Date.now(),title:title.trim(),content:body.trim(),type:_postType,tags:[].concat(_postTags),
-anonymous_name:STATE.user.anonymous_name,created_at:new Date().toISOString(),
-reaction_counts:{‘🔥’:0,‘😂’:0,‘😢’:0,‘😡’:0},comment_count:0,vote_a:0,vote_b:0,
-wiw_he:0,wiw_she:0,wiw_both:0,user_id:STATE.user.id,view_count:0};
-function onDone(post){
-STATE.posts.unshift(post);
-bumpStreak();
-var app=document.getElementById(‘app’);
-if(app){app.innerHTML=’<div style="text-align:center;padding:40px 14px;animation:up .4s ease both">’
-+’<div style="font-size:46px;margin-bottom:12px">💔</div>’
-+’<div style="font-size:20px;font-weight:800;margin-bottom:8px">Your confession is live.</div>’
-+’<p style="color:var(--t2);font-size:14px;line-height:1.65;margin-bottom:20px;max-width:280px;margin-left:auto;margin-right:auto">We'll email you when someone comments or reacts. Check your inbox.</p>’
-+’<div style="background:var(--c2);border:1px solid rgba(255,61,90,.2);border-radius:12px;padding:13px;margin-bottom:18px">’
-+’<div style="font-size:13px;font-weight:600;margin-bottom:3px">📧 Email notifications on</div>’
-+’<div style="font-size:12px;color:var(--t3)">Turn off anytime in Profile → Settings</div>’
-+’</div>’
-+’<button class="btn bp" onclick="goHome()" style="padding:12px 26px;font-size:15px">Read the feed →</button>’
-+’</div>’;}
-}
-if(sb&&STATE.user.id!==‘demo’){
-sb.from(‘posts’).insert({title:np.title,content:np.content,type:_postType,tags:_postTags,user_id:STATE.user.id}).select().single()
-.then(function(r){
-if(r.error){toast(r.error.message,‘error’);if(btn){btn.disabled=false;btn.innerHTML=‘💔 Post anonymously’;}return;}
-np.id=r.data.id;
-sb.from(‘post_rate’).upsert({user_id:STATE.user.id,day_bucket:new Date().toISOString().split(‘T’)[0],count:rateCount+1},{onConflict:‘user_id,day_bucket’}).then(function(){});
-onDone(np);
-});
-} else {
-setTimeout(function(){onDone(np);},600);
-}
+const title = document.getElementById(‘postTitle’).value.trim();
+const content = document.getElementById(‘postContent’).value.trim();
+const tags = document.getElementById(‘postTags’).value.split(’,’).map(t=>t.trim()).filter(Boolean);
+if(!title||!content) { showToast(‘Title and story are required’,‘error’); return; }
+if(content.length<50) { showToast(‘Tell more of the story — minimum 50 characters’,‘error’); return; }
+
+const newPost = {
+id:‘p’+Date.now(),
+author: currentUser.username,
+type:‘confession’,
+title,content,tags,
+created_at: new Date().toISOString(),
+reactions:{💔:0,😭:0,😡:0,😳:0,😂:0,🔥:0},
+votes:{he:0,she:0,both:0},
+views:1,comment_count:0,trending:false,
+preview_text:content.slice(0,120)+’…’
+};
+SEED_POSTS.unshift(newPost);
+
+document.getElementById(‘postTitle’).value=’’;
+document.getElementById(‘postContent’).value=’’;
+document.getElementById(‘postTags’).value=’’;
+showToast(‘Story posted anonymously 💔’,‘success’);
+navigate(‘home’, document.querySelector(’[data-page=home]’));
 }
 
-// Title count
-document.addEventListener(‘input’, function(e){
-if(e.target&&e.target.id===‘post-title’){
-var c=document.getElementById(‘title-count’);
-if(c) c.textContent=e.target.value.length+’/120’;
-}
-});
-
-function openPost(pid) {
-var post=STATE.posts.find(function(p){return p.id===pid;});
-if(!post) return;
-STATE.active=post;
-STATE.page=‘detail’;
-STATE._commentSort=‘top’;
-window.scrollTo({top:0,behavior:‘smooth’});
-render();
-}
-
-function goBack() {
-STATE.page=‘home’;STATE.active=null;render();
-}
-function goHome() {
-STATE.page=‘home’;STATE.active=null;render();
-}
-
-function setPage(p) {
-STATE.page=p;STATE.active=null;
-window.scrollTo({top:0,behavior:‘smooth’});
-render();
-}
-
-function setTag(t) {
-STATE.tagFilter=t;
-if(STATE.page===‘home’||STATE.page===‘confessions’||STATE.page===‘advice’) render();
-}
-
-function doReact(ev, pid, type, inDetail) {
-ev.stopPropagation();
-if(!STATE.user){showAuth(‘signup’);return;}
-var prev = STATE.reactions[pid]&&STATE.reactions[pid]._mine;
-if(!STATE.reactions[pid]) STATE.reactions[pid]={};
-var r=STATE.reactions[pid];
-var post=STATE.posts.find(function(p){return p.id===pid;});
-var rc=post?Object.assign({},post.reaction_counts||{}):Object.assign({},r);
-if(prev===type){rc[type]=Math.max(0,(rc[type]||1)-1);r._mine=null;}
-else{if(prev)rc[prev]=Math.max(0,(rc[prev]||1)-1);rc[type]=(rc[type]||0)+1;r._mine=type;}
-Object.assign(r,rc);
-if(post) post.reaction_counts=Object.assign({},rc);
-// Re-render just the reaction row
-var rowEl=document.getElementById(inDetail?‘rx-detail-’+pid:‘rx-row-’+pid);
-if(rowEl){
-rowEl.innerHTML=RXLIST.map(function(rr){
-var mine2=r._mine;
-var cnt=rc[rr]||0;
-return ‘<button class="rxb'+(mine2===rr?' on':'')+'" onclick="doReact(event,\''+pid+'\',\''+rr+'\','+inDetail+')">’+rr+’<span style="margin-left:3px">’+(cnt>0?cnt.toLocaleString():’’)+’</span></button>’;
-}).join(’’);
-}
-if(sb&&STATE.user.id!==‘demo’){
-if(prev)sb.from(‘reactions’).delete().match({post_id:pid,user_id:STATE.user.id,type:prev});
-if(r._mine){
-sb.from(‘reactions’).insert({post_id:pid,user_id:STATE.user.id,type:type}).then(function(){
-if(post&&post.user_id&&post.user_id!==STATE.user.id){
-sb.from(‘notifications’).insert({user_id:post.user_id,type:‘reaction’,post_id:pid,actor_name:STATE.user.anonymous_name,message:’@’+STATE.user.anonymous_name+’ reacted ‘+type+’ to your confession’,read:false});
-notify(‘reaction’,{user_id:post.user_id,reactorAnonName:STATE.user.anonymous_name,reactionEmoji:type,postTitle:post.title,totalReactions:Object.values(rc).reduce(function(a,v){return a+v;},0),postId:pid});
-}
-});
-}
-}
-}
-
-function voteWiw(pid, choice) {
-if(!STATE.user){showAuth(‘signup’);return;}
-var post=STATE.posts.find(function(p){return p.id===pid;});
-if(!STATE.wiwVotes[pid]) STATE.wiwVotes[pid]={he:post?post.wiw_he||0:0,she:post?post.wiw_she||0:0,both:post?post.wiw_both||0:0};
-STATE.wiwVotes[pid][choice]++;
-STATE.wiwVotes[pid]._mine=choice;
-var el=document.getElementById(‘wiw-’+pid);
-if(el){el.innerHTML=’<div class="wiw-ttl">⚖️ Who is in the wrong?</div>’+renderWiwBars(post,choice);}
-if(sb&&STATE.user.id!==‘demo’){
-sb.from(‘wiw_votes’).insert({post_id:pid,user_id:STATE.user.id,choice:choice}).then(function(){
-if(post&&post.user_id&&post.user_id!==STATE.user.id){
-sb.from(‘notifications’).insert({user_id:post.user_id,type:‘vote’,post_id:pid,actor_name:STATE.user.anonymous_name,message:‘Someone voted on your confession’,read:false});
-}
-});
-}
-}
-
-function toggleSave(ev, pid) {
-ev.stopPropagation();
-if(!STATE.user){showAuth(‘signup’);return;}
-STATE.savedPosts[pid]=!STATE.savedPosts[pid];
-var btn=ev.currentTarget||ev.target;
-if(btn) btn.style.color=STATE.savedPosts[pid]?’#f59e0b’:‘var(–t3)’;
-if(sb&&STATE.user.id!==‘demo’){
-if(STATE.savedPosts[pid]) sb.from(‘saved_posts’).insert({user_id:STATE.user.id,post_id:pid});
-else sb.from(‘saved_posts’).delete().match({user_id:STATE.user.id,post_id:pid});
-}
-}
-
-function postComment(pid) {
-if(!STATE.user){showAuth(‘signup’);return;}
-var inp=document.getElementById(‘cmt-inp-’+pid);
-if(!inp||!inp.value.trim()) return;
-var content=inp.value.trim();
-inp.value=’’;
-var c={id:‘c-’+Date.now(),anonymous_name:STATE.user.anonymous_name,content:content,created_at:new Date().toISOString(),upvotes:0,user_id:STATE.user.id,heated:false};
-if(!STATE.comments[pid]) STATE.comments[pid]=[];
-STATE.comments[pid].unshift(c);
-var post=STATE.posts.find(function(p){return p.id===pid;});
-if(post) post.comment_count++;
-var el=document.getElementById(‘comments-’+pid);
-if(el) el.innerHTML=renderComments(pid);
-if(sb&&STATE.user.id!==‘demo’){
-sb.from(‘comments’).insert({post_id:pid,user_id:STATE.user.id,content:content}).then(function(){
-if(post&&post.user_id&&post.user_id!==STATE.user.id){
-sb.from(‘notifications’).insert({user_id:post.user_id,type:‘comment’,post_id:pid,actor_name:STATE.user.anonymous_name,message:’@’+STATE.user.anonymous_name+’ commented on your confession’,read:false});
-notify(‘comment’,{user_id:post.user_id,commenterAnonName:STATE.user.anonymous_name,postTitle:post.title,commentContent:content,postId:pid});
-}
-});
-}
-}
-
-function sortComments(pid, by) {
-STATE._commentSort=by;
-var el=document.getElementById(‘comments-’+pid);
-if(el) el.innerHTML=renderComments(pid);
-}
-
-function upvoteComment(pid, cid) {
-if(!STATE.user){showAuth(‘signup’);return;}
-if(STATE.upvoted[cid]) return;
-STATE.upvoted[cid]=true;
-var cmts=STATE.comments[pid]||[];
-cmts.forEach(function(c){if(c.id===cid)c.upvotes=(c.upvotes||0)+1;});
-var el=document.getElementById(‘comments-’+pid);
-if(el) el.innerHTML=renderComments(pid);
-if(sb&&STATE.user.id!==‘demo’) sb.rpc(‘upvote_comment’,{cid:cid,uid:STATE.user.id}).catch(function(){});
-}
-
-function switchTrend(tab) {
-[‘hot’,‘controversial’,‘discussed’].forEach(function(t){
-var btn=document.getElementById(‘trn-’+t);
-if(btn) btn.className=‘pill’+(t===tab?’ on’:’’);
-});
-var el=document.getElementById(‘trn-list’);
-if(el) el.innerHTML=renderTrendList(tab);
-}
-
-function doSearch(val) {
-var res=document.getElementById(‘search-res’);
-if(!res) return;
-if(!val||val.length<2){res.className=‘search-res’;return;}
-var lo=val.toLowerCase();
-var found=STATE.posts.filter(function(p){return p.title.toLowerCase().includes(lo)||p.content.toLowerCase().includes(lo)||(p.tags||[]).some(function(t){return t.includes(lo);});}).slice(0,5);
-if(!found.length){res.className=‘search-res’;return;}
-res.innerHTML=found.map(function(p){return ‘<div class="sr" onclick="openPost(\''+p.id+'\')">’+’<div class="sr-title">’+esc(p.title.slice(0,55))+(p.title.length>55?’…’:’’)+’</div>’+’<div class="sr-meta">’+(p.type===‘confession’?‘💔’:‘💬’)+’ ‘+p.type+’ · @’+esc(p.anonymous_name)+’</div></div>’;}).join(’’);
-res.className=‘search-res show’;
-}
-
-// Close search on outside click
-document.addEventListener(‘click’,function(e){
-var res=document.getElementById(‘search-res’);
-var wrap=document.querySelector(’.search-wrap’);
-if(res&&wrap&&!wrap.contains(e.target)){res.className=‘search-res’;}
-});
-
-/* ══════════════════════════════════════
-AUTH MODAL
-══════════════════════════════════════ */
-var _authMode=‘login’;
-function showAuth(mode) {
-_authMode=mode||‘login’;
-renderAuthModal();
-}
-function closeAuth() {
-var el=document.getElementById(‘auth-overlay’);
-if(el) el.remove();
-}
-function renderAuthModal() {
-var existing=document.getElementById(‘auth-overlay’);
-if(existing) existing.remove();
-var mode=_authMode;
-var el=document.createElement(‘div’);
-el.className=‘overlay’;el.id=‘auth-overlay’;
-el.addEventListener(‘click’,function(e){if(e.target===el)closeAuth();});
-el.innerHTML=’<div class="modal">’
-+’<button class="mclose" onclick="closeAuth()">✕</button>’
-+’<div style="font-size:20px;font-weight:800;color:var(--rose);text-align:center;margin-bottom:5px">💔 HeartConfia</div>’
-+’<p style="text-align:center;color:var(--t2);font-size:13px;margin-bottom:15px">’+(mode===‘login’?‘Your secrets are safe here.’:mode===‘signup’?‘Share anonymously. Feel less alone.’:‘Reset your password.’)+’</p>’
-+(mode!==‘reset’?’<div class="mtabs"><button class="mtab'+(mode==='login'?' on':'')+'" onclick="switchAuthMode(\'login\')">Log in</button><button class="mtab'+(mode==='signup'?' on':'')+'" onclick="switchAuthMode(\'signup\')">Sign up</button></div>’:’’)
-+’<div id="auth-done" style="display:none;text-align:center;padding:18px 0;color:var(--tel);font-size:15px;line-height:1.6"></div>’
-+’<div id="auth-form"><div style="display:flex;flex-direction:column;gap:11px">’
-+’<div><label class="flbl">Email</label><input class="inp" id="auth-email" type="email" placeholder="your@email.com"/></div>’
-+(mode!==‘reset’?’<div><label class="flbl">Password</label><input class="inp" id="auth-pass" type="password" placeholder="••••••••" onkeydown="if(event.key===\'Enter\')doAuth()"/></div>’:’’)
-+’<div id="auth-err" class="err" style="display:none"></div>’
-+’<button class="btn bp btn-full" id="auth-btn" onclick="doAuth()">’+(mode===‘login’?‘Log in’:mode===‘signup’?‘Create account’:‘Send reset link’)+’</button>’
-+(mode===‘login’?’<button style="background:none;border:none;color:var(--t3);font-size:13px;cursor:pointer;text-align:center;font-family:var(--font)" onclick="switchAuthMode(\'reset\')">Forgot password?</button>’:’’)
-+’</div></div>’
-+’<div class="mswitch">’+(mode===‘login’?‘Don't have an account? <button onclick="switchAuthMode(\'signup\')">Sign up free</button>’:mode===‘signup’?‘Already have an account? <button onclick="switchAuthMode(\'login\')">Log in</button>’:’’)+’</div>’
-+’</div>’;
-document.body.appendChild(el);
-}
-function switchAuthMode(m){_authMode=m;renderAuthModal();}
-function doAuth(){
-var email=(document.getElementById(‘auth-email’)||{}).value||’’;
-var pass=(document.getElementById(‘auth-pass’)||{}).value||’’;
-var btn=document.getElementById(‘auth-btn’);
-var errEl=document.getElementById(‘auth-err’);
-var doneEl=document.getElementById(‘auth-done’);
-var formEl=document.getElementById(‘auth-form’);
-if(!email){if(errEl){errEl.style.display=’’;errEl.textContent=‘Enter your email’;}return;}
-if(btn){btn.disabled=true;btn.innerHTML=’<span class="spin"></span>’;}
-if(errEl) errEl.style.display=‘none’;
-var mode=_authMode;
-if(!IS_CFG){
-setTimeout(function(){
-handleAuthSuccess({id:‘demo’,email:email,anonymous_name:makeName(),notify_email:true});
-},700);
+// ── NOTIFICATIONS ──
+function renderNotifications() {
+const container = document.getElementById(‘notifContainer’);
+if(!currentUser) {
+container.innerHTML=`<div class="empty-state"><div class="empty-state-icon">🔔</div><p class="empty-state-text">Login to see notifications</p><br><button class="btn btn-primary btn-sm" onclick="showAuth('login')">Login</button></div>`;
 return;
 }
-function fail(msg){if(errEl){errEl.style.display=’’;errEl.textContent=msg;}if(btn){btn.disabled=false;btn.innerHTML=mode===‘login’?‘Log in’:mode===‘signup’?‘Create account’:‘Send reset link’;}}
-if(mode===‘reset’){
-sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href}).then(function(r){if(r.error)fail(r.error.message);else{if(doneEl){doneEl.style.display=’’;doneEl.textContent=‘Reset link sent 📧’;}if(formEl)formEl.style.display=‘none’;}});
-} else if(mode===‘signup’){
-sb.auth.signUp({email:email,password:pass}).then(function(r){
-if(r.error){fail(r.error.message);return;}
-if(r.data&&r.data.user){
-var n=makeName();
-sb.from(‘users’).insert({id:r.data.user.id,email:email,anonymous_name:n,notify_email:true}).then(function(){
-if(doneEl){doneEl.style.display=’’;doneEl.textContent=‘Verify your email to continue 💌’;}
-if(formEl)formEl.style.display=‘none’;
-});
-}
-});
-} else {
-sb.auth.signInWithPassword({email:email,password:pass}).then(function(r){
-if(r.error){fail(r.error.message);return;}
-sb.from(‘users’).select(’*’).eq(‘id’,r.data.user.id).single().then(function(pr){
-handleAuthSuccess(Object.assign({},r.data.user,{anonymous_name:(pr.data&&pr.data.anonymous_name)||makeName(),notify_email:(pr.data&&pr.data.notify_email)!==false}));
-});
-});
-}
-}
-function handleAuthSuccess(u){
-STATE.user=u;
-closeAuth();
-// First time onboarding
-if(!localStorage.getItem(‘hc_onboarded’)){
-showOnboarding(u.anonymous_name);
-} else {
-toast(‘Welcome back, @’+u.anonymous_name+’!’,‘success’);
-render();
-}
-renderNavRight();
-}
-
-/* ══════════════════════════════════════
-ONBOARDING
-══════════════════════════════════════ */
-var _obStep=0;
-var _obName=’’;
-var OB_STEPS=[
-{icon:‘🔒’,title:‘You are completely anonymous’,body:‘Nobody can trace a confession back to you. Your identity is never revealed.’},
-{icon:‘💔’,title:‘Share what you've never said aloud’,body:‘Confessions, advice, hot takes. Be honest — no one knows it's you.’},
-{icon:‘⚖️’,title:‘Vote on who is wrong’,body:‘Every confession has a “Who is wrong?” vote. React, comment, join the debate.’},
-{icon:‘🔔’,title:‘We'll notify you when people react’,body:‘Get an email when someone comments on your confession or when it trends.’},
+const notifs = [
+{id:1,icon:‘💬’,text:`<strong>Truth_4401</strong> replied to your comment on "I checked his phone at 2AM…"`,time:‘2m ago’,unread:true},
+{id:2,icon:‘🔥’,text:`Your post is <strong>Trending Now</strong> with 143 comments!`,time:‘1h ago’,unread:true},
+{id:3,icon:‘💔’,text:`<strong>Ghost_7712</strong> reacted 💔 to your confession`,time:‘2h ago’,unread:false},
+{id:4,icon:‘⚖️’,text:`<strong>847 people</strong> voted on your post. He is wrong: 89%`,time:‘3h ago’,unread:false},
+{id:5,icon:‘😡’,text:`<strong>Vibe_9923</strong> upvoted your comment`,time:‘5h ago’,unread:false},
 ];
-function showOnboarding(anonName){
-_obStep=0;_obName=anonName;
-renderOnboarding();
-}
-function renderOnboarding(){
-var existing=document.getElementById(‘ob-overlay’);if(existing)existing.remove();
-var cur=OB_STEPS[_obStep];var isLast=*obStep===OB_STEPS.length-1;
-var el=document.createElement(‘div’);el.className=‘ob-overlay’;el.id=‘ob-overlay’;
-el.innerHTML=’<div class="ob-card">’
-+’<div class="ob-dots">’+OB_STEPS.map(function(*,i){return ‘<div class="ob-dot'+(i===_obStep?' on':'')+'"></div>’;}).join(’’)+’</div>’
-+’<div class="ob-icon">’+cur.icon+’</div>’
-+’<div style="font-size:19px;font-weight:700;color:var(--t1);margin-bottom:8px;line-height:1.25">’+cur.title+’</div>’
-+’<div class="ob-name">@’+esc(_obName)+’</div>’
-+’<p style="font-size:14px;color:var(--t2);line-height:1.65;margin-bottom:20px">’+cur.body+’</p>’
-+’<button class="btn bp btn-full" onclick="obNext()">’+(isLast?‘Start reading confessions →’:‘Continue’)+’</button>’
-+’</div>’;
-document.body.appendChild(el);
-}
-function obNext(){
-if(_obStep<OB_STEPS.length-1){_obStep++;renderOnboarding();}
-else{var el=document.getElementById(‘ob-overlay’);if(el)el.remove();localStorage.setItem(‘hc_onboarded’,‘1’);toast(‘Welcome, @’+_obName+’! 💔’,‘success’);render();}
+container.innerHTML=notifs.map(n=>` <div class="notif-item ${n.unread?'unread':''}"> <div class="notif-icon">${n.icon}</div> <div style="flex:1"> <div class="notif-text">${n.text}</div> <div class="notif-time">${n.time}</div> </div> ${n.unread?'<div class="unread-dot"></div>':''} </div>`).join(’’);
 }
 
-/* ══════════════════════════════════════
-REPORT MODAL
-══════════════════════════════════════ */
-var _repPostId=null,_repCommentId=null,_repReason=’’;
-function showReport(ev,pid,cid){
-ev.stopPropagation&&ev.stopPropagation();
-_repPostId=pid;_repCommentId=cid;_repReason=’’;
-var existing=document.getElementById(‘rep-overlay’);if(existing)existing.remove();
-var el=document.createElement(‘div’);el.className=‘overlay’;el.id=‘rep-overlay’;
-el.addEventListener(‘click’,function(e){if(e.target===el)closeReport();});
-el.innerHTML=’<div class="modal" style="max-width:330px">’
-+’<button class="mclose" onclick="closeReport()">✕</button>’
-+’<div style="font-size:18px;font-weight:700;margin-bottom:10px">Report content</div>’
-+REASONS.map(function(r){return ‘<div class="repopt" id="rep-'+r.replace(/\s/g,'_')+'" onclick="selectReason(\''+esc(r)+'\')">● ‘+esc(r)+’</div>’;}).join(’’)
-+’<button class="btn btn-full" style="background:#dc2626;color:#fff;margin-top:9px" onclick="submitReport()">Submit</button>’
-+’</div>’;
-document.body.appendChild(el);
+// ── PROFILE ──
+function renderProfile() {
+const container = document.getElementById(‘profileContainer’);
+if(!currentUser) {
+container.innerHTML=`<div class="profile-header"><div class="confess-icon">👤</div><h2 style="margin-bottom:12px">Your Profile</h2><p style="color:var(--text3);margin-bottom:16px">Create an account to build your identity</p><button class="btn btn-primary" onclick="showAuth('signup')">Join HeartConfia</button></div>`;
+return;
 }
-function selectReason(r){
-*repReason=r;
-REASONS.forEach(function(rr){var el=document.getElementById(‘rep-’+rr.replace(/\s/g,’*’));if(el)el.className=‘repopt’+(rr===r?’ on’:’’);});
-}
-function closeReport(){var el=document.getElementById(‘rep-overlay’);if(el)el.remove();}
-function submitReport(){
-if(!_repReason) return;
-if(sb&&STATE.user&&STATE.user.id!==‘demo’) sb.from(‘reports’).insert({reporter_id:STATE.user.id,post_id:_repPostId,comment_id:_repCommentId,reason:_repReason});
-closeReport();toast(‘Report submitted. We'll review it.’,‘success’);
+const initials = (currentUser.username||‘U’).slice(0,2).toUpperCase();
+const myPosts = SEED_POSTS.filter(p=>p.author===currentUser.username);
+const totalReactions = myPosts.reduce((sum,p)=>sum+Object.values(p.reactions).reduce((a,b)=>a+b,0),0);
+
+container.innerHTML=`<div class="profile-header"> <div class="profile-avatar-large">${initials}</div> <div class="profile-username">${currentUser.username}</div> <div class="profile-joined">Member since ${new Date(currentUser.created_at||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'})}</div> <div class="profile-stats"> <div class="profile-stat"><div class="profile-stat-num">${myPosts.length}</div><div class="profile-stat-label">Posts</div></div> <div class="profile-stat"><div class="profile-stat-num">${fmtNum(totalReactions)}</div><div class="profile-stat-label">Reactions</div></div> <div class="profile-stat"><div class="profile-stat-num">0</div><div class="profile-stat-label">Comments</div></div> </div> </div> <div class="profile-section-title">My Confessions</div> ${myPosts.length ? myPosts.map((p,i)=>renderPostCard(p,i)).join('') : '<div class="empty-state"><div class="empty-state-icon">🖤</div><p class="empty-state-text">You haven\'t shared anything yet</p></div>' } <div style="margin-top:24px;text-align:center"> <button class="btn btn-ghost" onclick="doLogout()" style="color:var(--accent)">Sign Out</button> </div>`;
 }
 
-/* ══════════════════════════════════════
-PROFILE ACTIONS
-══════════════════════════════════════ */
-function toggleEmailNotif(){
-var u=STATE.user;if(!u)return;
-u.notify_email=!u.notify_email;
-var btn=document.getElementById(‘email-tgl’);
-if(btn){btn.className=‘tgl’+(u.notify_email?’ on’:’’);}
-if(sb) sb.from(‘users’).update({notify_email:u.notify_email}).eq(‘id’,u.id);
-toast(u.notify_email?‘Email notifications on ✅’:‘Email notifications off’,‘info’);
-}
-function showDeleteAccount(){
-var el=document.getElementById(‘del-confirm’);if(el)el.style.display=‘block’;
-}
-function cancelDelete(){
-var el=document.getElementById(‘del-confirm’);if(el)el.style.display=‘none’;
-var inp=document.getElementById(‘del-inp’);if(inp)inp.value=’’;
-}
-function confirmDelete(){
-var inp=document.getElementById(‘del-inp’);
-if(!inp||inp.value!==‘DELETE’) return;
-if(sb){sb.from(‘users’).delete().eq(‘id’,STATE.user.id);sb.auth.signOut();}
-localStorage.removeItem(‘hc_sk’);
-STATE.user=null;
-toast(‘Account deleted’,‘info’);
-setTimeout(function(){window.location.reload();},1400);
+// ── REPORT MODAL ──
+function showReport(id, type=‘post’) {
+if(!currentUser) { showAuth(‘login’); return; }
+const body = document.getElementById(‘reportModalBody’);
+const reasons = [‘Spam or fake’,‘Harassment or hate’,‘Misinformation’,‘Inappropriate content’,‘Privacy violation’,‘Other’];
+body.innerHTML=` <p style="font-size:13px;color:var(--text3);margin-bottom:14px">Why are you reporting this ${type}?</p> ${reasons.map(r=>`<button class="btn btn-ghost" style="width:100%;text-align:left;margin-bottom:8px;padding:10px 14px" onclick="submitReport('${id}','${r}')">${r}</button>`).join('')} `;
+document.getElementById(‘reportModal’).classList.remove(‘hidden’);
 }
 
-/* ══════════════════════════════════════
-NAV
-══════════════════════════════════════ */
-function updateNavTabs(){
-document.querySelectorAll(’.tab’).forEach(function(btn){
-btn.className=‘tab’+(btn.dataset.page===STATE.page?’ on’:’’);
-});
+function submitReport(id, reason) {
+document.getElementById(‘reportModal’).classList.add(‘hidden’);
+showToast(`Reported: "${reason}" — Thanks for keeping the community safe 🛡️`,‘info’);
 }
 
-function renderNavRight(){
-var el=document.getElementById(‘nav-right’);if(!el)return;
-var streak=getStreak();
-var u=STATE.user;
-if(u){
-el.innerHTML=(streak.c>0?’<div class="streakc" onclick="setPage(\'profile\')">🔥’+streak.c+’</div>’:’’)
-+’<div style="position:relative" id="notif-wrap">’
-+’<button class="nbtn" id="notif-btn" onclick="toggleNotif()">🔔’
-+(STATE.notifs.filter(function(n){return !n.read;}).length>0?’<span class="nbadge">’+Math.min(STATE.notifs.filter(function(n){return !n.read;}).length,9)+’</span>’:’’)
-+’</button>’
-+’<div class="npanel" id="notif-panel">’+renderNotifPanel()+’</div>’
-+’</div>’
-+’<button class="btn bp btn-sm" onclick="setPage(\'create\')">+ Post</button>’
-+’<button class="btn bg" style="font-size:12px;padding:6px 8px" onclick="doLogout()">Out</button>’;
-} else {
-el.innerHTML=’<button class="btn bg" style="font-size:12px" onclick="showAuth(\'login\')">Login</button>’
-+’<button class="btn bp btn-sm" onclick="showAuth(\'signup\')">Join</button>’;
+// ── REALTIME (Supabase) ──
+function subscribeRealtime() {
+if(!supabase) return;
+// Subscribe to new posts
+const postCh = supabase.channel(‘posts-channel’)
+.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘posts’}, payload=>{
+SEED_POSTS.unshift(payload.new);
+if(currentPage===‘home’) renderFeed();
+showToast(‘New confession just dropped 💔’,‘info’);
+})
+.subscribe();
+realtimeChannels.push(postCh);
+
+// Subscribe to votes
+const voteCh = supabase.channel(‘votes-channel’)
+.on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘votes’}, payload=>{
+const post = SEED_POSTS.find(p=>p.id===payload.new.post_id);
+if(post) {
+post.votes[payload.new.vote_type]++;
+updateVoteBar(post.id, post.votes);
 }
+})
+.subscribe();
+realtimeChannels.push(voteCh);
 }
 
-function renderNotifPanel(){
-if(!STATE.notifs.length) return ‘<div style="padding:24px 13px;text-align:center;color:var(--t3);font-size:13px">No notifications yet.</div>’;
-var icons={comment:‘💬’,reaction:‘🔥’,vote:‘⚖️’,trending:‘🚀’};
-return ‘<div style="padding:11px 13px;border-bottom:1px solid var(--b1);font-size:14px;font-weight:700">Notifications</div>’
-+STATE.notifs.slice(0,15).map(function(n){return ‘<div class="nitem'+(n.read?'':' unread')+'">’
-+’<div style="display:flex;gap:7px;align-items:flex-start">’+(n.read?’’:’<div class="ndot"></div>’)
-+’<div><div style="font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:2px">’+(icons[n.type]||‘📣’)+’ ‘+esc(n.message)+’</div>’
-+’<div style="font-size:11px;color:var(--t3)">’+ago(n.created_at)+’</div></div></div></div>’;}).join(’’);
+// ── UTILS ──
+function fmtNum(n) {
+if(n>=1000000) return (n/1000000).toFixed(1)+‘M’;
+if(n>=1000) return (n/1000).toFixed(1)+‘k’;
+return String(n);
 }
 
-function toggleNotif(){
-STATE.notifOpen=!STATE.notifOpen;
-var panel=document.getElementById(‘notif-panel’);
-if(panel) panel.className=‘npanel’+(STATE.notifOpen?’ show’:’’);
-if(STATE.notifOpen){
-STATE.notifs.forEach(function(n){n.read=true;});
-if(sb&&STATE.user) sb.from(‘notifications’).update({read:true}).eq(‘user_id’,STATE.user.id);
-renderNavRight();
-// Reopen panel after re-render
-setTimeout(function(){var p=document.getElementById(‘notif-panel’);if(p)p.className=‘npanel show’;},10);
-}
+function timeAgo(dateStr) {
+const diff = Date.now() - new Date(dateStr).getTime();
+const mins = Math.floor(diff/60000);
+const hours = Math.floor(mins/60);
+const days = Math.floor(hours/24);
+if(mins<1) return ‘just now’;
+if(mins<60) return `${mins}m ago`;
+if(hours<24) return `${hours}h ago`;
+return `${days}d ago`;
 }
 
-document.addEventListener(‘click’,function(e){
-var wrap=document.getElementById(‘notif-wrap’);
-if(wrap&&!wrap.contains(e.target)){
-STATE.notifOpen=false;
-var panel=document.getElementById(‘notif-panel’);
-if(panel) panel.className=‘npanel’;
-}
-});
-
-function doLogout(){
-if(sb) sb.auth.signOut();
-STATE.user=null;STATE.page=‘home’;STATE.notifs=[];
-toast(‘Logged out. Your secrets are safe.’,‘info’);
-render();renderNavRight();
+function autoResize(el) {
+el.style.height=‘auto’;
+el.style.height=el.scrollHeight+‘px’;
 }
 
-/* ══════════════════════════════════════
-TICKER
-══════════════════════════════════════ */
-function renderTicker(){
-var posts=STATE.posts.slice(0,8);
-var items=posts.map(function(p){var rx=totalRx(p);return ‘💔 @’+p.anonymous_name+’ · ‘+rx.toLocaleString()+’ reactions · “’+p.title.slice(0,36)+’…”’;});
-var all=items.concat(items);
-var inner=document.getElementById(‘tick-inner’);
-if(inner) inner.innerHTML=all.map(function(s){return ‘<span class="ti"><span class="td"></span>’+esc(s)+’</span>’;}).join(’’);
+function showToast(msg, type=‘info’) {
+const container = document.getElementById(‘toast-container’);
+const toast = document.createElement(‘div’);
+toast.className=`toast ${type}`;
+toast.textContent=msg;
+container.appendChild(toast);
+setTimeout(()=>toast.remove(), 3100);
 }
 
-/* ══════════════════════════════════════
-ADMIN
-══════════════════════════════════════ */
-function loadAdminReports(){
-if(!sb||!STATE.user||STATE.user.email!==ADMIN_EMAIL) return;
-sb.from(‘reports’).select(’*,posts(title),comments(content)’).order(‘created_at’,{ascending:false}).then(function(r){
-var el=document.getElementById(‘admin-list’);
-if(!el||!r.data) return;
-if(!r.data.length){el.innerHTML=’<div class="empty"><div style="font-size:36px;margin-bottom:8px">✅</div><div>Queue clear</div></div>’;return;}
-el.innerHTML=r.data.map(function(rep){
-return ‘<div style="background:var(--c2);border:1px solid var(--b1);border-radius:11px;padding:13px;margin-bottom:9px;display:flex;justify-content:space-between;gap:10px">’
-+’<div style="flex:1"><div style="font-size:11px;color:var(--rose);font-weight:700;margin-bottom:4px;text-transform:uppercase">’+esc(rep.reason)+’</div>’
-+’<p style="font-size:13px;color:var(--t2);margin-bottom:4px">’+esc((rep.posts&&rep.posts.title)||(rep.comments&&rep.comments.content)||’—’)+’</p>’
-+’<div style="font-size:11px;color:var(--t3)">’+ago(rep.created_at)+’</div></div>’
-+’<div style="display:flex;flex-direction:column;gap:6px">’
-+’<button class="btn bs btn-sm" onclick="adminDismiss(\''+rep.id+'\',this)">Dismiss</button>’
-+’<button class="btn btn-sm" style="background:#dc2626;color:#fff" onclick="adminRemove(\''+rep.id+'\',\''+rep.post_id+'\',\''+rep.comment_id+'\',this)">Remove</button>’
-+’</div></div>’;
-}).join(’’);
-});
-}
-function adminDismiss(id,btn){if(btn)btn.closest(’[style]’).remove();if(sb)sb.from(‘reports’).update({resolved:true}).eq(‘id’,id);}
-function adminRemove(id,pid,cid,btn){
-if(btn)btn.closest(’[style]’).remove();
-if(sb){if(pid&&pid!==‘null’)sb.from(‘posts’).delete().eq(‘id’,pid);if(cid&&cid!==‘null’)sb.from(‘comments’).delete().eq(‘id’,cid);sb.from(‘reports’).delete().eq(‘id’,id);}
-toast(‘Content removed’,‘success’);
-}
+// ── INIT ──
+(function init() {
+// Restore demo user
+const saved = localStorage.getItem(‘hc_demo_user’);
+if(saved) { currentUser=JSON.parse(saved); updateNavForUser(); }
 
-/* ══════════════════════════════════════
-LOAD REAL DATA
-══════════════════════════════════════ */
-function loadComments(pid){
-if(!sb) return;
-var post=STATE.posts.find(function(p){return p.id===pid;});
-if(!post||post.id.startsWith(‘p’)) return; // demo posts
-sb.from(‘comments’).select(’*’).eq(‘post_id’,pid).order(‘upvotes’,{ascending:false}).then(function(r){
-if(r.data&&r.data.length){
-STATE.comments[pid]=r.data;
-var el=document.getElementById(‘comments-’+pid);
-if(el) el.innerHTML=renderComments(pid);
-}
-});
-// Realtime
-sb.channel(‘c-’+pid).on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘comments’,filter:‘post_id=eq.’+pid},function(pl){
-if(!STATE.comments[pid]) STATE.comments[pid]=[];
-STATE.comments[pid].unshift(Object.assign({},pl.new,{heated:Math.random()>.7}));
-var el=document.getElementById(‘comments-’+pid);
-if(el) el.innerHTML=renderComments(pid);
-}).subscribe();
-}
-
-function loadNotifications(){
-if(!sb||!STATE.user) return;
-sb.from(‘notifications’).select(’*’).eq(‘user_id’,STATE.user.id).order(‘created_at’,{ascending:false}).limit(20).then(function(r){
-if(r.data) STATE.notifs=r.data;
-renderNavRight();
-});
-sb.channel(‘n-’+STATE.user.id).on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘notifications’,filter:‘user_id=eq.’+STATE.user.id},function(pl){
-STATE.notifs.unshift(pl.new);
-renderNavRight();
-}).subscribe();
-}
-
-/* ══════════════════════════════════════
-BOOT
-══════════════════════════════════════ */
-function boot(){
-initPosts();
-initComments();
-// Load real posts
-if(sb){
-sb.from(‘posts’).select(’*,users(anonymous_name)’).order(‘created_at’,{ascending:false}).limit(50).then(function(r){
-if(r.data&&r.data.length){
-STATE.posts=r.data.map(function(p){return Object.assign({wiw_he:0,wiw_she:0,wiw_both:0,view_count:0},p,{anonymous_name:p.users&&p.users.anonymous_name});});
-render();
-}
-});
-// Auth session
-sb.auth.getSession().then(function(r){
-if(r.data&&r.data.session&&r.data.session.user){
-sb.from(‘users’).select(’*’).eq(‘id’,r.data.session.user.id).single().then(function(pr){
-if(pr.data){
-STATE.user=Object.assign({},r.data.session.user,{anonymous_name:pr.data.anonymous_name,notify_email:pr.data.notify_email!==false});
-renderNavRight();
-loadNotifications();
-// Load rate count
-sb.from(‘post_rate’).select(‘count’).eq(‘user_id’,STATE.user.id).eq(‘day_bucket’,new Date().toISOString().split(‘T’)[0]).single().then(function(rr){if(rr.data)STATE._rateCount=rr.data.count||0;});
-}
+// Restore Supabase session
+if(supabase) {
+supabase.auth.getSession().then(({data:{session}})=>{
+if(session?.user) {
+supabase.from(‘users’).select(’*’).eq(‘id’,session.user.id).single().then(({data})=>{
+if(data) { currentUser=data; updateNavForUser(); subscribeRealtime(); }
 });
 }
 });
-sb.auth.onAuthStateChange(function(ev){if(ev===‘SIGNED_OUT’){STATE.user=null;renderNavRight();}});
-// Realtime feed
-sb.channel(‘feed’).on(‘postgres_changes’,{event:‘INSERT’,schema:‘public’,table:‘posts’},function(pl){
-sb.from(‘users’).select(‘anonymous_name’).eq(‘id’,pl.new.user_id).single().then(function(u){
-STATE.posts.unshift(Object.assign({wiw_he:0,wiw_she:0,wiw_both:0,view_count:0},pl.new,{anonymous_name:u.data&&u.data.anonymous_name,reaction_counts:{},comment_count:0,vote_a:0,vote_b:0}));
-if(STATE.page===‘home’) render();
+}
+
+// Initial render
+renderFeed();
+
+// Intersection Observer for infinite scroll feel
+const observer = new IntersectionObserver(entries=>{
+entries.forEach(e=>{
+if(e.isIntersecting) e.target.style.opacity=‘1’;
 });
-}).subscribe();
-}
-render();
-// Admin
-if(STATE.user&&STATE.user.email===ADMIN_EMAIL){
-document.getElementById(‘tabs’).insertAdjacentHTML(‘beforeend’,’<button class="tab" data-page="admin" onclick="setPage(\'admin\');loadAdminReports()">🛡 Admin</button>’);
-}
-}
+},{threshold:0.1});
 
-// Override setPage to handle admin
-var _origSetPage=setPage;
-window.setPage=function(p){
-_origSetPage(p);
-if(p===‘admin’) loadAdminReports();
-};
-
-boot();
+// Animate cards on scroll
+document.addEventListener(‘scroll’,()=>{
+document.querySelectorAll(’.post-card’).forEach(card=>{
+const rect = card.getBoundingClientRect();
+if(rect.top < window.innerHeight * 0.95) card.style.opacity=‘1’;
+});
+},{passive:true});
+})();
 </script>
+
+<!-- ═══════════════════════════════════════
+     SUPABASE SQL SCHEMA
+     Copy this into your Supabase SQL editor
+═══════════════════════════════════════ -->
+
+<!--
+-- ═══════════════════════════════════════
+-- HEARTCONFIA DATABASE SCHEMA
+-- Run in Supabase SQL Editor
+-- ═══════════════════════════════════════
+
+-- USERS
+CREATE TABLE users (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  username TEXT NOT NULL UNIQUE,
+  avatar_url TEXT,
+  bio TEXT,
+  is_banned BOOLEAN DEFAULT FALSE,
+  is_admin BOOLEAN DEFAULT FALSE,
+  post_count INT DEFAULT 0,
+  comment_count INT DEFAULT 0,
+  reaction_count INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- POSTS
+CREATE TABLE posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  author_username TEXT NOT NULL,
+  type TEXT NOT NULL CHECK (type IN ('confession','advice','debate')),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  preview_text TEXT,
+  tags TEXT[] DEFAULT '{}',
+  is_hidden BOOLEAN DEFAULT FALSE,
+  view_count INT DEFAULT 0,
+  comment_count INT DEFAULT 0,
+  trending_score FLOAT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_posts_created ON posts(created_at DESC);
+CREATE INDEX idx_posts_trending ON posts(trending_score DESC);
+CREATE INDEX idx_posts_tags ON posts USING gin(tags);
+
+-- VOTES
+CREATE TABLE votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  vote_type TEXT NOT NULL CHECK (vote_type IN ('he','she','both')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(post_id, user_id)
+);
+CREATE INDEX idx_votes_post ON votes(post_id);
+
+-- REACTIONS
+CREATE TABLE reactions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  emoji TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(post_id, user_id, emoji)
+);
+CREATE INDEX idx_reactions_post ON reactions(post_id);
+
+-- COMMENTS
+CREATE TABLE comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  author_username TEXT NOT NULL,
+  content TEXT NOT NULL,
+  upvotes INT DEFAULT 0,
+  downvotes INT DEFAULT 0,
+  is_pinned BOOLEAN DEFAULT FALSE,
+  is_hidden BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_comments_post ON comments(post_id, created_at DESC);
+CREATE INDEX idx_comments_heated ON comments(post_id, (upvotes+downvotes) DESC);
+
+-- COMMENT REPLIES
+CREATE TABLE comment_replies (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  author_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  author_username TEXT NOT NULL,
+  content TEXT NOT NULL,
+  upvotes INT DEFAULT 0,
+  downvotes INT DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_replies_comment ON comment_replies(comment_id);
+
+-- COMMENT VOTES
+CREATE TABLE comment_votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  direction TEXT NOT NULL CHECK (direction IN ('up','down')),
+  UNIQUE(comment_id, user_id)
+);
+
+-- NOTIFICATIONS
+CREATE TABLE notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  type TEXT NOT NULL,
+  title TEXT NOT NULL,
+  body TEXT NOT NULL,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_notifs_user ON notifications(user_id, created_at DESC);
+
+-- POST VIEWS
+CREATE TABLE post_views (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  viewed_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_views_post ON post_views(post_id, viewed_at DESC);
+
+-- TRENDING SCORES (materialized)
+CREATE TABLE trending_scores (
+  post_id UUID PRIMARY KEY REFERENCES posts(id) ON DELETE CASCADE,
+  score FLOAT DEFAULT 0,
+  views_1h INT DEFAULT 0,
+  reactions_1h INT DEFAULT 0,
+  comments_1h INT DEFAULT 0,
+  votes_total INT DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- REPORTS
+CREATE TABLE reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+  comment_id UUID REFERENCES comments(id) ON DELETE CASCADE,
+  reason TEXT NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending','reviewed','dismissed','actioned')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX idx_reports_status ON reports(status);
+
+-- RLS POLICIES
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE votes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE comment_replies ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reports ENABLE ROW LEVEL SECURITY;
+
+-- Users can read all non-hidden posts
+CREATE POLICY "Read visible posts" ON posts FOR SELECT USING (NOT is_hidden);
+-- Users can insert their own posts
+CREATE POLICY "Insert own posts" ON posts FOR INSERT WITH CHECK (auth.uid() = author_id);
+-- Users can vote once per post
+CREATE POLICY "Vote once" ON votes FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Read votes" ON votes FOR SELECT USING (TRUE);
+-- Users can react
+CREATE POLICY "React" ON reactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Read reactions" ON reactions FOR SELECT USING (TRUE);
+-- Comment policies
+CREATE POLICY "Read visible comments" ON comments FOR SELECT USING (NOT is_hidden);
+CREATE POLICY "Insert comments" ON comments FOR INSERT WITH CHECK (auth.uid() = author_id);
+-- Notifications - own only
+CREATE POLICY "Own notifications" ON notifications FOR SELECT USING (auth.uid() = user_id);
+-- Reports
+CREATE POLICY "Insert report" ON reports FOR INSERT WITH CHECK (auth.uid() = reporter_id);
+
+-- REALTIME
+ALTER PUBLICATION supabase_realtime ADD TABLE posts;
+ALTER PUBLICATION supabase_realtime ADD TABLE votes;
+ALTER PUBLICATION supabase_realtime ADD TABLE reactions;
+ALTER PUBLICATION supabase_realtime ADD TABLE comments;
+ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
+
+-- TRENDING SCORE FUNCTION
+CREATE OR REPLACE FUNCTION calculate_trending_score(post_id UUID)
+RETURNS FLOAT AS $$
+DECLARE
+  v_views INT;
+  v_reactions INT;
+  v_comments INT;
+  v_votes INT;
+  v_age_hours FLOAT;
+  score FLOAT;
+BEGIN
+  SELECT view_count, comment_count INTO v_views, v_comments FROM posts WHERE id = post_id;
+  SELECT COUNT(*) INTO v_reactions FROM reactions WHERE reactions.post_id = post_id AND created_at > NOW() - INTERVAL '1 hour';
+  SELECT COUNT(*) INTO v_votes FROM votes WHERE votes.post_id = post_id;
+  SELECT EXTRACT(EPOCH FROM (NOW() - created_at))/3600 INTO v_age_hours FROM posts WHERE id = post_id;
+  score := (v_reactions * 3 + v_comments * 2 + v_votes * 1.5 + v_views * 0.1) / POWER(v_age_hours + 2, 1.5);
+  RETURN score;
+END;
+$$ LANGUAGE plpgsql;
+
+-- AUTO-UPDATE TRENDING
+CREATE OR REPLACE FUNCTION update_post_trending()
+RETURNS TRIGGER AS $$
+BEGIN
+  UPDATE posts SET trending_score = calculate_trending_score(NEW.post_id) WHERE id = NEW.post_id;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_trending_on_vote
+AFTER INSERT ON votes FOR EACH ROW EXECUTE FUNCTION update_post_trending();
+
+CREATE TRIGGER trg_update_trending_on_reaction
+AFTER INSERT ON reactions FOR EACH ROW EXECUTE FUNCTION update_post_trending();
+
+CREATE TRIGGER trg_update_trending_on_comment
+AFTER INSERT ON comments FOR EACH ROW EXECUTE FUNCTION update_post_trending();
+
+-- AUTO NOTIFY
+CREATE OR REPLACE FUNCTION notify_comment_author()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_post_author UUID;
+BEGIN
+  SELECT author_id INTO v_post_author FROM posts WHERE id = NEW.post_id;
+  IF v_post_author IS NOT NULL AND v_post_author != NEW.author_id THEN
+    INSERT INTO notifications(user_id, type, title, body, post_id)
+    VALUES(v_post_author, 'comment', 'New comment', NEW.author_username || ' commented on your post', NEW.post_id);
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_notify_comment AFTER INSERT ON comments
+FOR EACH ROW EXECUTE FUNCTION notify_comment_author();
+
+-- ═══════════════════════════════════════
+-- DEPLOYMENT INSTRUCTIONS
+-- ═══════════════════════════════════════
+-- 1. Create Supabase project at supabase.com
+-- 2. Run the SQL above in the SQL Editor
+-- 3. Enable Email Auth in Authentication > Providers
+-- 4. Enable Email Verification in Authentication > Email Templates
+-- 5. Replace SUPABASE_URL and SUPABASE_ANON_KEY at top of the script
+-- 6. Deploy HTML to Netlify:
+--    - Drag & drop the file at netlify.com/drop
+--    - Or push to GitHub and connect to Netlify
+-- 7. Set your Netlify domain in Supabase Auth > URL Configuration
+-- 8. Enable Realtime for tables: posts, votes, reactions, comments, notifications
+--    (Database > Replication > Tables)
+-- 9. (Optional) Set up Supabase Edge Functions for:
+--    - Rate limiting post submissions
+--    - Profanity filtering
+--    - Trending score recalculation cron
+-- 10. For admin panel access: set is_admin=true in users table for your account
+-->
 
 </body>
 </html>
