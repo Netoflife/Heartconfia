@@ -988,8 +988,8 @@ img{display:block;max-width:100%}
 (function(){
   'use strict';
 
-  const SUPABASE_URL = 'https://rihritdkzvmqoeckleud.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaHJpdGRrenZtcW9lY2tsZXVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NjE5MzYsImV4cCI6MjA5MzMzNzkzNn0.gWTE4vyCid3vE6-pxAf_ccRB7o5Gec8vd5nHJrTDe1M';
+  const SUPABASE_URL = 'YOUR_SUPABASE_URL';
+  const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
   
   const MAX_COMMENT_LENGTH = 1000;
   const MAX_TITLE_LENGTH = 120;
@@ -1090,195 +1090,206 @@ img{display:block;max-width:100%}
     el.innerHTML='<span class="ach-icon">'+ach.icon+'</span><div><div class="ach-title">🏆 '+ach.title+' Unlocked!</div><div class="ach-desc">'+ach.desc+'</div></div>';
     container.appendChild(el);
     setTimeout(()=>el.remove(),3400);
-    saveUserData();
+    saveUserDataToLocal();
   }
 
-  function checkAchievements(){
-    if(!currentUser)return;
-    const myPosts=POSTS.filter(p=>p.author===currentUser.username);
-    const myComments=[];
-    Object.values(COMMENTS).forEach(cmts=>{
-      cmts.forEach(c=>{
-        if(c.author===currentUser.username)myComments.push(c);
-        if(c.replies)c.replies.forEach(r=>{if(r.author===currentUser.username)myComments.push(r)});
-      });
-    });
-    
-    if(myPosts.length>=1)showAchievement('first_post');
-    if(myComments.length>=1)showAchievement('first_comment');
-    const viralPost=myPosts.find(p=>(p.views||0)>=1000);
-    if(viralPost)showAchievement('viral_post');
-    const topComment=myComments.find(c=>(c.up||0)>=100);
-    if(topComment)showAchievement('top_comment');
-    if(userStreak>=3)showAchievement('streak_3');
-    if(userStreak>=7)showAchievement('streak_7');
-  }
-
-  function updateStreak(){
-    const today=new Date().toDateString();
-    if(lastActiveDate===today)return;
-    const yesterday=new Date(Date.now()-86400000).toDateString();
-    if(lastActiveDate===yesterday){userStreak++;}else if(lastActiveDate!==today){userStreak=1;}
-    lastActiveDate=today;
-    saveUserData();
-    checkAchievements();
-    renderStreakBar();
-  }
-
-  function renderStreakBar(){
-    const bar=document.getElementById('streakBar');
-    if(!currentUser||userStreak<2){bar.innerHTML='';return;}
-    bar.innerHTML='<div class="streak-bar"><span class="fire">🔥</span> '+userStreak+' day streak! Keep it going</div>';
-  }
-
-  function saveUserData(){
-    if(!currentUser)return;
+  function savePostsToLocal(){
     try{
-      const data={streak:userStreak,lastActiveDate:lastActiveDate,achievements:userAchievements,preferences:userPreferences,onboardingComplete:onboardingComplete};
-      localStorage.setItem('hc_user_data',JSON.stringify(data));
+      const dataToSave = POSTS.slice(0, 100);
+      localStorage.setItem('hc_posts', JSON.stringify(dataToSave));
     }catch(e){}
   }
 
-  function loadUserData(){
+  function loadPostsFromLocal(){
     try{
-      const saved=localStorage.getItem('hc_user_data');
+      const saved = localStorage.getItem('hc_posts');
       if(saved){
-        const data=JSON.parse(saved);
-        userStreak=data.streak||0;
-        lastActiveDate=data.lastActiveDate||null;
-        userAchievements=data.achievements||[];
-        userPreferences=data.preferences||{topics:[],mutedTags:[]};
-        onboardingComplete=data.onboardingComplete||false;
+        const parsed = JSON.parse(saved);
+        if(Array.isArray(parsed) && parsed.length > 0){
+          POSTS.length = 0;
+          POSTS.push(...parsed);
+          return true;
+        }
+      }
+    }catch(e){}
+    return false;
+  }
+
+  function saveCommentsToLocal(){
+    try{
+      localStorage.setItem('hc_comments', JSON.stringify(COMMENTS));
+    }catch(e){}
+  }
+
+  function loadCommentsFromLocal(){
+    try{
+      const saved = localStorage.getItem('hc_comments');
+      if(saved){
+        const parsed = JSON.parse(saved);
+        Object.keys(parsed).forEach(key => {
+          COMMENTS[key] = parsed[key];
+        });
+        return true;
+      }
+    }catch(e){}
+    return false;
+  }
+
+  function saveUserDataToLocal(){
+    try{
+      const data = {
+        streak: userStreak,
+        lastActiveDate: lastActiveDate,
+        achievements: userAchievements,
+        preferences: userPreferences,
+        onboardingComplete: onboardingComplete
+      };
+      localStorage.setItem('hc_user_data', JSON.stringify(data));
+    }catch(e){}
+  }
+
+  function loadUserDataFromLocal(){
+    try{
+      const saved = localStorage.getItem('hc_user_data');
+      if(saved){
+        const data = JSON.parse(saved);
+        userStreak = data.streak || 0;
+        lastActiveDate = data.lastActiveDate || null;
+        userAchievements = data.achievements || [];
+        userPreferences = data.preferences || {topics:[],mutedTags:[]};
+        onboardingComplete = data.onboardingComplete || false;
       }
     }catch(e){}
   }
 
-  function showOnboarding(){
-    if(onboardingComplete||!currentUser)return;
-    const ov=document.getElementById('onboardingOv');
-    const body=document.getElementById('onboardingBody');
-    let step=0;
-    const steps=[
-      {
-        emoji:'💔',title:'Welcome to HeartConfia',
-        desc:'A safe space to share, judge, and heal. Everything is anonymous. No one knows who you are.',
-        button:'Next'
-      },
-      {
-        emoji:'📋',title:'Pick Your Stories',
-        desc:'What kind of confessions interest you? We\'ll personalize your feed.',
-        button:'Next',
-        tags:true
-      },
-      {
-        emoji:'🤝',title:'You\'re Not Alone',
-        desc:'This is a community. Vote, comment, support others. Your voice matters here.',
-        button:'Start Exploring 💔'
+  function saveUserSession(user){
+    try{
+      localStorage.setItem('hc_user_session', JSON.stringify({
+        user: user,
+        timestamp: Date.now()
+      }));
+    }catch(e){}
+  }
+
+  function loadUserSession(){
+    try{
+      const saved = localStorage.getItem('hc_user_session');
+      if(saved){
+        const data = JSON.parse(saved);
+        const hoursSinceSave = (Date.now() - data.timestamp) / (1000 * 60 * 60);
+        if(hoursSinceSave < 72 && data.user){
+          return data.user;
+        }
       }
-    ];
+    }catch(e){}
+    return null;
+  }
 
-    function renderStep(){
-      const s=steps[step];
-      let html='<div class="onboarding-step"><div class="onboarding-emoji">'+s.emoji+'</div><h2 class="onboarding-title">'+s.title+'</h2><p class="onboarding-desc">'+s.desc+'</p>';
-      if(s.tags){
-        const allTags=['cheating','breakup','trust','toxic','marriage','dating','betrayal','healing','advice','confession'];
-        html+='<div class="onboarding-tags">'+allTags.map(t=>'<button class="onboarding-tag'+(userPreferences.topics.includes(t)?' selected':'')+'" data-tag="'+t+'">#'+t+'</button>').join('')+'</div>';
-      }
-      html+='<div class="onboarding-dots">'+steps.map((_,i)=>'<div class="onboarding-dot'+(i===step?' active':'')+'"></div>').join('')+'</div>';
-      html+='<button class="btn btn-primary btn-block" id="btnOnboardNext">'+s.button+'</button>';
-      if(step>0)html+='<button class="btn btn-ghost btn-block" style="margin-top:8px" id="btnOnboardSkip">Skip</button>';
-      body.innerHTML=html;
-
-      document.querySelectorAll('.onboarding-tag').forEach(btn=>{
-        btn.addEventListener('click',function(){
-          const tag=this.dataset.tag;
-          this.classList.toggle('selected');
-          if(this.classList.contains('selected')){if(!userPreferences.topics.includes(tag))userPreferences.topics.push(tag);}
-          else{userPreferences.topics=userPreferences.topics.filter(t=>t!==tag);}
-        });
-      });
-
-      document.getElementById('btnOnboardNext')?.addEventListener('click',()=>{
-        if(step<steps.length-1){step++;renderStep();}
-        else{ov.classList.add('hidden');onboardingComplete=true;saveUserData();toast('Welcome to the community 💔','ok');}
-      });
-
-      document.getElementById('btnOnboardSkip')?.addEventListener('click',()=>{
-        ov.classList.add('hidden');onboardingComplete=true;saveUserData();
-      });
-    }
-
-    ov.classList.remove('hidden');
-    renderStep();
+  function clearUserSession(){
+    try{
+      localStorage.removeItem('hc_user_session');
+    }catch(e){}
   }
 
   async function initSupabase(){
     try{
-      supabase=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
-      const{data:{session}}=await supabase.auth.getSession();
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      
+      const {data:{session}} = await supabase.auth.getSession();
       if(session?.user){
-        const{data:profile}=await supabase.from('users').select('*').eq('id',session.user.id).single();
-        if(profile){currentUser=profile;loadUserData();updateStreak();}
+        const {data:profile} = await supabase.from('users').select('*').eq('id',session.user.id).single();
+        if(profile){
+          currentUser = profile;
+          saveUserSession(profile);
+          loadUserDataFromLocal();
+          updateStreak();
+          updateNav();
+        }
       }
+      
       setupRealtimeSubscriptions();
-      await fetchPosts();
-      await fetchNotifications();
-    }catch(e){console.error('Supabase init error:',e);}
+      await fetchPostsFromSupabase();
+      if(currentUser) await fetchNotifications();
+    }catch(e){
+      console.error('Supabase init error:',e);
+      loadLocalFallback();
+    }
   }
 
   function setupRealtimeSubscriptions(){
     if(!supabase)return;
+    
     supabase.channel('hc-posts').on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},payload=>{
       const np=payload.new;
-      POSTS.unshift(np);
-      if(currentPage==='home')renderFeed();
-      if(np.author===currentUser?.username)checkAchievements();
-      addNotification({type:'new_post',text:'New confession just dropped 💔',icon:'💔',time:new Date().toISOString(),read:false,postId:np.id});
-      toast('New confession just dropped 💔','info');
+      const exists = POSTS.find(p => p.id === np.id);
+      if(!exists){
+        POSTS.unshift(np);
+        savePostsToLocal();
+        if(currentPage==='home')renderFeed();
+        addNotification({type:'new_post',text:'New confession just dropped 💔',icon:'💔',time:new Date().toISOString(),read:false,postId:np.id});
+        toast('New confession just dropped 💔','info');
+      }
     }).subscribe();
 
     supabase.channel('hc-votes').on('postgres_changes',{event:'UPDATE',schema:'public',table:'posts'},payload=>{
       const updated=payload.new;
       const idx=POSTS.findIndex(p=>p.id===updated.id);
-      if(idx!==-1){POSTS[idx]={...POSTS[idx],...updated};if(currentPage==='home')renderFeed();if(currentPage==='detail'&&detailPost?.id===updated.id)renderDetail(detailPost);}
+      if(idx!==-1){
+        POSTS[idx]={...POSTS[idx],...updated};
+        savePostsToLocal();
+        if(currentPage==='home')renderFeed();
+        if(currentPage==='detail'&&detailPost?.id===updated.id)renderDetail(detailPost);
+      }
     }).subscribe();
 
     supabase.channel('hc-comments').on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},payload=>{
       const nc=payload.new;
       if(!COMMENTS[nc.post_id])COMMENTS[nc.post_id]=[];
       COMMENTS[nc.post_id].unshift(nc);
+      saveCommentsToLocal();
       if(currentPage==='detail'&&detailPost?.id===nc.post_id)renderDetail(detailPost);
-      if(nc.post_id&&POSTS.find(p=>p.id===nc.post_id)){
-        const p=POSTS.find(p=>p.id===nc.post_id);
-        if(p)p.cmt=(p.cmt||0)+1;
-      }
-      if(nc.author===currentUser?.username)checkAchievements();
-      const post=POSTS.find(p=>p.id===nc.post_id);
-      if(post&&post.author===currentUser?.username){
-        addNotification({type:'comment',text:'<strong>'+nc.author+'</strong> commented on your confession',icon:'💬',time:new Date().toISOString(),read:false,postId:nc.post_id});
+      const p=POSTS.find(x=>x.id===nc.post_id);
+      if(p){
+        p.cmt=(p.cmt||0)+1;
+        savePostsToLocal();
       }
     }).subscribe();
   }
 
-  async function fetchPosts(){
+  async function fetchPostsFromSupabase(){
     if(!supabase){
-      loadLocalPosts();
+      loadLocalFallback();
       return;
     }
     try{
       const{data,error}=await supabase.from('posts').select('*').order('created_at',{ascending:false}).limit(50);
       if(error)throw error;
-      if(data&&data.length){POSTS.length=0;POSTS.push(...data);}
+      if(data&&data.length){
+        POSTS.length=0;
+        POSTS.push(...data);
+        savePostsToLocal();
+      }else{
+        loadLocalFallback();
+      }
       if(currentPage==='home')renderFeed();
-    }catch(e){console.error('Fetch posts error:',e);loadLocalPosts();}
+    }catch(e){
+      console.error('Fetch posts error:',e);
+      loadLocalFallback();
+    }
   }
 
-  function loadLocalPosts(){
-    if(POSTS.length===0){
+  function loadLocalFallback(){
+    const loadedFromLocal = loadPostsFromLocal();
+    loadCommentsFromLocal();
+    if(!loadedFromLocal && POSTS.length === 0){
       POSTS.push(
-        {id:'p1',author:'Heart_4821',type:'confession',title:"I checked his phone at 2AM and saw something I still wish I never saw…",content:"I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years. Three years of building something I thought was real.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... \"last night was everything.\"\n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — \"the roommate.\"\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.",tags:['cheating','betrayal','trust'],created_at:ago(2),rx:{'💔':247,'😭':189,'😡':312,'😳':98,'😂':5,'🔥':45},votes:{he:412,she:23,both:89},views:1840,cmt:143,trending:true,sensitive:false,preview:"He called me 'the roommate' to her. After 3 years. After we talked about kids last month."}
+        {id:'p1',author:'Heart_4821',type:'confession',title:"I checked his phone at 2AM and saw something I still wish I never saw…",content:"I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years. Three years of building something I thought was real.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... \"last night was everything.\"\n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — \"the roommate.\"\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.",tags:['cheating','betrayal','trust'],created_at:ago(2),rx:{'💔':247,'😭':189,'😡':312,'😳':98,'😂':5,'🔥':45},votes:{he:412,she:23,both:89},views:1840,cmt:143,trending:true,sensitive:false,preview:"He called me 'the roommate' to her. After 3 years. After we talked about kids last month."},
+        {id:'p2',author:'Confess_7732',type:'advice',title:"She deleted 6 months of messages the day I asked her to be my girlfriend. What do I do?",content:"We've been talking every single day for 6 months. I thought we were building something serious. Yesterday I finally asked her if she wanted to make things official.\n\nShe said \"yes, of course\" and kissed me.\n\nBut this morning I noticed something. When I opened our WhatsApp chat, it starts from yesterday. The ENTIRE history — 6 months of messages — is gone from my side. She claims she \"doesn't know what happened\" and that it was a \"phone glitch.\"\n\nI didn't say anything. I smiled and went to work.\n\nBut I need to know: what was in those messages that she needed to delete the exact night I made us official?\n\nDo I ask directly? Do I pretend I didn't notice? Do I just… end this before it starts?",tags:['trust','advice','suspicious'],created_at:ago(5),rx:{'💔':89,'😭':34,'😡':156,'😳':412,'😂':22,'🔥':78},votes:{he:67,she:298,both:145},views:2100,cmt:89,trending:true,sensitive:false,preview:"6 months of messages. Gone. The same night I asked her to be mine."},
+        {id:'p3',author:'Vibe_1190',type:'confession',title:"My boyfriend proposed to me while actively dating someone else. I found out 3 days later.",content:"He got down on one knee on a Friday. I said yes, cried, called my mum, posted on Instagram. Classic fairytale moment.\n\nMonday morning his side girl posted a photo with the caption \"he told me she doesn't mean anything.\" The photo was from the same Saturday — the day after he proposed to me.\n\nI've been engaged for 72 hours and already a cheater's fiancée.\n\nI haven't taken the ring off yet. I don't know why. Maybe because the moment I do, none of it was real. The proposal, the future, the person I thought I knew.\n\nHe's been calling. Texting. Showing up. His family is calling me too — apparently they \"knew nothing.\"\n\nSomeone tell me: am I wrong for still having the ring on?",tags:['cheating','engagement','betrayal'],created_at:ago(8),rx:{'💔':891,'😭':567,'😡':1203,'😳':456,'😂':12,'🔥':234},votes:{he:1456,she:34,both:123},views:8900,cmt:312,trending:true,sensitive:false,preview:"He proposed Friday. She posted a photo with him Saturday. I found out Monday."}
       );
+      savePostsToLocal();
     }
+    if(currentPage==='home')renderFeed();
   }
 
   async function fetchNotifications(){
@@ -1286,7 +1297,12 @@ img{display:block;max-width:100%}
     try{
       const{data,error}=await supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
       if(error)throw error;
-      if(data){NOTIFICATIONS.length=0;NOTIFICATIONS.push(...data);unreadNotifs=NOTIFICATIONS.filter(n=>!n.read).length;updateNotifBadge();}
+      if(data){
+        NOTIFICATIONS.length=0;
+        NOTIFICATIONS.push(...data);
+        unreadNotifs=NOTIFICATIONS.filter(n=>!n.read).length;
+        updateNotifBadge();
+      }
     }catch(e){console.error('Fetch notifications error:',e);}
   }
 
@@ -1376,7 +1392,8 @@ img{display:block;max-width:100%}
       const{error:profileError}=await supabase.from('users').insert({id:data.user.id,email,username,created_at:new Date().toISOString()});
       if(profileError){toast(profileError.message,'err');return;}
       currentUser={id:data.user.id,email,username,created_at:new Date().toISOString()};
-      closeAuth();updateNav();updateStreak();showOnboarding();
+      saveUserSession(currentUser);
+      closeAuth();updateNav();loadUserDataFromLocal();updateStreak();
       toast('Account created! Check your email to verify 💔','ok');
     }catch(e){toast('Something went wrong. Try again.','err');}
   }
@@ -1391,15 +1408,20 @@ img{display:block;max-width:100%}
       if(error){toast(error.message,'err');return;}
       const{data:profile}=await supabase.from('users').select('*').eq('id',data.user.id).single();
       currentUser=profile||{id:data.user.id,email,username:mkUsername(),created_at:data.user.created_at};
-      closeAuth();updateNav();loadUserData();updateStreak();fetchNotifications();
-      if(!onboardingComplete)showOnboarding();
+      saveUserSession(currentUser);
+      closeAuth();updateNav();loadUserDataFromLocal();updateStreak();fetchNotifications();
       toast('Welcome back! 💔','ok');
     }catch(e){toast('Login failed. Try again.','err');}
   }
 
   async function doLogout(){
     if(supabase)await supabase.auth.signOut();
-    currentUser=null;userStreak=0;lastActiveDate=null;userAchievements=[];onboardingComplete=false;
+    currentUser=null;
+    userStreak=0;
+    lastActiveDate=null;
+    userAchievements=[];
+    onboardingComplete=false;
+    clearUserSession();
     try{localStorage.removeItem('hc_user_data');}catch(e){}
     updateNav();toast('Logged out safely','info');go('home');
   }
@@ -1437,15 +1459,11 @@ img{display:block;max-width:100%}
   }
 
   function loadMore(){
-    const loader=document.getElementById('feedLoader');loader.classList.remove('hidden');
-    setTimeout(()=>{
-      postsPage++;const posts=getFilteredPosts();
-      const slice=posts.slice(postsPage*POSTS_PER_PAGE,(postsPage+1)*POSTS_PER_PAGE);
-      const w=document.getElementById('feedWrap');
-      if(slice.length){const tmp=document.createElement('div');tmp.innerHTML=slice.map((p,i)=>cardHTML(p,i+postsPage*POSTS_PER_PAGE)).join('');while(tmp.firstChild)w.appendChild(tmp.firstChild);}
-      document.getElementById('loadMoreWrap').classList.toggle('hidden',(postsPage+1)*POSTS_PER_PAGE>=posts.length);
-      loader.classList.add('hidden');
-    },400);
+    postsPage++;const posts=getFilteredPosts();
+    const slice=posts.slice(postsPage*POSTS_PER_PAGE,(postsPage+1)*POSTS_PER_PAGE);
+    const w=document.getElementById('feedWrap');
+    if(slice.length){const tmp=document.createElement('div');tmp.innerHTML=slice.map((p,i)=>cardHTML(p,i+postsPage*POSTS_PER_PAGE)).join('');while(tmp.firstChild)w.appendChild(tmp.firstChild);}
+    document.getElementById('loadMoreWrap').classList.toggle('hidden',(postsPage+1)*POSTS_PER_PAGE>=posts.length);
   }
 
   function cardHTML(p,idx){
@@ -1471,6 +1489,7 @@ img{display:block;max-width:100%}
     if(!p)return;
     if(!currentUser){showPw(id);return;}
     detailPost=p;p.views=(p.views||0)+1;
+    savePostsToLocal();
     if(supabase)supabase.from('posts').update({views:p.views}).eq('id',p.id).then(()=>{}).catch(()=>{});
     go('detail');renderDetail(p);
   }
@@ -1505,7 +1524,6 @@ img{display:block;max-width:100%}
   }
 
   function toggleRbox(id){const b=document.getElementById('rb-'+id);if(b){b.classList.toggle('hidden');if(!b.classList.contains('hidden')){const ta=document.getElementById('ri-'+id);if(ta){ta.focus();resize(ta);}}}}
-
   function sortCmts(val,pid){const cmts=(COMMENTS[pid]||[]).slice();if(val==='heated')cmts.sort((a,b)=>(b.up+b.dn)-(a.up+a.dn));else if(val==='top')cmts.sort((a,b)=>b.up-a.up);else cmts.reverse();const l=document.getElementById('cmList');if(l)l.innerHTML=cmts.length?cmts.map(c=>cmtHTML(c)).join(''):'<div class="empty"><div class="empty-ic">💬</div><p class="empty-tx">No comments yet</p></div>';}
 
   async function postCmt(pid){
@@ -1513,11 +1531,12 @@ img{display:block;max-width:100%}
     const el=document.getElementById('cmIn');const text=sanitizeInput(el?.value||'');
     if(!text){toast('Write something first!','err');return;}
     if(text.length<2){toast('Comment too short','err');return;}
-    if(containsModeratedContent(text)){toast('Comment contains prohibited content and cannot be posted.','err');return;}
-    if(!rateLimiter.check('comment_'+(currentUser.id||'anon'),5,30000)){toast('Slow down! Too many comments.','warn');return;}
+    if(containsModeratedContent(text)){toast('Comment contains prohibited content.','err');return;}
+    if(!rateLimiter.check('comment_'+(currentUser.id||'anon'),5,30000)){toast('Slow down!','warn');return;}
     const c={id:generateId(),post_id:pid,author:currentUser.username,text,up:0,dn:0,pin:false,time:'just now',replies:[],hearts:0};
     if(!COMMENTS[pid])COMMENTS[pid]=[];COMMENTS[pid].unshift(c);
-    const p=POSTS.find(x=>x.id===pid);if(p)p.cmt=(p.cmt||0)+1;
+    saveCommentsToLocal();
+    const p=POSTS.find(x=>x.id===pid);if(p){p.cmt=(p.cmt||0)+1;savePostsToLocal();}
     if(supabase){supabase.from('comments').insert(c).then(()=>{}).catch(()=>{});supabase.from('posts').update({cmt:p.cmt}).eq('id',pid).then(()=>{}).catch(()=>{});}
     el.value='';el.style.height='auto';const cc=document.getElementById('cmCharCount');if(cc)cc.textContent='0 / '+MAX_COMMENT_LENGTH;
     const l=document.getElementById('cmList');if(l){const emptyEl=l.querySelector('.empty');if(emptyEl)emptyEl.remove();const tmp=document.createElement('div');tmp.innerHTML=cmtHTML(c);l.prepend(tmp.firstElementChild);}
@@ -1530,7 +1549,7 @@ img{display:block;max-width:100%}
     if(!text||text.length<2){toast('Reply too short','err');return;}
     const pid=detailPost.id;const cmts=COMMENTS[pid]||[];const c=cmts.find(x=>x.id===cid);if(!c)return;
     if(!c.replies)c.replies=[];const r={id:generateId(),author:currentUser.username,text,up:0,dn:0,time:'just now'};
-    c.replies.push(r);el.value='';el.style.height='auto';toggleRbox(cid);
+    c.replies.push(r);saveCommentsToLocal();el.value='';el.style.height='auto';toggleRbox(cid);
     let rw=document.querySelector('#cmt-'+cid+' .replies-wrap');if(!rw){rw=document.createElement('div');rw.className='replies-wrap';document.getElementById('cmt-'+cid)?.appendChild(rw);}
     const tmp=document.createElement('div');tmp.innerHTML=cmtHTML(r,true);rw.appendChild(tmp.firstElementChild);
     toast('Reply added','ok');
@@ -1538,16 +1557,16 @@ img{display:block;max-width:100%}
 
   function voteCmt(cid,dir,btn){
     if(!currentUser){showAuth('login');return;}
-    if(!rateLimiter.check('vote_'+(currentUser.id||'anon'))){toast('Slow down on the voting!','warn');return;}
+    if(!rateLimiter.check('vote_'+(currentUser.id||'anon'))){toast('Slow down!','warn');return;}
     btn.classList.toggle('on');const key=dir==='up'?'up':'dn';const sym=dir==='up'?'▲':'▼';
     const cur=parseInt(btn.textContent.replace(/[▲▼\s]/g,''))||0;btn.textContent=sym+' '+(btn.classList.contains('on')?cur+1:Math.max(0,cur-1));
-    const pid=detailPost?.id;if(pid&&COMMENTS[pid]){const updateCommentVotes=(comments)=>{for(const c of comments){if(c.id===cid){c[key]=(c[key]||0)+(btn.classList.contains('on')?1:-1);return true;}if(c.replies&&updateCommentVotes(c.replies))return true;}return false;};updateCommentVotes(COMMENTS[pid]);}
+    const pid=detailPost?.id;if(pid&&COMMENTS[pid]){const updateCommentVotes=(comments)=>{for(const c of comments){if(c.id===cid){c[key]=(c[key]||0)+(btn.classList.contains('on')?1:-1);saveCommentsToLocal();return true;}if(c.replies&&updateCommentVotes(c.replies))return true;}return false;};updateCommentVotes(COMMENTS[pid]);}
     showAchievement('first_vote');
   }
 
   function heartComment(cid,btn){
     if(!currentUser){showAuth('login');return;}btn.classList.toggle('on');
-    const pid=detailPost?.id;if(pid&&COMMENTS[pid]){const updateHearts=(comments)=>{for(const c of comments){if(c.id===cid){c.hearts=(c.hearts||0)+(btn.classList.contains('on')?1:-1);return true;}if(c.replies&&updateHearts(c.replies))return true;}return false;};
+    const pid=detailPost?.id;if(pid&&COMMENTS[pid]){const updateHearts=(comments)=>{for(const c of comments){if(c.id===cid){c.hearts=(c.hearts||0)+(btn.classList.contains('on')?1:-1);saveCommentsToLocal();return true;}if(c.replies&&updateHearts(c.replies))return true;}return false;};
     if(updateHearts(COMMENTS[pid])){
       const cmtEl=document.getElementById('cmt-'+cid);
       if(cmtEl){const authEl=cmtEl.querySelector('.cm-auth');if(authEl){const cmts=COMMENTS[pid]||[];const findComment=(comments)=>{for(const c of comments){if(c.id===cid)return c;if(c.replies){const found=findComment(c.replies);if(found)return found;}}return null;};const updated=findComment(cmts);
@@ -1559,12 +1578,13 @@ img{display:block;max-width:100%}
 
   async function doVote(pid,type,btn){
     if(!currentUser){showAuth('signup');return;}
-    if(!rateLimiter.check('post_vote_'+(currentUser.id||'anon'),5)){toast('Slow down! Take your time voting.','warn');return;}
+    if(!rateLimiter.check('post_vote_'+(currentUser.id||'anon'),5)){toast('Slow down!','warn');return;}
     const p=POSTS.find(x=>x.id===pid);if(!p)return;
     const vbtns=btn.parentElement.querySelectorAll('.vbtn');const was=btn.classList.contains('on');
     vbtns.forEach(b=>b.classList.remove('on'));
     if(!was){btn.classList.add('on');p.votes[type]=(p.votes[type]||0)+1;}
     else{p.votes[type]=Math.max(0,(p.votes[type]||1)-1);}
+    savePostsToLocal();
     if(supabase)supabase.from('posts').update({votes:p.votes}).eq('id',pid).then(()=>{}).catch(()=>{});
     refreshVoteBars(pid,p.votes);showAchievement('first_vote');
   }
@@ -1573,21 +1593,21 @@ img{display:block;max-width:100%}
 
   async function doRx(pid,emoji,btn){
     if(!currentUser){showAuth('signup');return;}
-    if(!rateLimiter.check('react_'+(currentUser.id||'anon'),MAX_REACTIONS_PER_WINDOW)){toast('Easy with the reactions!','warn');return;}
+    if(!rateLimiter.check('react_'+(currentUser.id||'anon'),MAX_REACTIONS_PER_WINDOW)){toast('Easy!','warn');return;}
     const p=POSTS.find(x=>x.id===pid);if(!p)return;
     const was=btn.classList.contains('on');btn.classList.toggle('on');
     const sp=btn.querySelector('span');const cur=parseInt((sp?.textContent||'0').replace(/[km]/g,''))||0;
     if(was){p.rx[emoji]=Math.max(0,(p.rx[emoji]||1)-1);if(sp)sp.textContent=fmt(p.rx[emoji]);}
     else{p.rx[emoji]=(p.rx[emoji]||0)+1;if(sp)sp.textContent=fmt(p.rx[emoji]);btn.style.transform='scale(1.2)';setTimeout(()=>{btn.style.transform='';},180);}
+    savePostsToLocal();
     if(supabase)supabase.from('posts').update({rx:p.rx}).eq('id',pid).then(()=>{}).catch(()=>{});
-    const allReactionsUsed=EMOJIS.every(e=>(p.rx[e]||0)>0);if(allReactionsUsed)showAchievement('reaction_master');
   }
 
   function sharePost(pid,btn){
     const p=POSTS.find(x=>x.id===pid);if(!p)return;
     const shareData={title:p.title,text:p.preview||p.content.slice(0,150)+'…',url:window.location.origin+window.location.pathname+'#post-'+pid};
     if(navigator.share&&navigator.canShare&&navigator.canShare(shareData)){navigator.share(shareData).catch(()=>{});}
-    else{navigator.clipboard.writeText(shareData.url).then(()=>{toast('Link copied! Share it anywhere 💔','info');}).catch(()=>{toast('Could not share. Copy the URL manually.','err');});}
+    else{navigator.clipboard.writeText(shareData.url).then(()=>{toast('Link copied! 💔','info');}).catch(()=>{toast('Could not share.','err');});}
     if(btn){btn.style.transform='scale(1.2)';setTimeout(()=>{btn.style.transform='';},200);}
   }
 
@@ -1604,7 +1624,7 @@ img{display:block;max-width:100%}
   async function submitRpt(id,reason,type){
     document.getElementById('rptOv').classList.add('hidden');
     if(supabase){supabase.from('reports').insert({content_id:id,reason,type,reporter:currentUser.username,created_at:new Date().toISOString()}).then(()=>{}).catch(()=>{});}
-    toast('Reported: "'+reason+'" — Thanks for keeping our community safe 🛡️','info');
+    toast('Reported. Thanks for keeping our community safe 🛡️','info');
   }
 
   function renderTrending(){
@@ -1617,116 +1637,124 @@ img{display:block;max-width:100%}
       {ico:'👀',lbl:'Most Viewed',posts:[...POSTS].sort((a,b)=>(b.views||0)-(a.views||0)).slice(0,3)}
     ];
     w.innerHTML=cats.map(cat=>{if(!cat.posts.length)return'';return'<div class="tr-sec"><div class="tr-sec-title">'+cat.ico+' '+cat.lbl+'</div>'+cat.posts.map((p,i)=>{const totalRx=Object.values(p.rx||{}).reduce((a,b)=>a+b,0);return'<div class="tr-card" data-pid="'+p.id+'" role="link" tabindex="0"><div class="tr-num">'+(i+1)+'</div><div><div class="tr-ttl">'+escapeHTML(p.title)+'</div><div class="tr-stats"><span>💬 '+fmt(p.cmt||0)+'</span><span>👁 '+fmt(p.views||0)+'</span><span>🔥 '+fmt(totalRx)+'</span></div></div></div>';}).join('')+'</div>';}).join('');
-
     const topUsers=[...new Set(POSTS.map(p=>p.author))].map(author=>{const userPosts=POSTS.filter(p=>p.author===author);const totalRx=userPosts.reduce((s,p)=>s+Object.values(p.rx||{}).reduce((a,b)=>a+b,0),0);const totalVotes=userPosts.reduce((s,p)=>s+(p.votes?.he||0)+(p.votes?.she||0)+(p.votes?.both||0),0);return{author,totalRx,totalVotes,posts:userPosts.length};}).sort((a,b)=>(b.totalRx+b.totalVotes)-(a.totalRx+a.totalVotes)).slice(0,5);
-
-    if(topUsers.length){
-      w.innerHTML+='<div class="tr-sec"><div class="tr-sec-title">🏆 Top Confessors This Week</div>'+topUsers.map((u,i)=>'<div class="leaderboard-row"><span class="leaderboard-rank">'+(i+1)+'</span><span class="leaderboard-name">'+escapeHTML(u.author)+'</span><span class="leaderboard-score">'+fmt(u.totalRx+u.totalVotes)+' pts</span></div>').join('')+'</div>';
-    }
+    if(topUsers.length){w.innerHTML+='<div class="tr-sec"><div class="tr-sec-title">🏆 Top Confessors This Week</div>'+topUsers.map((u,i)=>'<div class="leaderboard-row"><span class="leaderboard-rank">'+(i+1)+'</span><span class="leaderboard-name">'+escapeHTML(u.author)+'</span><span class="leaderboard-score">'+fmt(u.totalRx+u.totalVotes)+' pts</span></div>').join('')+'</div>';}
   }
 
   function renderConfess(){
     const w=document.getElementById('cfWrap');
     if(!currentUser){w.innerHTML='<div class="empty"><div class="empty-ic">🔒</div><p class="empty-tx" style="margin-bottom:16px">Sign up to share your story anonymously</p><button class="btn btn-primary" id="btnCfSignup">Create Free Account</button></div>';setTimeout(()=>{document.getElementById('btnCfSignup')?.addEventListener('click',()=>showAuth('signup'));},50);return;}
     w.innerHTML='<div class="cf-form"><div class="type-row"><button class="type-btn on" data-type="confession" aria-pressed="true">💔 Confession</button><button class="type-btn" data-type="advice" aria-pressed="false">🧠 Advice</button><button class="type-btn" data-type="debate" aria-pressed="false">⚖️ Debate</button></div><input type="text" class="ti" id="ptitle" placeholder="Write a title that stops the scroll…" maxlength="'+MAX_TITLE_LENGTH+'" aria-label="Title"/><div class="cc" id="cc">0 / '+MAX_TITLE_LENGTH+'</div><textarea class="ta" id="pbody" placeholder="Tell your story. Be specific. The details are what make people feel it…" minlength="'+MIN_STORY_LENGTH+'" aria-label="Your story"></textarea><div class="cc" id="bodyCC">0 characters (min '+MIN_STORY_LENGTH+')</div><input type="text" class="tags-i" id="ptags" placeholder="Tags: cheating, breakup, trust (comma-separated)" aria-label="Tags"/><div class="hint">Good tags help readers find your story. Use 2-5 specific tags.</div><button class="btn btn-primary btn-block" id="btnSubmitPost">🖤 Post Anonymously</button><p style="font-size:11px;color:var(--t3);text-align:center;margin-top:10px">You appear as <strong style="color:var(--t2)">'+escapeHTML(currentUser.username)+'</strong></p></div>';
-    setTimeout(()=>{
-      document.getElementById('ptitle')?.addEventListener('input',function(){const cc=document.getElementById('cc');if(cc)cc.textContent=this.value.length+' / '+MAX_TITLE_LENGTH;});
-      document.getElementById('pbody')?.addEventListener('input',function(){resize(this);const bcc=document.getElementById('bodyCC');if(bcc)bcc.textContent=this.value.length+' characters (min '+MIN_STORY_LENGTH+')';});
-      document.getElementById('btnSubmitPost')?.addEventListener('click',submitPost);
-    },50);
-  }
+    setTimeout(()=>{document.getElementById('ptitle')?.addEventListener('input',function(){const cc=document.getElementById('cc');if(cc)cc.textContent=this.value.length+' / '+MAX_TITLE_LENGTH;});document.getElementById('pbody')?.addEventListener('input',function(){resize(this);const bcc=document.getElementById('bodyCC');if(bcc)bcc.textContent=this.value.length+' characters (min '+MIN_STORY_LENGTH+')';});document.getElementById('btnSubmitPost')?.addEventListener('click',submitPost);},50);}
 
   function selectType(btn){btn.parentElement.querySelectorAll('.type-btn').forEach(b=>{b.classList.remove('on');b.setAttribute('aria-pressed','false');});btn.classList.add('on');btn.setAttribute('aria-pressed','true');}
 
   async function submitPost(){
     if(!currentUser){showAuth('login');return;}
-    if(!rateLimiter.check('post_'+(currentUser.id||'anon'),3,300000)){toast('You can only post once every 5 minutes. Take your time.','warn');return;}
+    if(!rateLimiter.check('post_'+(currentUser.id||'anon'),3,300000)){toast('You can post every 5 minutes.','warn');return;}
     const title=sanitizeInput(document.getElementById('ptitle')?.value||'');
     const body=sanitizeInput(document.getElementById('pbody')?.value||'');
     const tagsStr=sanitizeInput(document.getElementById('ptags')?.value||'');
     const tags=tagsStr.split(',').map(t=>t.trim().toLowerCase()).filter(Boolean).slice(0,5);
-    if(!title){toast('Please add a title','err');return;}if(!body){toast('Please share your story','err');return;}
-    if(body.length<MIN_STORY_LENGTH){toast('Tell more — at least '+MIN_STORY_LENGTH+' characters. Details matter.','err');return;}
-    if(title.length<10){toast('Title is too short — make it compelling!','err');return;}
-    if(containsModeratedContent(title)||containsModeratedContent(body)){toast('Your post contains prohibited content (personal info). Please edit and try again.','err');return;}
+    if(!title||!body||body.length<MIN_STORY_LENGTH||title.length<10){toast('Fill all fields properly','err');return;}
+    if(containsModeratedContent(title)||containsModeratedContent(body)){toast('Contains prohibited content','err');return;}
     const isSensitive=containsSensitiveContent(body);
     const typeBtn=document.querySelector('.type-btn.on');const postType=typeBtn?typeBtn.dataset.type:'confession';
     const np={id:'p_'+Date.now(),author:currentUser.username,type:postType,title,content:body,tags:tags.length?tags:['confession'],created_at:new Date().toISOString(),rx:{'💔':0,'😭':0,'😡':0,'😳':0,'😂':0,'🔥':0},votes:{he:0,she:0,both:0},views:1,cmt:0,trending:false,sensitive:isSensitive,preview:body.slice(0,150).replace(/\n/g,' ')+'…'};
     POSTS.unshift(np);
+    savePostsToLocal();
     if(supabase)supabase.from('posts').insert(np).then(()=>{}).catch(()=>{});
-    const titleEl=document.getElementById('ptitle');const bodyEl=document.getElementById('pbody');const tagsEl=document.getElementById('ptags');
-    if(titleEl)titleEl.value='';if(bodyEl){bodyEl.value='';bodyEl.style.height='auto';}if(tagsEl)tagsEl.value='';
-    const cc=document.getElementById('cc');if(cc)cc.textContent='0 / '+MAX_TITLE_LENGTH;
-    const bcc=document.getElementById('bodyCC');if(bcc)bcc.textContent='0 characters (min '+MIN_STORY_LENGTH+')';
+    document.getElementById('ptitle').value='';document.getElementById('pbody').value='';document.getElementById('ptags').value='';
+    const pbody=document.getElementById('pbody');if(pbody)pbody.style.height='auto';
     showAchievement('first_post');
-    if(isSensitive){toast('Story posted with sensitivity warning 💔 Take care of yourself.','info');}
-    else{toast('Story posted anonymously 💔','ok');}
+    toast(isSensitive?'Posted with sensitivity warning 💔':'Story posted anonymously 💔','ok');
     go('home');
   }
 
   function renderNotifs(){
     const w=document.getElementById('nfWrap');
-    if(!currentUser){w.innerHTML='<div class="empty"><div class="empty-ic">🔔</div><p class="empty-tx" style="margin-bottom:14px">Login to see notifications</p><button class="btn btn-primary btn-sm" id="btnNfLogin">Login</button></div>';setTimeout(()=>{document.getElementById('btnNfLogin')?.addEventListener('click',()=>showAuth('login'));},50);return;}
+    if(!currentUser){w.innerHTML='<div class="empty"><div class="empty-ic">🔔</div><p class="empty-tx">Login to see notifications</p><button class="btn btn-primary btn-sm" id="btnNfLogin">Login</button></div>';setTimeout(()=>document.getElementById('btnNfLogin')?.addEventListener('click',()=>showAuth('login')),50);return;}
     if(!NOTIFICATIONS.length){w.innerHTML='<div class="empty"><div class="empty-ic">🔔</div><p class="empty-tx">No notifications yet</p></div>';return;}
-    w.innerHTML=NOTIFICATIONS.map(n=>'<div class="nf-item'+(n.read?'':' unread')+'" data-nid="'+(n.id||'')+'"><div class="nf-icon">'+(n.icon||'💬')+'</div><div style="flex:1"><div class="nf-text">'+n.text+'</div><div class="nf-time">'+tAgo(n.time||n.created_at)+'</div></div>'+(n.read?'':'<div class="udot"></div>')+'</div>').join('');
-  }
+    w.innerHTML=NOTIFICATIONS.map(n=>'<div class="nf-item'+(n.read?'':' unread')+'"><div class="nf-icon">'+(n.icon||'💬')+'</div><div style="flex:1"><div class="nf-text">'+n.text+'</div><div class="nf-time">'+tAgo(n.time||n.created_at)+'</div></div>'+(n.read?'':'<div class="udot"></div>')+'</div>').join('');}
 
   function markNotifsRead(){
     unreadNotifs=0;updateNotifBadge();
     NOTIFICATIONS.forEach(n=>n.read=true);
-    if(supabase&&currentUser){supabase.from('notifications').update({read:true}).eq('user_id',currentUser.id).eq('read',false).then(()=>{}).catch(()=>{});}
+    if(supabase&&currentUser)supabase.from('notifications').update({read:true}).eq('user_id',currentUser.id).eq('read',false).then(()=>{}).catch(()=>{});
   }
 
   function renderProfile(){
     const w=document.getElementById('pfWrap');
-    if(!currentUser){w.innerHTML='<div class="pf-header"><div class="cf-icon">👤</div><h2 style="margin:12px 0 6px">Your Profile</h2><p style="color:var(--t3);margin-bottom:16px;font-size:13px">Create an account to build your anonymous identity</p><button class="btn btn-primary" id="btnPfSignup">Join HeartConfia</button></div>';setTimeout(()=>{document.getElementById('btnPfSignup')?.addEventListener('click',()=>showAuth('signup'));},50);return;}
+    if(!currentUser){w.innerHTML='<div class="pf-header"><div class="cf-icon">👤</div><h2 style="margin:12px 0 6px">Your Profile</h2><p style="color:var(--t3);margin-bottom:16px;font-size:13px">Create an account</p><button class="btn btn-primary" id="btnPfSignup">Join HeartConfia</button></div>';setTimeout(()=>document.getElementById('btnPfSignup')?.addEventListener('click',()=>showAuth('signup')),50);return;}
     const ini=(currentUser.username||'U').slice(0,2).toUpperCase();
     const myPosts=POSTS.filter(p=>p.author===currentUser.username);
     const totalRx=myPosts.reduce((s,p)=>s+Object.values(p.rx||{}).reduce((a,b)=>a+b,0),0);
     const totalVotes=myPosts.reduce((s,p)=>s+(p.votes?.he||0)+(p.votes?.she||0)+(p.votes?.both||0),0);
     const joinDate=new Date(currentUser.created_at||Date.now()).toLocaleDateString('en-US',{month:'long',year:'numeric'});
-    let badgeHTML='';
-    if(myPosts.length>=5)badgeHTML='<div class="pf-badge-row"><span class="pf-badge">🖤 Prolific Confessor</span></div>';
-    else if(myPosts.length>=2)badgeHTML='<div class="pf-badge-row"><span class="pf-badge">🖤 Regular Confessor</span></div>';
+    let badgeHTML=myPosts.length>=5?'<div class="pf-badge-row"><span class="pf-badge">🖤 Prolific Confessor</span></div>':myPosts.length>=2?'<div class="pf-badge-row"><span class="pf-badge">🖤 Regular Confessor</span></div>':'';
     if(userAchievements.length>0){badgeHTML+='<div class="pf-badge-row">'+userAchievements.slice(0,3).map(a=>{const ach=ACHIEVEMENTS.find(x=>x.id===a);return ach?'<span class="pf-badge" title="'+ach.desc+'">'+ach.icon+' '+ach.title+'</span>':'';}).join('')+'</div>';}
     const myComments=[];Object.values(COMMENTS).forEach(cmts=>{cmts.forEach(c=>{if(c.author===currentUser.username)myComments.push(c);if(c.replies)c.replies.forEach(r=>{if(r.author===currentUser.username)myComments.push(r)});});});
     const totalHearts=myComments.reduce((s,c)=>s+(c.hearts||0),0);
-    w.innerHTML='<div class="pf-header"><div class="pf-ava" aria-hidden="true">'+ini+'</div><div class="pf-name">'+escapeHTML(currentUser.username)+'</div>'+badgeHTML+'<div class="pf-joined">Member since '+joinDate+'</div><div class="pf-stats"><div class="ps"><div class="ps-n">'+myPosts.length+'</div><div class="ps-l">Confessions</div></div><div class="ps"><div class="ps-n">'+fmt(totalRx)+'</div><div class="ps-l">Reactions</div></div><div class="ps"><div class="ps-n">'+fmt(totalVotes)+'</div><div class="ps-l">Votes</div></div><div class="ps"><div class="ps-n">'+fmt(totalHearts)+'</div><div class="ps-l">Hearts</div></div><div class="ps"><div class="ps-n">'+userStreak+'</div><div class="ps-l">Day Streak</div></div></div></div><div class="sec-title">My Confessions</div>'+(myPosts.length?myPosts.slice(0,10).map((p,i)=>cardHTML(p,i)).join(''):'<div class="empty"><div class="empty-ic">🖤</div><p class="empty-tx">You haven\'t shared anything yet</p></div>')+'<div style="text-align:center;padding:24px 0"><button class="btn btn-ghost" style="color:var(--accent);margin-right:8px" id="btnResources">🫂 Support Resources</button><button class="btn btn-ghost" style="color:var(--accent)" id="btnLogout">Sign Out</button></div>';
-    setTimeout(()=>{
-      document.getElementById('btnLogout')?.addEventListener('click',doLogout);
-      document.getElementById('btnResources')?.addEventListener('click',()=>go('resources'));
-    },50);
-  }
+    w.innerHTML='<div class="pf-header"><div class="pf-ava">'+ini+'</div><div class="pf-name">'+escapeHTML(currentUser.username)+'</div>'+badgeHTML+'<div class="pf-joined">Member since '+joinDate+'</div><div class="pf-stats"><div class="ps"><div class="ps-n">'+myPosts.length+'</div><div class="ps-l">Confessions</div></div><div class="ps"><div class="ps-n">'+fmt(totalRx)+'</div><div class="ps-l">Reactions</div></div><div class="ps"><div class="ps-n">'+fmt(totalVotes)+'</div><div class="ps-l">Votes</div></div><div class="ps"><div class="ps-n">'+fmt(totalHearts)+'</div><div class="ps-l">Hearts</div></div><div class="ps"><div class="ps-n">'+userStreak+'</div><div class="ps-l">Day Streak</div></div></div></div><div class="sec-title">My Confessions</div>'+(myPosts.length?myPosts.slice(0,10).map((p,i)=>cardHTML(p,i)).join(''):'<div class="empty"><div class="empty-ic">🖤</div><p class="empty-tx">No confessions yet</p></div>')+'<div style="text-align:center;padding:24px 0"><button class="btn btn-ghost" style="color:var(--accent);margin-right:8px" id="btnResources">🫂 Support Resources</button><button class="btn btn-ghost" style="color:var(--accent)" id="btnLogout">Sign Out</button></div>';
+    setTimeout(()=>{document.getElementById('btnLogout')?.addEventListener('click',doLogout);document.getElementById('btnResources')?.addEventListener('click',()=>go('resources'));},50);}
 
   function renderResources(){
     const w=document.getElementById('resourcesWrap');
     const resources=[
       {emoji:'📞',name:'National Domestic Violence Hotline',desc:'Call 1-800-799-7233 or text START to 88788',url:'https://www.thehotline.org'},
-      {emoji:'🧠',name:'Crisis Text Line',desc:'Text HOME to 741741 for free crisis counseling',url:'https://www.crisistextline.org'},
-      {emoji:'💜',name:'RAINN - Sexual Assault Support',desc:'Call 1-800-656-4673 or chat online',url:'https://www.rainn.org'},
-      {emoji:'🫂',name:'BetterHelp - Online Therapy',desc:'Professional therapy accessible from anywhere',url:'https://www.betterhelp.com'},
-      {emoji:'🌍',name:'Find a Therapist',desc:'Psychology Today directory of therapists',url:'https://www.psychologytoday.com/us/therapists'},
-      {emoji:'📚',name:'Love Is Respect',desc:'Resources for healthy relationships',url:'https://www.loveisrespect.org'}
+      {emoji:'🧠',name:'Crisis Text Line',desc:'Text HOME to 741741',url:'https://www.crisistextline.org'},
+      {emoji:'💜',name:'RAINN',desc:'Call 1-800-656-4673',url:'https://www.rainn.org'},
+      {emoji:'🫂',name:'BetterHelp',desc:'Online therapy',url:'https://www.betterhelp.com'},
+      {emoji:'🌍',name:'Find a Therapist',desc:'Psychology Today directory',url:'https://www.psychologytoday.com/us/therapists'},
+      {emoji:'📚',name:'Love Is Respect',desc:'Healthy relationships',url:'https://www.loveisrespect.org'}
     ];
-    w.innerHTML=resources.map(r=>'<a href="'+r.url+'" target="_blank" rel="noopener noreferrer" class="resource-card"><span class="resource-emoji">'+r.emoji+'</span><div class="resource-info"><div class="resource-name">'+r.name+'</div><div class="resource-desc">'+r.desc+'</div></div></a>').join('');
-  }
+    w.innerHTML=resources.map(r=>'<a href="'+r.url+'" target="_blank" rel="noopener noreferrer" class="resource-card"><span class="resource-emoji">'+r.emoji+'</span><div class="resource-info"><div class="resource-name">'+r.name+'</div><div class="resource-desc">'+r.desc+'</div></div></a>').join('');}
 
   function renderFilters(){
     const ftabs=document.getElementById('ftabs');
     ftabs.innerHTML=FILTERS.map(f=>'<button class="ftab'+(f.val===currentFilter?' on':'')+'" data-f="'+f.val+'" role="tab" aria-selected="'+(f.val===currentFilter)+'">'+f.label+'</button>').join('');
-    ftabs.querySelectorAll('.ftab').forEach(b=>{b.addEventListener('click',function(){currentFilter=this.dataset.f;postsPage=0;renderFeed();renderFilters();});});
+    ftabs.querySelectorAll('.ftab').forEach(b=>{b.addEventListener('click',function(){currentFilter=this.dataset.f;postsPage=0;renderFeed();renderFilters();});});}
+
+  function renderStreakBar(){
+    const bar=document.getElementById('streakBar');
+    if(!currentUser||userStreak<2){bar.innerHTML='';return;}
+    bar.innerHTML='<div class="streak-bar"><span class="fire">🔥</span> '+userStreak+' day streak! Keep it going</div>';}
+
+  function updateStreak(){
+    const today=new Date().toDateString();
+    if(lastActiveDate===today)return;
+    const yesterday=new Date(Date.now()-86400000).toDateString();
+    if(lastActiveDate===yesterday){userStreak++;}else if(lastActiveDate!==today){userStreak=1;}
+    lastActiveDate=today;
+    saveUserDataToLocal();
+    checkAchievements();
+    renderStreakBar();
+  }
+
+  function checkAchievements(){
+    if(!currentUser)return;
+    const myPosts=POSTS.filter(p=>p.author===currentUser.username);
+    const myComments=[];
+    Object.values(COMMENTS).forEach(cmts=>{cmts.forEach(c=>{if(c.author===currentUser.username)myComments.push(c);if(c.replies)c.replies.forEach(r=>{if(r.author===currentUser.username)myComments.push(r)});});});
+    if(myPosts.length>=1)showAchievement('first_post');
+    if(myComments.length>=1)showAchievement('first_comment');
+    const viralPost=myPosts.find(p=>(p.views||0)>=1000);
+    if(viralPost)showAchievement('viral_post');
+    const topComment=myComments.find(c=>(c.up||0)>=100);
+    if(topComment)showAchievement('top_comment');
+    if(userStreak>=3)showAchievement('streak_3');
+    if(userStreak>=7)showAchievement('streak_7');
   }
 
   function setupPullToRefresh(){
     let touchStartY=0;let pulling=false;
     document.addEventListener('touchstart',e=>{if(window.scrollY<10&&currentPage==='home'){touchStartY=e.touches[0].clientY;pulling=true;}},{passive:true});
-    document.addEventListener('touchmove',e=>{if(!pulling)return;const diff=e.touches[0].clientY-touchStartY;if(diff>80){pulling=false;renderFeed();toast('Feed refreshed ✨','info');}},{passive:true});
+    document.addEventListener('touchmove',e=>{if(!pulling)return;if(e.touches[0].clientY-touchStartY>80){pulling=false;renderFeed();toast('Feed refreshed ✨','info');}},{passive:true});
     document.addEventListener('touchend',()=>{pulling=false;});
   }
 
   function setupGlobalDelegation(){
     document.getElementById('bottomnav').addEventListener('click',function(e){const btn=e.target.closest('button');if(!btn)return;const page=btn.dataset.page;if(page){e.preventDefault();go(page);}});
-
     document.addEventListener('click',function(e){
       const postTarget=e.target.closest('[data-pid]');
       if(postTarget){const pid=postTarget.dataset.pid;
@@ -1735,9 +1763,7 @@ img{display:block;max-width:100%}
         if(postTarget.classList.contains('rxbtn')){e.preventDefault();e.stopPropagation();doRx(pid,postTarget.dataset.e,postTarget);return;}
         if(postTarget.classList.contains('c-stat')&&!postTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();openPost(pid);return;}
         if(postTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();showRpt(pid,'post');return;}
-        if(postTarget.classList.contains('share-btn')){e.preventDefault();e.stopPropagation();sharePost(pid,postTarget);return;}
-      }
-
+        if(postTarget.classList.contains('share-btn')){e.preventDefault();e.stopPropagation();sharePost(pid,postTarget);return;}}
       const cmtTarget=e.target.closest('[data-cid]');
       if(cmtTarget){const cid=cmtTarget.dataset.cid;
         if(cmtTarget.classList.contains('up')||cmtTarget.classList.contains('dn')){e.preventDefault();e.stopPropagation();voteCmt(cid,cmtTarget.classList.contains('up')?'up':'dn',cmtTarget);return;}
@@ -1745,16 +1771,9 @@ img{display:block;max-width:100%}
         if(cmtTarget.dataset.action==='reply'){e.preventDefault();e.stopPropagation();toggleRbox(cid);return;}
         if(cmtTarget.dataset.action==='cancel-reply'){e.preventDefault();e.stopPropagation();toggleRbox(cid);return;}
         if(cmtTarget.dataset.action==='post-reply'){e.preventDefault();e.stopPropagation();postReply(cid);return;}
-        if(cmtTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();showRpt(cid,'comment');return;}
-      }
-
-      const typeTarget=e.target.closest('[data-type]');
-      if(typeTarget&&typeTarget.classList.contains('type-btn')){e.preventDefault();e.stopPropagation();selectType(typeTarget);return;}
-
-      const reasonTarget=e.target.closest('[data-reason]');
-      if(reasonTarget){e.preventDefault();e.stopPropagation();submitRpt(reasonTarget.dataset.id,reasonTarget.dataset.reason,reasonTarget.dataset.type||'post');return;}
-    });
-
+        if(cmtTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();showRpt(cid,'comment');return;}}
+      const typeTarget=e.target.closest('[data-type]');if(typeTarget&&typeTarget.classList.contains('type-btn')){e.preventDefault();e.stopPropagation();selectType(typeTarget);return;}
+      const reasonTarget=e.target.closest('[data-reason]');if(reasonTarget){e.preventDefault();e.stopPropagation();submitRpt(reasonTarget.dataset.id,reasonTarget.dataset.reason,reasonTarget.dataset.type||'post');return;}});
     document.getElementById('authOv')?.addEventListener('click',function(e){if(e.target===this)closeAuth();});
     document.getElementById('pwOv')?.addEventListener('click',function(e){if(e.target===this)closePw();});
     document.getElementById('rptOv')?.addEventListener('click',function(e){if(e.target===this)closeRpt();});
@@ -1764,32 +1783,55 @@ img{display:block;max-width:100%}
     document.getElementById('btnPwSignup')?.addEventListener('click',function(){closePw();showAuth('signup');});
     document.getElementById('btnPwLogin')?.addEventListener('click',function(){closePw();showAuth('login');});
     document.getElementById('btnLoadMore')?.addEventListener('click',loadMore);
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAuth();closePw();closeRpt();}});
-  }
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeAuth();closePw();closeRpt();}});}
 
   async function init(){
-    document.getElementById('navRight').innerHTML='<button class="btn btn-ghost btn-sm" id="btnLoginNav">Login</button><button class="btn btn-primary btn-sm" id="btnSignupNav">Join Free</button>';
-    setTimeout(()=>{
-      document.getElementById('btnLoginNav')?.addEventListener('click',()=>showAuth('login'));
-      document.getElementById('btnSignupNav')?.addEventListener('click',()=>showAuth('signup'));
-    },50);
+    loadUserDataFromLocal();
+    const savedUser = loadUserSession();
+    if(savedUser){
+      currentUser = savedUser;
+      updateStreak();
+    }
 
-    renderFilters();renderFeed();setupGlobalDelegation();setupPullToRefresh();
-    
     if(SUPABASE_URL!=='YOUR_SUPABASE_URL'&&SUPABASE_ANON_KEY!=='YOUR_SUPABASE_ANON_KEY'){
       await initSupabase();
+      if(!currentUser){
+        const {data:{session}} = await supabase.auth.getSession();
+        if(!session?.user){
+          currentUser = null;
+          clearUserSession();
+        }
+      }
     }else{
-      loadLocalPosts();
-      console.warn('Supabase not configured. Using local data. Set SUPABASE_URL and SUPABASE_ANON_KEY.');
+      loadPostsFromLocal();
+      loadCommentsFromLocal();
+      if(!currentUser){
+        currentUser = loadUserSession();
+      }
     }
+
+    updateNav();
+    renderFilters();
+    renderFeed();
+    renderStreakBar();
+    setupGlobalDelegation();
+    setupPullToRefresh();
     
+    window.addEventListener('beforeunload', () => {
+      savePostsToLocal();
+      saveCommentsToLocal();
+      saveUserDataToLocal();
+      if(currentUser) saveUserSession(currentUser);
+    });
+
+    setInterval(() => {
+      savePostsToLocal();
+      saveCommentsToLocal();
+    }, 10000);
+
     setInterval(()=>{liveViewerCount=Math.floor(Math.random()*40)+15;const lv=document.getElementById('liveViewers');if(lv)lv.textContent=liveViewerCount+' listening';},30000);
-    setInterval(checkAchievements,60000);
-    
-    console.log('💔 HeartConfia Production Ready');
-    console.log('   User:',currentUser?currentUser.username:'Guest');
-    console.log('   Streak:',userStreak,'days');
-    console.log('   Posts:',POSTS.length);
+
+    console.log('💔 HeartConfia Running');
   }
 
   if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
