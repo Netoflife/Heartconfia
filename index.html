@@ -667,7 +667,7 @@ img{display:block;max-width:100%}
         }
       }
       setupRealtimeSubscriptions();
-      await fetchPostsFromSupabase();
+      await fetchPostsFromSupabase(); // merges remote data, re-renders feed
       if(currentUser)await fetchNotifications();
     }catch(e){
       console.error('[HeartConfia] Supabase init error:',e);
@@ -1567,44 +1567,54 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAuth();closePw
 }
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
-async function init(){
+function init(){
+// ── STEP 1: Everything synchronous first — buttons work immediately ──────
 loadUserDataFromLocal();
-// Restore session from localStorage immediately for instant UI
-const savedUser=loadUserSession();
-if(savedUser){currentUser=savedUser;updateNav();updateStreak();}
+loadPostsFromLocal();
+loadCommentsFromLocal();
 
 ```
-// FIX #8: single code path — no double renderFeed
-if(SUPABASE_URL&&SUPABASE_URL!=='YOUR_SUPABASE_URL'&&SUPABASE_ANON_KEY&&SUPABASE_ANON_KEY!=='YOUR_SUPABASE_ANON_KEY'){
-  await initSupabase();
-  // FIX #10: no second session fetch — initSupabase handles it
-}else{
-  loadPostsFromLocal();loadCommentsFromLocal();
-  if(currentPage==='home')renderFeed(); // only called here in non-supabase path
-}
+const savedUser=loadUserSession();
+if(savedUser){currentUser=savedUser;}
 
+updateNav();
 renderFilters();
+renderFeed();
 renderStreakBar();
-setupGlobalDelegation();
+setupGlobalDelegation();   // ← ALWAYS runs, regardless of network
 setupPullToRefresh();
-
-// FIX #7: handle shared links via hash
 handleHashRouting();
 
-// Live viewer count animation
+if(currentUser)updateStreak();
+
+// Live viewer ticker
 setInterval(()=>{
   liveViewerCount=Math.floor(Math.random()*40)+15;
   const lv=document.getElementById('liveViewers');if(lv)lv.textContent=liveViewerCount+' listening';
 },30000);
 
-// Periodic save
+// Periodic local save
 setInterval(()=>{savePostsToLocal();saveCommentsToLocal();},15000);
 
-// Save on exit
 window.addEventListener('beforeunload',()=>{
   savePostsToLocal();saveCommentsToLocal();saveUserDataToLocal();
   if(currentUser)saveUserSession(currentUser);
 });
+
+// ── STEP 2: Supabase in background — never blocks UI ────────────────────
+const hasSupabase = SUPABASE_URL && SUPABASE_URL!=='YOUR_SUPABASE_URL'
+                 && SUPABASE_ANON_KEY && SUPABASE_ANON_KEY!=='YOUR_SUPABASE_ANON_KEY';
+if(hasSupabase){
+  // Race Supabase init against a 8-second timeout
+  const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),8000));
+  Promise.race([initSupabase(),timeout])
+    .catch(e=>{
+      console.warn('[HeartConfia] Supabase init timed out or failed:',e.message);
+      setOfflineBanner(true);
+    });
+}else{
+  setOfflineBanner(true);
+}
 
 console.log('💔 HeartConfia ready');
 ```
