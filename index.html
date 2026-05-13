@@ -987,6 +987,7 @@ img{display:block;max-width:100%}
 </div>
 
 <script>
+<script>
 (function(){
   'use strict';
 
@@ -1049,9 +1050,9 @@ img{display:block;max-width:100%}
   ];
 
   function ago(h){const d=new Date(Date.now()-h*3600000);return d.toISOString();}
-  function fmt(n){if(n==null||isNaN(n))return'0';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(1)+'k';return String(Math.floor(n))}
+  function fmt(n){if(n==null||isNaN(n))return'0';if(n>=1e6)return(n/1e6).toFixed(1)+'M';if(n>=1000)return(n/1000).toFixed(1)+'k';return String(Math.floor(n));}
   function tAgo(d){if(!d)return'just now';try{const s=Math.floor((Date.now()-new Date(d).getTime())/1000);if(isNaN(s)||s<0)return'just now';if(s<60)return'just now';if(s<3600)return Math.floor(s/60)+'m ago';if(s<86400)return Math.floor(s/3600)+'h ago';if(s<604800)return Math.floor(s/86400)+'d ago';return Math.floor(s/604800)+'w ago';}catch(e){return'just now';}}
-  function toast(msg,type='info'){const c=document.getElementById('toasts');if(!c)return;const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3100)}
+  function toast(msg,type='info'){const c=document.getElementById('toasts');if(!c)return;const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;c.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3100);}
   function resize(el){if(!el)return;el.style.height='auto';el.style.height=Math.min(el.scrollHeight,400)+'px';}
   function escapeHTML(str){if(!str)return'';const div=document.createElement('div');div.textContent=str;return div.innerHTML;}
   function sanitizeInput(str){if(!str)return'';return str.replace(/<[^>]*>/g,'').trim();}
@@ -1060,28 +1061,29 @@ img{display:block;max-width:100%}
   function generateId(){return'id_'+Date.now()+'_'+Math.random().toString(36).substr(2,9);}
   function scrollToTop(){window.scrollTo({top:0,behavior:'smooth'});}
 
-  // FIX 4: safely parse replies that may arrive from Supabase as a JSON string
+  // Safely parse replies that may arrive from Supabase as a JSON string
   function parseReplies(replies){
     if(Array.isArray(replies))return replies;
-    if(typeof replies==='string'){
-      try{const p=JSON.parse(replies);return Array.isArray(p)?p:[];}catch(e){return[];}
-    }
+    if(typeof replies==='string'){try{const p=JSON.parse(replies);return Array.isArray(p)?p:[];}catch(e){return[];}}
     return[];
   }
 
-  const rateLimiter = {
-    actions: {},
-    check(key, limit, windowMs = RATE_LIMIT_WINDOW) {
-      const now = Date.now();
-      this.actions[key] = (this.actions[key] || []).filter(t => now - t < windowMs);
-      if (this.actions[key].length >= (limit || MAX_VOTES_PER_WINDOW)) return false;
+  // Safe votes initializer — BUG K: guard against null/missing votes from DB
+  function safeVotes(v){
+    if(v&&typeof v==='object'&&!Array.isArray(v))return v;
+    return{he:0,she:0,both:0};
+  }
+
+  const rateLimiter={
+    actions:{},
+    check(key,limit,windowMs=RATE_LIMIT_WINDOW){
+      const now=Date.now();
+      this.actions[key]=(this.actions[key]||[]).filter(t=>now-t<windowMs);
+      if(this.actions[key].length>=(limit||MAX_VOTES_PER_WINDOW))return false;
       this.actions[key].push(now);
       return true;
     },
-    clear(key) {
-      if(key) delete this.actions[key];
-      else this.actions = {};
-    }
+    clear(key){if(key)delete this.actions[key];else this.actions={};}
   };
 
   function spawnFloatingHeart(source){
@@ -1121,17 +1123,13 @@ img{display:block;max-width:100%}
       if(!Array.isArray(cmts))return;
       cmts.forEach(c=>{
         if(c.author===currentUser.username)myComments.push(c);
-        if(Array.isArray(c.replies))c.replies.forEach(r=>{
-          if(r.author===currentUser.username)myComments.push(r);
-        });
+        if(Array.isArray(c.replies))c.replies.forEach(r=>{if(r.author===currentUser.username)myComments.push(r);});
       });
     });
     if(myPosts.length>=1)showAchievement('first_post');
     if(myComments.length>=1)showAchievement('first_comment');
-    const viralPost=myPosts.find(p=>(p.views||0)>=1000);
-    if(viralPost)showAchievement('viral_post');
-    const topComment=myComments.find(c=>(c.up||0)>=100);
-    if(topComment)showAchievement('top_comment');
+    if(myPosts.find(p=>(p.views||0)>=1000))showAchievement('viral_post');
+    if(myComments.find(c=>(c.up||0)>=100))showAchievement('top_comment');
     if(userStreak>=3)showAchievement('streak_3');
     if(userStreak>=7)showAchievement('streak_7');
   }
@@ -1157,14 +1155,10 @@ img{display:block;max-width:100%}
   function saveUserData(){
     if(!currentUser||!currentUser.id)return;
     try{
-      const data={
-        streak:userStreak,
-        lastActiveDate:lastActiveDate,
-        achievements:userAchievements,
-        preferences:userPreferences,
-        onboardingComplete:onboardingComplete
-      };
-      localStorage.setItem('hc_user_data_'+currentUser.id,JSON.stringify(data));
+      localStorage.setItem('hc_user_data_'+currentUser.id,JSON.stringify({
+        streak:userStreak,lastActiveDate,achievements:userAchievements,
+        preferences:userPreferences,onboardingComplete
+      }));
     }catch(e){}
   }
 
@@ -1180,11 +1174,7 @@ img{display:block;max-width:100%}
         userPreferences=data.preferences||{topics:[],mutedTags:[]};
         onboardingComplete=data.onboardingComplete||false;
       }
-    }catch(e){
-      userStreak=0;
-      lastActiveDate=null;
-      userAchievements=[];
-    }
+    }catch(e){userStreak=0;lastActiveDate=null;userAchievements=[];}
   }
 
   function showOnboarding(){
@@ -1194,11 +1184,10 @@ img{display:block;max-width:100%}
     if(!ov||!body)return;
     let step=0;
     const steps=[
-      {emoji:'💔',title:'Welcome to HeartConfia',desc:'A safe space to share, judge, and heal. Everything is anonymous. No one knows who you are.',button:'Next'},
+      {emoji:'💔',title:'Welcome to HeartConfia',desc:'A safe space to share, judge, and heal. Everything is anonymous.',button:'Next'},
       {emoji:'📋',title:'Pick Your Stories',desc:'What kind of confessions interest you? We\'ll personalize your feed.',button:'Next',tags:true},
       {emoji:'🤝',title:'You\'re Not Alone',desc:'This is a community. Vote, comment, support others. Your voice matters here.',button:'Start Exploring 💔'}
     ];
-
     function renderStep(){
       const s=steps[step];
       let html='<div class="onboarding-step"><div class="onboarding-emoji">'+s.emoji+'</div><h2 class="onboarding-title">'+s.title+'</h2><p class="onboarding-desc">'+s.desc+'</p>';
@@ -1245,20 +1234,38 @@ img{display:block;max-width:100%}
     }catch(e){
       console.error('Supabase init error:',e);
       loadLocalPosts();
+      renderFeed();
     }
   }
 
+  // BUG B+F FIX: restoreUserProfile now uses upsert and only creates a new profile
+  // when the error is specifically "not found" (PGRST116), not on any DB error.
   async function restoreUserProfile(user){
     try{
-      const{data:profile,error:profileError}=await supabase.from('users').select('*').eq('id',user.id).single();
-      if(profileError||!profile){
-        const username=mkUsername();
-        const{error:insertError}=await supabase.from('users').insert({id:user.id,email:user.email,username:username,created_at:new Date().toISOString()});
-        if(insertError){console.error('Failed to create user profile:',insertError);toast('Error setting up profile. Please try again.','err');return;}
-        currentUser={id:user.id,email:user.email,username:username,created_at:new Date().toISOString()};
-      }else{
+      const{data:profile,error:profileError}=await supabase
+        .from('users').select('*').eq('id',user.id).single();
+
+      if(profile){
         currentUser=profile;
+      }else if(profileError&&profileError.code==='PGRST116'){
+        // Row genuinely does not exist — create it
+        const username=mkUsername();
+        const newProfile={id:user.id,email:user.email,username,created_at:new Date().toISOString()};
+        // BUG B FIX: upsert instead of insert so duplicate calls never create ghost users
+        const{data:upserted,error:upsertErr}=await supabase
+          .from('users').upsert(newProfile,{onConflict:'id'}).select().single();
+        if(upsertErr){
+          console.error('Failed to create user profile:',upsertErr);
+          toast('Error setting up profile. Please try again.','err');
+          return;
+        }
+        currentUser=upserted||newProfile;
+      }else if(profileError){
+        console.error('Profile fetch error:',profileError);
+        toast('Error loading your profile. Please refresh.','err');
+        return;
       }
+
       loadUserData();
       updateStreak();
       updateNav();
@@ -1273,13 +1280,33 @@ img{display:block;max-width:100%}
       supabase.channel('hc-posts-changes')
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'posts'},payload=>{
           const np=payload.new;
-          if(np&&!POSTS.find(p=>p.id===np.id)){POSTS.unshift(np);if(currentPage==='home')renderFeed();}
+          if(!np)return;
+          np.votes=safeVotes(np.votes); // BUG K fix
+          // BUG C FIX: check both the server ID and any pending local temp ID
+          const exists=POSTS.find(p=>p.id===np.id||p._localId===np._localId);
+          if(!exists){
+            POSTS.unshift(np);
+            if(currentPage==='home')renderFeed();
+          }else{
+            // Update the local optimistic post with the real server ID
+            exists.id=np.id;
+            delete exists._localId;
+          }
         })
         .on('postgres_changes',{event:'UPDATE',schema:'public',table:'posts'},payload=>{
           const updated=payload.new;
+          if(!updated)return;
+          updated.votes=safeVotes(updated.votes); // BUG K fix
           const idx=POSTS.findIndex(p=>p.id===updated.id);
           if(idx!==-1){
-            POSTS[idx]={...POSTS[idx],...updated};
+            // BUG J FIX: merge carefully — don't overwrite local optimistic fields
+            // with a stale server snapshot that doesn't reflect the user's own actions
+            POSTS[idx]={...updated,...{
+              votes:updated.votes,
+              rx:updated.rx||POSTS[idx].rx,
+              cmt:Math.max(updated.cmt||0,POSTS[idx].cmt||0),
+              views:Math.max(updated.views||0,POSTS[idx].views||0)
+            }};
             if(currentPage==='home')renderFeed();
             if(currentPage==='detail'&&detailPost?.id===updated.id)detailPost=POSTS[idx];
           }
@@ -1289,27 +1316,21 @@ img{display:block;max-width:100%}
       supabase.channel('hc-comments-changes')
         .on('postgres_changes',{event:'INSERT',schema:'public',table:'comments'},payload=>{
           const nc=payload.new;
-          if(nc&&nc.post_id){
-            // FIX 4: parse replies when receiving from realtime
-            nc.replies=parseReplies(nc.replies);
-            if(!COMMENTS[nc.post_id])COMMENTS[nc.post_id]=[];
-            if(!COMMENTS[nc.post_id].find(c=>c.id===nc.id))COMMENTS[nc.post_id].unshift(nc);
-            // FIX 8: guard detailPost before using it in realtime callback
-            if(currentPage==='detail'&&detailPost&&detailPost.id===nc.post_id)renderDetailComments(detailPost);
-            const p=POSTS.find(p=>p.id===nc.post_id);
-            if(p)p.cmt=(p.cmt||0)+1;
-          }
+          if(!nc||!nc.post_id)return;
+          nc.replies=parseReplies(nc.replies);
+          if(!COMMENTS[nc.post_id])COMMENTS[nc.post_id]=[];
+          if(!COMMENTS[nc.post_id].find(c=>c.id===nc.id))COMMENTS[nc.post_id].unshift(nc);
+          if(currentPage==='detail'&&detailPost&&detailPost.id===nc.post_id)renderDetailComments(detailPost);
+          const p=POSTS.find(p=>p.id===nc.post_id);
+          if(p)p.cmt=(p.cmt||0)+1;
         })
         .on('postgres_changes',{event:'UPDATE',schema:'public',table:'comments'},payload=>{
           const updated=payload.new;
-          if(updated&&updated.post_id&&COMMENTS[updated.post_id]){
-            // FIX 4: parse replies on update too
-            updated.replies=parseReplies(updated.replies);
-            const idx=COMMENTS[updated.post_id].findIndex(c=>c.id===updated.id);
-            if(idx!==-1)COMMENTS[updated.post_id][idx]=updated;
-            // FIX 8: guard detailPost
-            if(currentPage==='detail'&&detailPost&&detailPost.id===updated.post_id)renderDetailComments(detailPost);
-          }
+          if(!updated||!updated.post_id||!COMMENTS[updated.post_id])return;
+          updated.replies=parseReplies(updated.replies);
+          const idx=COMMENTS[updated.post_id].findIndex(c=>c.id===updated.id);
+          if(idx!==-1)COMMENTS[updated.post_id][idx]=updated;
+          if(currentPage==='detail'&&detailPost&&detailPost.id===updated.post_id)renderDetailComments(detailPost);
         })
         .subscribe();
     }catch(e){
@@ -1317,28 +1338,38 @@ img{display:block;max-width:100%}
     }
   }
 
+  // BUG D FIX: always clear POSTS before repopulating, regardless of data.length
   async function fetchPosts(){
     if(!supabase){loadLocalPosts();return;}
     try{
-      const{data,error}=await supabase.from('posts').select('*').order('created_at',{ascending:false}).limit(100);
+      const{data,error}=await supabase
+        .from('posts').select('*').order('created_at',{ascending:false}).limit(100);
       if(error)throw error;
-      if(data&&data.length){POSTS.length=0;POSTS.push(...data);}
+      // Always reset — stale local/demo data must not linger
+      POSTS.length=0;
+      if(data&&data.length){
+        data.forEach(p=>{p.votes=safeVotes(p.votes);});
+        POSTS.push(...data);
+      }
       if(currentPage==='home')renderFeed();
     }catch(e){
       console.error('Fetch posts error:',e);
       if(POSTS.length===0)loadLocalPosts();
+      if(currentPage==='home')renderFeed();
     }
   }
 
+  // BUG E FIX: always clear COMMENTS before repopulating
   async function fetchComments(){
     if(!supabase)return;
     try{
-      const{data,error}=await supabase.from('comments').select('*').order('created_at',{ascending:false}).limit(500);
+      const{data,error}=await supabase
+        .from('comments').select('*').order('created_at',{ascending:false}).limit(500);
       if(error)throw error;
+      // Always reset stale comment state
+      Object.keys(COMMENTS).forEach(k=>delete COMMENTS[k]);
       if(data&&data.length){
-        Object.keys(COMMENTS).forEach(k=>delete COMMENTS[k]);
         data.forEach(c=>{
-          // FIX 4: always parse replies — Supabase may return them as a JSON string
           c.replies=parseReplies(c.replies);
           if(!COMMENTS[c.post_id])COMMENTS[c.post_id]=[];
           COMMENTS[c.post_id].push(c);
@@ -1357,7 +1388,7 @@ img{display:block;max-width:100%}
       POSTS.push({
         id:'p1',author:'Heart_4821',type:'confession',
         title:"I checked his phone at 2AM and saw something I still wish I never saw…",
-        content:"I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years. Three years of building something I thought was real.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... \"last night was everything.\"\n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — \"the roommate.\"\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.",
+        content:"I don't know how to describe the feeling of your whole world shifting in 4 seconds. We've been together for 3 years.\n\nHe fell asleep with his phone unlocked. I wasn't snooping — I just wanted to turn off his alarm. But his WhatsApp notification was right there.\n\nThe name wasn't someone I recognized. But the words... \"last night was everything.\"\n\nI didn't wake him. I just sat in the bathroom for an hour, reading the whole thread. 47 messages going back 4 months. They had a name for me — \"the roommate.\"\n\nHe calls me his roommate to her. After three years. After we talked about kids last month.\n\nI'm still in this apartment. Still sleeping next to him every night. I haven't told anyone yet. I don't even know who I am right now.",
         tags:['cheating','betrayal','trust'],created_at:ago(2),
         rx:{'💔':247,'😭':189,'😡':312,'😳':98,'😂':5,'🔥':45},
         votes:{he:412,she:23,both:89},views:1840,cmt:143,trending:true,sensitive:false,
@@ -1369,7 +1400,9 @@ img{display:block;max-width:100%}
   async function fetchNotifications(){
     if(!supabase||!currentUser||!currentUser.id)return;
     try{
-      const{data,error}=await supabase.from('notifications').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false}).limit(30);
+      const{data,error}=await supabase
+        .from('notifications').select('*').eq('user_id',currentUser.id)
+        .order('created_at',{ascending:false}).limit(30);
       if(error)throw error;
       if(data){
         NOTIFICATIONS.length=0;
@@ -1377,9 +1410,7 @@ img{display:block;max-width:100%}
         unreadNotifs=NOTIFICATIONS.filter(n=>!n.read).length;
         updateNotifBadge();
       }
-    }catch(e){
-      console.error('Fetch notifications error:',e);
-    }
+    }catch(e){console.error('Fetch notifications error:',e);}
   }
 
   function addNotification(nf){
@@ -1387,7 +1418,8 @@ img{display:block;max-width:100%}
     NOTIFICATIONS.unshift(nf);
     if(!nf.read){unreadNotifs++;updateNotifBadge();}
     if(supabase&&currentUser&&currentUser.id){
-      supabase.from('notifications').insert({...nf,user_id:currentUser.id,created_at:nf.time||new Date().toISOString()}).then(()=>{}).catch(()=>{});
+      supabase.from('notifications').insert({...nf,user_id:currentUser.id,created_at:nf.time||new Date().toISOString()})
+        .then(()=>{}).catch(()=>{});
     }
   }
 
@@ -1395,32 +1427,23 @@ img{display:block;max-width:100%}
     const badge=document.getElementById('notifBadge');
     if(!badge)return;
     if(unreadNotifs>0){badge.classList.remove('hidden');badge.textContent=unreadNotifs>9?'9+':String(unreadNotifs);}
-    else{badge.classList.add('hidden');}
+    else badge.classList.add('hidden');
   }
 
+  // go() — BUG 2 FIX retained: only reset detailPost when leaving detail, not entering it
   function go(page){
     if(pageChangeInProgress)return;
     pageChangeInProgress=true;
-
-    // FIX 2: only reset detailPost when leaving the detail page, not when entering it.
-    // openPost() sets detailPost AFTER calling go(), so we must not null it here for 'detail'.
-    if(page!=='detail'){
-      detailPost=null;
-    }
-
+    if(page!=='detail')detailPost=null;
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
-
     const pg=document.getElementById('pg-'+page);
     if(pg)pg.classList.add('active');
-
     const nb=document.querySelector('#bottomnav [data-page="'+page+'"]');
     if(nb)nb.classList.add('active');
-
     currentPage=page;
     postsPage=0;
     scrollToTop();
-
     switch(page){
       case'home':renderFeed();break;
       case'trending':renderTrending();break;
@@ -1429,7 +1452,6 @@ img{display:block;max-width:100%}
       case'profile':renderProfile();break;
       case'resources':renderResources();break;
     }
-
     setTimeout(()=>{pageChangeInProgress=false;},100);
   }
 
@@ -1471,10 +1493,12 @@ img{display:block;max-width:100%}
 
   function mkUsername(){
     const prefixes=['Heart','Confess','Vibe','Shadow','Ghost','Truth','Anon','Soul','Quiet','Storm','Silent','Echo','Brave','Wounded','Healing'];
-    const num=Math.floor(Math.random()*9000)+1000;
-    return prefixes[Math.floor(Math.random()*prefixes.length)]+'_'+num;
+    return prefixes[Math.floor(Math.random()*prefixes.length)]+'_'+(Math.floor(Math.random()*9000)+1000);
   }
 
+  // BUG B+L FIX: doSignup now uses restoreUserProfile (which uses upsert) instead of
+  // manually constructing currentUser. If the users INSERT ever fails, this ensures
+  // the profile is always consistent with the DB on next load.
   async function doSignup(){
     const emailInput=document.getElementById('ae');
     const passInput=document.getElementById('ap');
@@ -1493,16 +1517,23 @@ img{display:block;max-width:100%}
         return;
       }
       if(data?.user){
-        const username=mkUsername();
-        await supabase.from('users').insert({id:data.user.id,email,username,created_at:new Date().toISOString()});
         if(data.session){
-          currentUser={id:data.user.id,email,username,created_at:new Date().toISOString()};
-          closeAuth();updateNav();loadUserData();updateStreak();fetchNotifications();
-          if(!onboardingComplete)showOnboarding();
-          toast('Account created! Welcome to HeartConfia 💔','ok');
+          // Use restoreUserProfile so the username is always upserted to DB correctly
+          await restoreUserProfile(data.user);
+          if(currentUser){
+            closeAuth();updateNav();loadUserData();updateStreak();fetchNotifications();
+            if(!onboardingComplete)showOnboarding();
+            toast('Account created! Welcome to HeartConfia 💔','ok');
+          }
         }else{
+          // Email confirmation required — pre-create profile so it exists after confirmation
+          const username=mkUsername();
+          await supabase.from('users').upsert(
+            {id:data.user.id,email,username,created_at:new Date().toISOString()},
+            {onConflict:'id'}
+          );
           closeAuth();
-          toast('Account created! Please check your email to confirm, then login.','info');
+          toast('Account created! Check your email to confirm, then login.','info');
         }
       }
     }catch(e){
@@ -1530,7 +1561,12 @@ img{display:block;max-width:100%}
       if(data?.user){
         await restoreUserProfile(data.user);
         if(currentUser){
-          closeAuth();updateNav();fetchNotifications();fetchComments();
+          closeAuth();
+          updateNav();
+          fetchNotifications();
+          // BUG G FIX: re-fetch posts on login so RLS-gated content loads correctly
+          await fetchPosts();
+          await fetchComments();
           if(!onboardingComplete)showOnboarding();
           toast('Welcome back, '+currentUser.username+'! 💔','ok');
         }else{
@@ -1544,23 +1580,16 @@ img{display:block;max-width:100%}
   }
 
   async function doLogout(){
-    // FIX 1: save the user ID BEFORE nulling currentUser, so localStorage cleanup works correctly
+    // BUG 1 FIX (retained): save ID before nulling currentUser
     const userId=currentUser?.id;
-
-    if(supabase){
-      try{await supabase.auth.signOut();}catch(e){console.error('Sign out error:',e);}
-    }
-
+    if(supabase){try{await supabase.auth.signOut();}catch(e){console.error('Sign out error:',e);}}
     currentUser=null;
     userStreak=0;
     lastActiveDate=null;
     userAchievements=[];
     onboardingComplete=false;
     rateLimiter.clear();
-
-    // FIX 1 continued: use saved userId, not currentUser?.id (which is now null)
     try{if(userId)localStorage.removeItem('hc_user_data_'+userId);}catch(e){}
-
     updateNav();
     toast('Logged out safely','info');
     go('home');
@@ -1610,9 +1639,7 @@ img{display:block;max-width:100%}
     if(lmw)lmw.classList.toggle('hidden',posts.length<=POSTS_PER_PAGE);
     const lv=document.getElementById('liveViewers');
     if(lv)lv.textContent=liveViewerCount+' listening';
-
-    // FIX 6: attach loadMore listener directly here; do NOT add it again in setupGlobalDelegation
-    // cloneNode removes old listeners, then we add exactly one new listener — no stale refs
+    // BUG 6 FIX (retained): always re-attach load more listener after re-render
     const btn=document.getElementById('btnLoadMore');
     if(btn){
       const newBtn=btn.cloneNode(true);
@@ -1644,9 +1671,10 @@ img{display:block;max-width:100%}
   function cardHTML(p,idx){
     if(!p)return'';
     const delay=Math.min(idx*40,300);
-    const total=(p.votes?.he||0)+(p.votes?.she||0)+(p.votes?.both||0)||1;
-    const heP=Math.round((p.votes?.he||0)/total*100);
-    const sheP=Math.round((p.votes?.she||0)/total*100);
+    const v=safeVotes(p.votes);
+    const total=(v.he||0)+(v.she||0)+(v.both||0)||1;
+    const heP=Math.round((v.he||0)/total*100);
+    const sheP=Math.round((v.she||0)/total*100);
     const bothP=100-heP-sheP;
     const ini=(p.author||'AN').slice(0,2).toUpperCase();
     const guest=!currentUser;
@@ -1672,8 +1700,6 @@ img{display:block;max-width:100%}
     if(!currentUser){showPw(id);return;}
     p.views=(p.views||0)+1;
     if(supabase)supabase.from('posts').update({views:p.views}).eq('id',p.id).then(()=>{}).catch(()=>{});
-    // FIX 2: call go() first (which clears detailPost only for non-detail pages),
-    // then set detailPost so it is available for comments/voting in the detail view
     go('detail');
     detailPost=p;
     renderDetail(p);
@@ -1683,16 +1709,17 @@ img{display:block;max-width:100%}
     if(!p)return;
     const w=document.getElementById('dtWrap');
     if(!w)return;
-    const total=(p.votes?.he||0)+(p.votes?.she||0)+(p.votes?.both||0)||1;
-    const heP=Math.round((p.votes?.he||0)/total*100);
-    const sheP=Math.round((p.votes?.she||0)/total*100);
+    const v=safeVotes(p.votes);
+    const total=(v.he||0)+(v.she||0)+(v.both||0)||1;
+    const heP=Math.round((v.he||0)/total*100);
+    const sheP=Math.round((v.she||0)/total*100);
     const bothP=100-heP-sheP;
     const ini=(p.author||'AN').slice(0,2).toUpperCase();
     const tagsHTML=(p.tags||[]).map(t=>'<span class="tag">'+escapeHTML(t)+'</span>').join('');
     const rxSafe=p.rx||{};
     const rxHTML=EMOJIS.map(e=>'<button class="rxbtn" data-pid="'+p.id+'" data-e="'+e+'" aria-label="React '+e+'">'+e+' <span>'+fmt(rxSafe[e]||0)+'</span></button>').join('');
-    let contentHTML;
     const safeContent=typeof p.content==='string'?p.content:'';
+    let contentHTML;
     if(p.sensitive){
       contentHTML='<div class="sensitive-wrap"><div class="sensitive-blur d-body" id="sensitiveContent">'+escapeHTML(safeContent)+'</div><div class="sensitive-overlay" id="sensitiveOverlay" data-pid="'+p.id+'" role="button" tabindex="0" aria-label="Tap to reveal sensitive content"><div class="sensitive-ico" aria-hidden="true">⚠️</div><div class="sensitive-text">Tap to reveal sensitive content</div></div></div>';
     }else{
@@ -1702,7 +1729,6 @@ img{display:block;max-width:100%}
 
 ```
 renderDetailComments(p);
-
 requestAnimationFrame(()=>{
   const bb=document.getElementById('btnBackFeed');
   if(bb)bb.addEventListener('click',()=>go('home'));
@@ -1711,25 +1737,12 @@ requestAnimationFrame(()=>{
   const ss=document.getElementById('sortSel');
   if(ss)ss.addEventListener('change',function(){sortCmts(this.value,p.id);});
   const ta=document.getElementById('cmIn');
-  if(ta){
-    ta.addEventListener('input',function(){
-      resize(this);
-      const cc=document.getElementById('cmCharCount');
-      if(cc)cc.textContent=this.value.length+' / '+MAX_COMMENT_LENGTH;
-    });
-  }
+  if(ta){ta.addEventListener('input',function(){resize(this);const cc=document.getElementById('cmCharCount');if(cc)cc.textContent=this.value.length+' / '+MAX_COMMENT_LENGTH;});}
   const overlay=document.getElementById('sensitiveOverlay');
-  if(overlay){
-    overlay.addEventListener('click',function(){
-      const sc=document.getElementById('sensitiveContent');
-      if(sc)sc.classList.add('revealed');
-      this.classList.add('hidden');
-    });
-  }
-  const moodBtns=document.querySelectorAll('.mood-btn');
-  moodBtns.forEach(b=>{
+  if(overlay){overlay.addEventListener('click',function(){const sc=document.getElementById('sensitiveContent');if(sc)sc.classList.add('revealed');this.classList.add('hidden');});}
+  document.querySelectorAll('.mood-btn').forEach(b=>{
     b.addEventListener('click',function(){
-      moodBtns.forEach(x=>x.classList.remove('selected'));
+      document.querySelectorAll('.mood-btn').forEach(x=>x.classList.remove('selected'));
       this.classList.add('selected');
       toast('Thanks for sharing how you feel 💜','info');
     });
@@ -1759,13 +1772,7 @@ return’<div class="'+(isReply?'reply-item':'cm-item')+'" id="cmt-'+c.id+'"><di
 
 function toggleRbox(id){
 const b=document.getElementById(‘rb-’+id);
-if(b){
-b.classList.toggle(‘hidden’);
-if(!b.classList.contains(‘hidden’)){
-const ta=document.getElementById(‘ri-’+id);
-if(ta){ta.focus();resize(ta);}
-}
-}
+if(b){b.classList.toggle(‘hidden’);if(!b.classList.contains(‘hidden’)){const ta=document.getElementById(‘ri-’+id);if(ta){ta.focus();resize(ta);}}}
 }
 
 function sortCmts(val,pid){
@@ -1785,22 +1792,13 @@ const text=sanitizeInput(el?.value||’’);
 if(!text){toast(‘Write something first!’,‘err’);return;}
 if(text.length<2){toast(‘Comment too short’,‘err’);return;}
 if(containsModeratedContent(text)){toast(‘Comment contains prohibited content and cannot be posted.’,‘err’);return;}
-// FIX 5: check for sensitive/crisis content in comments and direct to resources
-if(containsSensitiveContent(text)){
-toast(‘If you're struggling, please reach out for support 💜 See Resources tab.’,‘warn’);
-// we still allow the comment to post but have surfaced the warning
-}
+if(containsSensitiveContent(text))toast(‘If you're struggling, please reach out for support 💜 See Resources tab.’,‘warn’);
 if(!rateLimiter.check(‘comment_’+(currentUser.id||‘anon’),5,30000)){toast(‘Slow down! Too many comments.’,‘warn’);return;}
 const c={
-id:generateId(),
-post_id:pid,
-author:currentUser.username,
-text,
-up:0,dn:0,pin:false,
-time:new Date().toISOString(),
-created_at:new Date().toISOString(),
-replies:[],
-hearts:0
+id:generateId(),post_id:pid,author:currentUser.username,
+text,up:0,dn:0,pin:false,
+time:new Date().toISOString(),created_at:new Date().toISOString(),
+replies:[],hearts:0
 };
 if(!COMMENTS[pid])COMMENTS[pid]=[];
 COMMENTS[pid].unshift(c);
@@ -1810,8 +1808,7 @@ if(supabase){
 supabase.from(‘comments’).insert({…c,replies:JSON.stringify([])}).then(()=>{}).catch(()=>{});
 supabase.from(‘posts’).update({cmt:p?.cmt||0}).eq(‘id’,pid).then(()=>{}).catch(()=>{});
 }
-el.value=’’;
-el.style.height=‘auto’;
+el.value=’’;el.style.height=‘auto’;
 const cc=document.getElementById(‘cmCharCount’);
 if(cc)cc.textContent=’0 / ’+MAX_COMMENT_LENGTH;
 if(detailPost&&detailPost.id===pid)renderDetailComments(detailPost);
@@ -1832,39 +1829,45 @@ if(!c)return;
 if(!Array.isArray(c.replies))c.replies=[];
 const r={id:generateId(),author:currentUser.username,text,up:0,dn:0,time:new Date().toISOString(),created_at:new Date().toISOString()};
 c.replies.push(r);
-el.value=’’;
-el.style.height=‘auto’;
+el.value=’’;el.style.height=‘auto’;
 toggleRbox(cid);
 if(supabase)supabase.from(‘comments’).update({replies:c.replies}).eq(‘id’,cid).then(()=>{}).catch(()=>{});
 if(detailPost.id===pid)renderDetailComments(detailPost);
 toast(‘Reply added’,‘ok’);
 }
 
+// BUG I FIX: read vote counts from the COMMENTS data model, not regex on DOM text
 function voteCmt(cid,dir,btn){
 if(!currentUser){showAuth(‘login’);return;}
 if(!rateLimiter.check(‘vote_comment_’+(currentUser.id||‘anon’),15,60000)){toast(‘Slow down on the voting!’,‘warn’);return;}
-btn.classList.toggle(‘on’);
 const key=dir===‘up’?‘up’:‘dn’;
 const sym=dir===‘up’?‘▲’:‘▼’;
-const curMatch=btn.textContent.match(/\d+/);
-const cur=curMatch?parseInt(curMatch[0]):0;
-btn.textContent=sym+’ ’+(btn.classList.contains(‘on’)?cur+1:Math.max(0,cur-1));
 const pid=detailPost?.id;
+let targetComment=null;
 if(pid&&COMMENTS[pid]){
-const updateCommentVotes=(comments)=>{
+const findComment=(comments)=>{
 for(const c of comments){
-if(c.id===cid){
-if(btn.classList.contains(‘on’))c[key]=(c[key]||0)+1;
-else c[key]=Math.max(0,(c[key]||0)-1);
-return true;
-}
-if(Array.isArray(c.replies)&&updateCommentVotes(c.replies))return true;
+if(c.id===cid){targetComment=c;return true;}
+if(Array.isArray(c.replies)&&findComment(c.replies))return true;
 }
 return false;
 };
-updateCommentVotes(COMMENTS[pid]);
-const comment=COMMENTS[pid].find(c=>c.id===cid);
-if(comment&&supabase)supabase.from(‘comments’).update({up:comment.up,dn:comment.dn}).eq(‘id’,cid).then(()=>{}).catch(()=>{});
+findComment(COMMENTS[pid]);
+}
+if(!targetComment){
+// Fallback: just toggle the button visually if we can’t find the data
+btn.classList.toggle(‘on’);
+return;
+}
+const wasOn=btn.classList.contains(‘on’);
+btn.classList.toggle(‘on’);
+if(wasOn){targetComment[key]=Math.max(0,(targetComment[key]||0)-1);}
+else{targetComment[key]=(targetComment[key]||0)+1;}
+// Update button text from data model — not from DOM (BUG I fix)
+btn.textContent=sym+’ ’+targetComment[key];
+if(supabase&&pid&&COMMENTS[pid]){
+const topLevelComment=COMMENTS[pid].find(c=>c.id===cid);
+if(topLevelComment)supabase.from(‘comments’).update({up:topLevelComment.up,dn:topLevelComment.dn}).eq(‘id’,cid).then(()=>{}).catch(()=>{});
 }
 showAchievement(‘first_vote’);
 }
@@ -1888,53 +1891,43 @@ return false;
 if(updateHearts(COMMENTS[pid])){
 const comment=COMMENTS[pid].find(c=>c.id===cid);
 if(comment&&supabase)supabase.from(‘comments’).update({hearts:comment.hearts}).eq(‘id’,cid).then(()=>{}).catch(()=>{});
-if(btn.classList.contains(‘on’)){
-spawnFloatingHeart(btn);
-if(comment&&comment.hearts>=50)showAchievement(‘helper’);
-}
+if(btn.classList.contains(‘on’)){spawnFloatingHeart(btn);if(comment&&comment.hearts>=50)showAchievement(‘helper’);}
 }
 }
 if(detailPost)renderDetailComments(detailPost);
 }
 
+// BUG K FIX: initialize p.votes if null before mutating
 async function doVote(pid,type,btn){
 if(!currentUser){showAuth(‘signup’);return;}
 if(!rateLimiter.check(‘post_vote_’+(currentUser.id||‘anon’),10,60000)){toast(‘Slow down! Take your time voting.’,‘warn’);return;}
 const p=POSTS.find(x=>x.id===pid);
-if(!p||!p.votes)return;
+if(!p)return;
+if(!p.votes||typeof p.votes!==‘object’)p.votes={he:0,she:0,both:0}; // BUG K fix
 const vbtns=btn.parentElement.querySelectorAll(’.vbtn’);
 if(!vbtns.length)return;
 const wasOn=btn.classList.contains(‘on’);
 vbtns.forEach(b=>b.classList.remove(‘on’));
-if(!wasOn){
-btn.classList.add(‘on’);
-p.votes[type]=(p.votes[type]||0)+1;
-}
+if(!wasOn){btn.classList.add(‘on’);p.votes[type]=(p.votes[type]||0)+1;}
 if(supabase)supabase.from(‘posts’).update({votes:p.votes}).eq(‘id’,pid).then(()=>{}).catch(()=>{});
-
-```
-// FIX 3: update vote bars in whichever container the button lives in (feed card OR detail panel)
-// This makes feed card vote bars respond immediately, and also updates the detail panel.
-const voteContainer=btn.closest('.vote-wrap')||btn.closest('.vpanel');
+// BUG 3 FIX (retained): update vote bars in whatever container the button is in
+const voteContainer=btn.closest(’.vote-wrap’)||btn.closest(’.vpanel’);
 if(voteContainer){
-  const t2=(p.votes.he||0)+(p.votes.she||0)+(p.votes.both||0)||1;
-  const heP=Math.round((p.votes.he||0)/t2*100);
-  const sheP=Math.round((p.votes.she||0)/t2*100);
-  const bothP=100-heP-sheP;
-  const bars=voteContainer.querySelectorAll('.vs');
-  if(bars[0])bars[0].style.width=heP+'%';
-  if(bars[1])bars[1].style.width=sheP+'%';
-  if(bars[2])bars[2].style.width=bothP+'%';
-  const labels=voteContainer.querySelectorAll('.vl');
-  if(labels[0])labels[0].textContent='🟥 He '+heP+'%';
-  if(labels[1])labels[1].textContent='🟪 She '+sheP+'%';
-  if(labels[2])labels[2].textContent='⚪ Both '+bothP+'%';
+const t2=(p.votes.he||0)+(p.votes.she||0)+(p.votes.both||0)||1;
+const heP=Math.round((p.votes.he||0)/t2*100);
+const sheP=Math.round((p.votes.she||0)/t2*100);
+const bothP=100-heP-sheP;
+const bars=voteContainer.querySelectorAll(’.vs’);
+if(bars[0])bars[0].style.width=heP+’%’;
+if(bars[1])bars[1].style.width=sheP+’%’;
+if(bars[2])bars[2].style.width=bothP+’%’;
+const labels=voteContainer.querySelectorAll(’.vl’);
+if(labels[0])labels[0].textContent=‘🟥 He ‘+heP+’%’;
+if(labels[1])labels[1].textContent=‘🟪 She ‘+sheP+’%’;
+if(labels[2])labels[2].textContent=‘⚪ Both ‘+bothP+’%’;
 }
-// Also refresh dedicated detail page IDs if they exist
 refreshVoteBars(pid,p.votes);
-showAchievement('first_vote');
-```
-
+showAchievement(‘first_vote’);
 }
 
 function refreshVoteBars(pid,v){
@@ -1943,18 +1936,10 @@ const t=(v.he||0)+(v.she||0)+(v.both||0)||1;
 const heP=Math.round((v.he||0)/t*100);
 const sheP=Math.round((v.she||0)/t*100);
 const bothP=100-heP-sheP;
-const dvhe=document.getElementById(‘dvhe’);
-const dvsh=document.getElementById(‘dvsh’);
-const dvbo=document.getElementById(‘dvbo’);
-if(dvhe)dvhe.style.width=heP+’%’;
-if(dvsh)dvsh.style.width=sheP+’%’;
-if(dvbo)dvbo.style.width=bothP+’%’;
-const dlhe=document.getElementById(‘dlhe’);
-const dlsh=document.getElementById(‘dlsh’);
-const dlbo=document.getElementById(‘dlbo’);
-if(dlhe)dlhe.textContent=‘🟥 He ‘+heP+’%’;
-if(dlsh)dlsh.textContent=‘🟪 She ‘+sheP+’%’;
-if(dlbo)dlbo.textContent=‘⚪ Both ‘+bothP+’%’;
+const dvhe=document.getElementById(‘dvhe’);const dvsh=document.getElementById(‘dvsh’);const dvbo=document.getElementById(‘dvbo’);
+if(dvhe)dvhe.style.width=heP+’%’;if(dvsh)dvsh.style.width=sheP+’%’;if(dvbo)dvbo.style.width=bothP+’%’;
+const dlhe=document.getElementById(‘dlhe’);const dlsh=document.getElementById(‘dlsh’);const dlbo=document.getElementById(‘dlbo’);
+if(dlhe)dlhe.textContent=‘🟥 He ‘+heP+’%’;if(dlsh)dlsh.textContent=‘🟪 She ‘+sheP+’%’;if(dlbo)dlbo.textContent=‘⚪ Both ‘+bothP+’%’;
 }
 
 async function doRx(pid,emoji,btn){
@@ -1965,37 +1950,18 @@ if(!p||!p.rx)return;
 const was=btn.classList.contains(‘on’);
 btn.classList.toggle(‘on’);
 const sp=btn.querySelector(‘span’);
-if(was){
-p.rx[emoji]=Math.max(0,(p.rx[emoji]||1)-1);
-if(sp)sp.textContent=fmt(p.rx[emoji]);
-}else{
-p.rx[emoji]=(p.rx[emoji]||0)+1;
-if(sp)sp.textContent=fmt(p.rx[emoji]);
-btn.style.transform=‘scale(1.2)’;
-setTimeout(()=>{btn.style.transform=’’;},180);
-}
+if(was){p.rx[emoji]=Math.max(0,(p.rx[emoji]||1)-1);if(sp)sp.textContent=fmt(p.rx[emoji]);}
+else{p.rx[emoji]=(p.rx[emoji]||0)+1;if(sp)sp.textContent=fmt(p.rx[emoji]);btn.style.transform=‘scale(1.2)’;setTimeout(()=>{btn.style.transform=’’;},180);}
 if(supabase)supabase.from(‘posts’).update({rx:p.rx}).eq(‘id’,pid).then(()=>{}).catch(()=>{});
-const allReactionsUsed=EMOJIS.every(e=>(p.rx[e]||0)>0);
-if(allReactionsUsed)showAchievement(‘reaction_master’);
+if(EMOJIS.every(e=>(p.rx[e]||0)>0))showAchievement(‘reaction_master’);
 }
 
 function sharePost(pid,btn){
 const p=POSTS.find(x=>x.id===pid);
 if(!p)return;
-const shareData={
-title:p.title||‘HeartConfia Confession’,
-text:(p.preview||(typeof p.content===‘string’?p.content.slice(0,150):’’)+’…’),
-url:window.location.origin+window.location.pathname+’#post-’+pid
-};
-if(navigator.share&&navigator.canShare&&navigator.canShare(shareData)){
-navigator.share(shareData).catch(()=>{});
-}else{
-navigator.clipboard.writeText(shareData.url).then(()=>{
-toast(‘Link copied! Share it anywhere 💔’,‘info’);
-}).catch(()=>{
-toast(‘Could not share. Copy the URL manually.’,‘err’);
-});
-}
+const shareData={title:p.title||‘HeartConfia Confession’,text:(p.preview||(typeof p.content===‘string’?p.content.slice(0,150):’’)+’…’),url:window.location.origin+window.location.pathname+’#post-’+pid};
+if(navigator.share&&navigator.canShare&&navigator.canShare(shareData)){navigator.share(shareData).catch(()=>{});}
+else{navigator.clipboard.writeText(shareData.url).then(()=>{toast(‘Link copied! Share it anywhere 💔’,‘info’);}).catch(()=>{toast(‘Could not share. Copy the URL manually.’,‘err’);});}
 if(btn){btn.style.transform=‘scale(1.2)’;setTimeout(()=>{btn.style.transform=’’;},200);}
 }
 
@@ -2021,10 +1987,78 @@ if(ov)ov.classList.remove(‘hidden’);
 async function submitRpt(id,reason,type){
 const ov=document.getElementById(‘rptOv’);
 if(ov)ov.classList.add(‘hidden’);
-if(supabase&&currentUser){
-supabase.from(‘reports’).insert({content_id:id,reason,type,reporter:currentUser.username,created_at:new Date().toISOString()}).then(()=>{}).catch(()=>{});
-}
+if(supabase&&currentUser){supabase.from(‘reports’).insert({content_id:id,reason,type,reporter:currentUser.username,created_at:new Date().toISOString()}).then(()=>{}).catch(()=>{});}
 toast(‘Reported: “’+reason+’” — Thanks for keeping our community safe 🛡️’,‘info’);
+}
+
+// BUG A+C FIX: submitPost no longer generates a custom string ID.
+// We omit `id` from the insert so Supabase generates a real UUID.
+// After a successful insert, we patch the local post with the returned UUID
+// so the realtime subscription won’t add it again as a duplicate.
+async function submitPost(){
+if(!currentUser){showAuth(‘login’);return;}
+if(!rateLimiter.check(‘post_’+(currentUser.id||‘anon’),3,300000)){toast(‘You can only post once every 5 minutes. Take your time.’,‘warn’);return;}
+const titleEl=document.getElementById(‘ptitle’);
+const bodyEl=document.getElementById(‘pbody’);
+const tagsEl=document.getElementById(‘ptags’);
+const title=sanitizeInput(titleEl?.value||’’);
+const body=sanitizeInput(bodyEl?.value||’’);
+const tagsStr=sanitizeInput(tagsEl?.value||’’);
+const tags=tagsStr.split(’,’).map(t=>t.trim().toLowerCase()).filter(Boolean).slice(0,5);
+if(!title){toast(‘Please add a title’,‘err’);return;}
+if(!body){toast(‘Please share your story’,‘err’);return;}
+if(body.length<MIN_STORY_LENGTH){toast(‘Tell more — at least ‘+MIN_STORY_LENGTH+’ characters. Details matter.’,‘err’);return;}
+if(title.length<10){toast(‘Title is too short — make it compelling!’,‘err’);return;}
+if(containsModeratedContent(title)||containsModeratedContent(body)){toast(‘Your post contains prohibited content (personal info). Please edit and try again.’,‘err’);return;}
+const isSensitive=containsSensitiveContent(body);
+const typeBtns=document.querySelectorAll(’.type-btn.on’);
+const postType=typeBtns.length?typeBtns[0].dataset.type:‘confession’;
+
+```
+// BUG A FIX: use a temp local-only ID; omit from DB insert
+const tempLocalId='_local_'+Date.now();
+const now=new Date().toISOString();
+const localPost={
+  id:tempLocalId,
+  _localId:tempLocalId,           // marker for realtime deduplication
+  author:currentUser.username,type:postType,title,content:body,
+  tags:tags.length?tags:['confession'],
+  created_at:now,
+  rx:{'💔':0,'😭':0,'😡':0,'😳':0,'😂':0,'🔥':0},
+  votes:{he:0,she:0,both:0},
+  views:1,cmt:0,trending:false,sensitive:isSensitive,
+  preview:body.slice(0,150).replace(/\n/g,' ')+'…'
+};
+
+// Show optimistically right away
+POSTS.unshift(localPost);
+
+// BUG H FIX: clear form and navigate before waiting on Supabase
+if(titleEl)titleEl.value='';
+if(bodyEl){bodyEl.value='';bodyEl.style.height='auto';}
+if(tagsEl)tagsEl.value='';
+const cc=document.getElementById('cc');if(cc)cc.textContent='0 / '+MAX_TITLE_LENGTH;
+const bcc=document.getElementById('bodyCC');if(bcc)bcc.textContent='0 characters (min '+MIN_STORY_LENGTH+')';
+if(isSensitive)toast('Story posted with sensitivity warning 💔 Take care of yourself.','info');
+else toast('Story posted anonymously 💔','ok');
+go('home');
+showAchievement('first_post');
+
+if(supabase){
+  // Omit id and _localId from DB insert — let Supabase generate the UUID
+  const{id:_,_localId:__,...insertPayload}=localPost;
+  const{data:saved,error}=await supabase.from('posts').insert(insertPayload).select().single();
+  if(error){
+    console.error('Failed to save post:',error);
+    toast('Post saved locally but failed to sync. It will appear after refresh if DB is fixed.','warn');
+  }else if(saved){
+    // BUG C FIX: patch local post with real server UUID so realtime won't duplicate it
+    localPost.id=saved.id;
+    delete localPost._localId;
+  }
+}
+```
+
 }
 
 function renderTrending(){
@@ -2043,7 +2077,6 @@ if(!cat.posts.length)return;
 html+=’<div class="tr-sec"><div class="tr-sec-title">’+cat.ico+’ ‘+cat.lbl+’</div>’;
 html+=cat.posts.map((p,i)=>{
 const totalRx=Object.values(p.rx||{}).reduce((a,b)=>a+b,0);
-// FIX 7: added data-pid so keyboard delegation can find the post ID
 return’<div class="tr-card" data-pid="'+p.id+'" role="link" tabindex="0" aria-label="Read: '+escapeHTML(p.title||'')+'"><div class="tr-num">’+(i+1)+’</div><div><div class="tr-ttl">’+escapeHTML(p.title||’’)+’</div><div class="tr-stats"><span>💬 ‘+fmt(p.cmt||0)+’</span><span>👁 ‘+fmt(p.views||0)+’</span><span>🔥 ‘+fmt(totalRx)+’</span></div></div></div>’;
 }).join(’’);
 html+=’</div>’;
@@ -2052,7 +2085,7 @@ const topUsers=[…new Set(POSTS.map(p=>p.author).filter(Boolean))].map(author=>
 const userPosts=POSTS.filter(p=>p.author===author);
 const totalRx=userPosts.reduce((s,p)=>s+Object.values(p.rx||{}).reduce((a,b)=>a+b,0),0);
 const totalVotes=userPosts.reduce((s,p)=>s+(p.votes?.he||0)+(p.votes?.she||0)+(p.votes?.both||0),0);
-return{author,totalRx,totalVotes,posts:userPosts.length};
+return{author,totalRx,totalVotes};
 }).sort((a,b)=>(b.totalRx+b.totalVotes)-(a.totalRx+a.totalVotes)).slice(0,5);
 if(topUsers.length){
 html+=’<div class="tr-sec"><div class="tr-sec-title">🏆 Top Confessors This Week</div>’;
@@ -2075,15 +2108,8 @@ w.innerHTML=’<div class="cf-form"><div class="type-row"><button class="type-bt
 requestAnimationFrame(()=>{
 const titleInput=document.getElementById(‘ptitle’);
 const bodyInput=document.getElementById(‘pbody’);
-if(titleInput)titleInput.addEventListener(‘input’,function(){
-const cc=document.getElementById(‘cc’);
-if(cc)cc.textContent=this.value.length+’ / ‘+MAX_TITLE_LENGTH;
-});
-if(bodyInput)bodyInput.addEventListener(‘input’,function(){
-resize(this);
-const bcc=document.getElementById(‘bodyCC’);
-if(bcc)bcc.textContent=this.value.length+’ characters (min ‘+MIN_STORY_LENGTH+’)’;
-});
+if(titleInput)titleInput.addEventListener(‘input’,function(){const cc=document.getElementById(‘cc’);if(cc)cc.textContent=this.value.length+’ / ‘+MAX_TITLE_LENGTH;});
+if(bodyInput)bodyInput.addEventListener(‘input’,function(){resize(this);const bcc=document.getElementById(‘bodyCC’);if(bcc)bcc.textContent=this.value.length+’ characters (min ‘+MIN_STORY_LENGTH+’)’;});
 const submitBtn=document.getElementById(‘btnSubmitPost’);
 if(submitBtn)submitBtn.addEventListener(‘click’,submitPost);
 });
@@ -2096,52 +2122,6 @@ if(!parent)return;
 parent.querySelectorAll(’.type-btn’).forEach(b=>{b.classList.remove(‘on’);b.setAttribute(‘aria-pressed’,‘false’);});
 btn.classList.add(‘on’);
 btn.setAttribute(‘aria-pressed’,‘true’);
-}
-
-async function submitPost(){
-if(!currentUser){showAuth(‘login’);return;}
-if(!rateLimiter.check(‘post_’+(currentUser.id||‘anon’),3,300000)){toast(‘You can only post once every 5 minutes. Take your time.’,‘warn’);return;}
-const titleEl=document.getElementById(‘ptitle’);
-const bodyEl=document.getElementById(‘pbody’);
-const tagsEl=document.getElementById(‘ptags’);
-const title=sanitizeInput(titleEl?.value||’’);
-const body=sanitizeInput(bodyEl?.value||’’);
-const tagsStr=sanitizeInput(tagsEl?.value||’’);
-const tags=tagsStr.split(’,’).map(t=>t.trim().toLowerCase()).filter(Boolean).slice(0,5);
-if(!title){toast(‘Please add a title’,‘err’);return;}
-if(!body){toast(‘Please share your story’,‘err’);return;}
-if(body.length<MIN_STORY_LENGTH){toast(‘Tell more — at least ‘+MIN_STORY_LENGTH+’ characters. Details matter.’,‘err’);return;}
-if(title.length<10){toast(‘Title is too short — make it compelling!’,‘err’);return;}
-if(containsModeratedContent(title)||containsModeratedContent(body)){toast(‘Your post contains prohibited content (personal info). Please edit and try again.’,‘err’);return;}
-const isSensitive=containsSensitiveContent(body);
-const typeBtns=document.querySelectorAll(’.type-btn.on’);
-const postType=typeBtns.length?typeBtns[0].dataset.type:‘confession’;
-const np={
-id:‘p_’+Date.now()+’_’+Math.random().toString(36).substr(2,6),
-author:currentUser.username,type:postType,title,content:body,
-tags:tags.length?tags:[‘confession’],
-created_at:new Date().toISOString(),
-rx:{‘💔’:0,‘😭’:0,‘😡’:0,‘😳’:0,‘😂’:0,‘🔥’:0},
-votes:{he:0,she:0,both:0},
-views:1,cmt:0,trending:false,sensitive:isSensitive,
-preview:body.slice(0,150).replace(/\n/g,’ ‘)+’…’
-};
-POSTS.unshift(np);
-if(supabase){
-const{error}=await supabase.from(‘posts’).insert(np);
-if(error){console.error(‘Failed to save post:’,error);toast(‘Post saved locally but failed to sync. It will show on refresh.’,‘warn’);}
-}
-if(titleEl)titleEl.value=’’;
-if(bodyEl){bodyEl.value=’’;bodyEl.style.height=‘auto’;}
-if(tagsEl)tagsEl.value=’’;
-const cc=document.getElementById(‘cc’);
-if(cc)cc.textContent=’0 / ’+MAX_TITLE_LENGTH;
-const bcc=document.getElementById(‘bodyCC’);
-if(bcc)bcc.textContent=‘0 characters (min ‘+MIN_STORY_LENGTH+’)’;
-showAchievement(‘first_post’);
-if(isSensitive)toast(‘Story posted with sensitivity warning 💔 Take care of yourself.’,‘info’);
-else toast(‘Story posted anonymously 💔’,‘ok’);
-go(‘home’);
 }
 
 function renderNotifs(){
@@ -2176,7 +2156,7 @@ if(signupBtn)signupBtn.addEventListener(‘click’,()=>showAuth(‘signup’));
 return;
 }
 const ini=(currentUser.username||‘U’).slice(0,2).toUpperCase();
-const myPosts=POSTS.filter(p=>p.author===currentUser.username);
+const myPosts=POSTS.filter(p=>p.author===currentUser.username&&!p._localId);
 const totalRx=myPosts.reduce((s,p)=>s+Object.values(p.rx||{}).reduce((a,b)=>a+b,0),0);
 const totalVotes=myPosts.reduce((s,p)=>s+(p.votes?.he||0)+(p.votes?.she||0)+(p.votes?.both||0),0);
 const joinDate=currentUser.created_at?new Date(currentUser.created_at).toLocaleDateString(‘en-US’,{month:‘long’,year:‘numeric’}):‘Unknown’;
@@ -2185,10 +2165,7 @@ if(myPosts.length>=5)badgeHTML=’<div class="pf-badge-row"><span class="pf-badg
 else if(myPosts.length>=2)badgeHTML=’<div class="pf-badge-row"><span class="pf-badge">🖤 Regular Confessor</span></div>’;
 if(userAchievements.length>0){
 badgeHTML+=’<div class="pf-badge-row">’;
-badgeHTML+=userAchievements.slice(0,3).map(a=>{
-const ach=ACHIEVEMENTS.find(x=>x.id===a);
-return ach?’<span class="pf-badge" title="'+ach.desc+'">’+ach.icon+’ ‘+ach.title+’</span>’:’’;
-}).join(’’);
+badgeHTML+=userAchievements.slice(0,3).map(a=>{const ach=ACHIEVEMENTS.find(x=>x.id===a);return ach?’<span class="pf-badge" title="'+ach.desc+'">’+ach.icon+’ ‘+ach.title+’</span>’:’’;}).join(’’);
 badgeHTML+=’</div>’;
 }
 const myComments=[];
@@ -2230,12 +2207,7 @@ const ftabs=document.getElementById(‘ftabs’);
 if(!ftabs)return;
 ftabs.innerHTML=FILTERS.map(f=>’<button class="ftab'+(f.val===currentFilter?' on':'')+'" data-f="'+f.val+'" role="tab" aria-selected="'+(f.val===currentFilter)+'">’+f.label+’</button>’).join(’’);
 ftabs.querySelectorAll(’.ftab’).forEach(b=>{
-b.addEventListener(‘click’,function(){
-currentFilter=this.dataset.f;
-postsPage=0;
-renderFeed();
-renderFilters();
-});
+b.addEventListener(‘click’,function(){currentFilter=this.dataset.f;postsPage=0;renderFeed();renderFilters();});
 });
 }
 
@@ -2256,51 +2228,32 @@ document.addEventListener('click',function(e){
   if(postTarget){
     const pid=postTarget.dataset.pid;
     if(!pid)return;
-    if(postTarget.classList.contains('c-title')||postTarget.classList.contains('c-lock-cta')||postTarget.classList.contains('tr-card')){
-      e.preventDefault();e.stopPropagation();openPost(pid);return;
-    }
-    if(postTarget.classList.contains('vbtn')){
-      e.preventDefault();e.stopPropagation();doVote(pid,postTarget.dataset.v,postTarget);return;
-    }
-    if(postTarget.classList.contains('rxbtn')){
-      e.preventDefault();e.stopPropagation();doRx(pid,postTarget.dataset.e,postTarget);return;
-    }
-    if(postTarget.classList.contains('c-stat')&&!postTarget.classList.contains('rpt-btn')){
-      e.preventDefault();e.stopPropagation();openPost(pid);return;
-    }
-    if(postTarget.classList.contains('rpt-btn')){
-      e.preventDefault();e.stopPropagation();showRpt(pid,'post');return;
-    }
-    if(postTarget.classList.contains('share-btn')){
-      e.preventDefault();e.stopPropagation();sharePost(pid,postTarget);return;
-    }
+    if(postTarget.classList.contains('c-title')||postTarget.classList.contains('c-lock-cta')||postTarget.classList.contains('tr-card')){e.preventDefault();e.stopPropagation();openPost(pid);return;}
+    if(postTarget.classList.contains('vbtn')){e.preventDefault();e.stopPropagation();doVote(pid,postTarget.dataset.v,postTarget);return;}
+    if(postTarget.classList.contains('rxbtn')){e.preventDefault();e.stopPropagation();doRx(pid,postTarget.dataset.e,postTarget);return;}
+    if(postTarget.classList.contains('c-stat')&&!postTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();openPost(pid);return;}
+    if(postTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();showRpt(pid,'post');return;}
+    if(postTarget.classList.contains('share-btn')){e.preventDefault();e.stopPropagation();sharePost(pid,postTarget);return;}
   }
-
   const cmtTarget=e.target.closest('[data-cid]');
   if(cmtTarget){
     const cid=cmtTarget.dataset.cid;
     if(!cid)return;
-    if(cmtTarget.classList.contains('up')||cmtTarget.classList.contains('dn')){
-      e.preventDefault();e.stopPropagation();voteCmt(cid,cmtTarget.classList.contains('up')?'up':'dn',cmtTarget);return;
-    }
-    if(cmtTarget.dataset.action==='heart'||cmtTarget.classList.contains('heart-act')){
-      e.preventDefault();e.stopPropagation();heartComment(cid,cmtTarget);return;
-    }
+    if(cmtTarget.classList.contains('up')||cmtTarget.classList.contains('dn')){e.preventDefault();e.stopPropagation();voteCmt(cid,cmtTarget.classList.contains('up')?'up':'dn',cmtTarget);return;}
+    if(cmtTarget.dataset.action==='heart'||cmtTarget.classList.contains('heart-act')){e.preventDefault();e.stopPropagation();heartComment(cid,cmtTarget);return;}
     if(cmtTarget.dataset.action==='reply'){e.preventDefault();e.stopPropagation();toggleRbox(cid);return;}
     if(cmtTarget.dataset.action==='cancel-reply'){e.preventDefault();e.stopPropagation();toggleRbox(cid);return;}
     if(cmtTarget.dataset.action==='post-reply'){e.preventDefault();e.stopPropagation();postReply(cid);return;}
     if(cmtTarget.classList.contains('rpt-btn')){e.preventDefault();e.stopPropagation();showRpt(cid,'comment');return;}
   }
-
-  // FIX 9: narrow type-btn check so it only fires inside .cf-form, not anywhere with data-type
+  // BUG 9 FIX (retained): narrow to .type-btn only
   const typeTarget=e.target.closest('.type-btn[data-type]');
   if(typeTarget){e.preventDefault();e.stopPropagation();selectType(typeTarget);return;}
-
   const reasonTarget=e.target.closest('[data-reason]');
   if(reasonTarget){e.preventDefault();e.stopPropagation();submitRpt(reasonTarget.dataset.id,reasonTarget.dataset.reason,reasonTarget.dataset.type||'post');return;}
 });
 
-// FIX 7: keyboard activation for trending cards and any focusable role=link elements
+// BUG 7 FIX (retained): keyboard activation for trending cards
 document.addEventListener('keydown',function(e){
   if(e.key==='Enter'||e.key===' '){
     const trCard=e.target.closest('.tr-card[data-pid]');
@@ -2311,42 +2264,26 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape'){closeAuth();closePw();closeRpt();}
 });
 
-const authOv=document.getElementById('authOv');
-const pwOv=document.getElementById('pwOv');
-const rptOv=document.getElementById('rptOv');
+const authOv=document.getElementById('authOv');const pwOv=document.getElementById('pwOv');const rptOv=document.getElementById('rptOv');
 if(authOv)authOv.addEventListener('click',function(e){if(e.target===this)closeAuth();});
 if(pwOv)pwOv.addEventListener('click',function(e){if(e.target===this)closePw();});
 if(rptOv)rptOv.addEventListener('click',function(e){if(e.target===this)closeRpt();});
-
-const btnCloseAuth=document.getElementById('btnCloseAuth');
-const btnClosePw=document.getElementById('btnClosePw');
-const btnCloseRpt=document.getElementById('btnCloseRpt');
+const btnCloseAuth=document.getElementById('btnCloseAuth');const btnClosePw=document.getElementById('btnClosePw');const btnCloseRpt=document.getElementById('btnCloseRpt');
 if(btnCloseAuth)btnCloseAuth.addEventListener('click',closeAuth);
 if(btnClosePw)btnClosePw.addEventListener('click',closePw);
 if(btnCloseRpt)btnCloseRpt.addEventListener('click',closeRpt);
-
-const btnPwSignup=document.getElementById('btnPwSignup');
-const btnPwLogin=document.getElementById('btnPwLogin');
+const btnPwSignup=document.getElementById('btnPwSignup');const btnPwLogin=document.getElementById('btnPwLogin');
 if(btnPwSignup)btnPwSignup.addEventListener('click',function(){closePw();showAuth('signup');});
 if(btnPwLogin)btnPwLogin.addEventListener('click',function(){closePw();showAuth('login');});
-
-// FIX 6: DO NOT attach a listener to #btnLoadMore here.
-// renderFeed() handles it via cloneNode+replaceChild to prevent stale references.
+// BUG 6 FIX: loadMore listener is owned by renderFeed() — NOT added here
 ```
 
 }
 
 function setupPullToRefresh(){
-let touchStartY=0;
-let pulling=false;
-document.addEventListener(‘touchstart’,function(e){
-if(window.scrollY<10&&currentPage===‘home’){touchStartY=e.touches[0].clientY;pulling=true;}
-},{passive:true});
-document.addEventListener(‘touchmove’,function(e){
-if(!pulling)return;
-const diff=e.touches[0].clientY-touchStartY;
-if(diff>80){pulling=false;fetchPosts().then(()=>{toast(‘Feed refreshed ✨’,‘info’);});}
-},{passive:true});
+let touchStartY=0,pulling=false;
+document.addEventListener(‘touchstart’,function(e){if(window.scrollY<10&&currentPage===‘home’){touchStartY=e.touches[0].clientY;pulling=true;}},{passive:true});
+document.addEventListener(‘touchmove’,function(e){if(!pulling)return;if(e.touches[0].clientY-touchStartY>80){pulling=false;fetchPosts().then(()=>toast(‘Feed refreshed ✨’,‘info’));}},{passive:true});
 document.addEventListener(‘touchend’,function(){pulling=false;});
 }
 
@@ -2357,7 +2294,6 @@ renderFeed();
 setupGlobalDelegation();
 setupPullToRefresh();
 await initSupabase();
-if(!supabase){loadLocalPosts();renderFeed();}
 
 ```
 if(liveViewerInterval)clearInterval(liveViewerInterval);
@@ -2381,6 +2317,7 @@ document.addEventListener(‘DOMContentLoaded’,init);
 init();
 }
 })();
+</script>
 </script>
 
 <script>
