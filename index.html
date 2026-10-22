@@ -476,6 +476,7 @@ button:focus:not(:focus-visible){outline:none}
   const RATE_LIMIT_WINDOW = 60000;
   const MAX_VOTES_PER_WINDOW = 10;
   const MAX_REACTIONS_PER_WINDOW = 15;
+  const PENDING_POST_TTL_MS = 3600000; // 1 hour
   const IS_PROD = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 
   // ============================================================
@@ -497,17 +498,17 @@ button:focus:not(:focus-visible){outline:none}
   let pageChangeInProgress = false;
   let liveViewerInterval = null;
   let achievementInterval = null;
-  let profileLoading = null; // guard against concurrent restoreUserProfile calls
+  let profileLoading = null;
 
   const POSTS = [];
   const COMMENTS = {};
   const NOTIFICATIONS = [];
-  // Per-user reaction state: { post_id: emoji }. Single source of truth for UI.
   const MY_REACTIONS = {};
 
   const EMOJIS = ['❤️', '💔', '😭', '😡', '😳', '😂', '🔥'];
   const FILTERS = [
     { val: 'all', label: '🔥 All' },
+    { val: 'foryou', label: '✨ For You' },
     { val: 'confession', label: '💔 Confessions' },
     { val: 'advice', label: '🧠 Advice' },
     { val: 'cheating', label: '😳 Cheating' },
@@ -579,8 +580,22 @@ button:focus:not(:focus-visible){outline:none}
     clear(key) { if (key) delete this.actions[key]; else this.actions = {}; }
   };
 
-  function setPendingPost(pid) { try { sessionStorage.setItem('hc_pending_post', pid || ''); } catch (e) {} }
-  function consumePendingPost() { try { const pid = sessionStorage.getItem('hc_pending_post'); sessionStorage.removeItem('hc_pending_post'); return pid || null; } catch (e) { return null; } }
+  // BUG D FIX: use localStorage + TTL so pending post survives tab close + new tabs
+  function setPendingPost(pid) {
+    if (!pid) return;
+    if (currentUser) return; // logged-in users don't need this
+    try { localStorage.setItem('hc_pending_post', JSON.stringify({ pid, exp: Date.now() + PENDING_POST_TTL_MS })); } catch (e) {}
+  }
+  function consumePendingPost() {
+    try {
+      const raw = localStorage.getItem('hc_pending_post');
+      localStorage.removeItem('hc_pending_post');
+      if (!raw) return null;
+      const { pid, exp } = JSON.parse(raw);
+      if (!pid || Date.now() > exp) return null;
+      return pid;
+    } catch (e) { return null; }
+  }
 
   let _lastFocused = null;
   function captureFocus() { _lastFocused = document.activeElement; }
@@ -658,6 +673,7 @@ button:focus:not(:focus-visible){outline:none}
     bar.innerHTML = '<div class="streak-bar"><span class="fire">🔥</span> ' + userStreak + ' day streak! Keep it going</div>';
   }
 
+  // BUG A FIX: saveUserData stays — this is per-user persistent data
   function saveUserData() {
     if (!currentUser || !currentUser.id) return;
     try {
@@ -736,6 +752,18 @@ button:focus:not(:focus-visible){outline:none}
       supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
       });
+
+      // BUG P FIX: subscribe to auth state changes
+      supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          Object.keys(MY_REACTIONS).forEach(k => delete MY_REACTIONS[k]);
+          updateNav();
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          // Session refreshed silently — no need to re-run full profile fetch
+        }
+      });
+
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       if (sessionError) console.error('Session error:', sessionError);
       if (session?.user) await restoreUserProfile(session.user);
@@ -753,12 +781,11 @@ button:focus:not(:focus-visible){outline:none}
     }
   }
 
-  // CRITICAL FIX (Issue 3): never generate a new username if a row exists.
-  // Uses maybeSingle so "no row" and "DB error" are distinguishable.
-  // Uses INSERT (not UPSERT) so we can never overwrite an existing profile.
   async function restoreUserProfile(user) {
     if (!user || !user.id) return;
-    // Serialize concurrent calls
+    // BUG H FIX: clear reactions from previous user before fetching this one's
+    Object.keys(MY_REACTIONS).forEach(k => delete MY_REACTIONS[k]);
+
     if (profileLoading) {
       try { await profileLoading; } catch (e) {}
     }
@@ -779,8 +806,6 @@ button:focus:not(:focus-visible){outline:none}
         if (profile && profile.username) {
           currentUser = profile;
         } else {
-          // Row missing — trigger should have created it. Create once via INSERT.
-          // A unique-violation means the row exists but RLS hid it. Surface it.
           const username = mkUsername();
           const { data: inserted, error: insertErr } = await supabase
             .from('users')
@@ -799,6 +824,7 @@ button:focus:not(:focus-visible){outline:none}
         loadUserData();
         updateStreak();
         updateNav();
+        renderStreakBar();
       } catch (e) {
         console.error('Profile restore error:', e);
       }
@@ -818,7 +844,7 @@ button:focus:not(:focus-visible){outline:none}
   function setupRealtimeSubscriptions() {
     if (!supabase) return;
     try {
-      // POSTS
+      // POSTS — INSERT + UPDATE + DELETE
       supabase.channel('hc-posts-changes')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, payload => {
           const np = payload.new;
@@ -837,7 +863,6 @@ button:focus:not(:focus-visible){outline:none}
           updated.rx = safeRx(updated.rx);
           const idx = POSTS.findIndex(p => p.id === updated.id);
           if (idx !== -1) {
-            // Merge to preserve local-only fields
             const merged = { ...POSTS[idx], ...updated };
             merged.votes = updated.votes;
             merged.rx = updated.rx;
@@ -849,6 +874,18 @@ button:focus:not(:focus-visible){outline:none}
             }
           }
         })
+        // BUG N FIX: handle post deletion
+        .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, payload => {
+          const old = payload.old;
+          if (!old || !old.id) return;
+          const idx = POSTS.findIndex(x => x.id === old.id);
+          if (idx !== -1) POSTS.splice(idx, 1);
+          if (detailPost && detailPost.id === old.id) {
+            go('home');
+            toast('That confession was removed', 'info');
+          }
+          if (currentPage === 'home') renderFeed();
+        })
         .subscribe();
 
       // COMMENTS
@@ -859,7 +896,6 @@ button:focus:not(:focus-visible){outline:none}
           nc.replies = parseReplies(nc.replies);
           if (!COMMENTS[nc.post_id]) COMMENTS[nc.post_id] = [];
           if (COMMENTS[nc.post_id].find(c => c.id === nc.id)) return;
-          // If this insert is our own and we have an optimistic tmp_ row, replace it
           if (currentUser && nc.user_id === currentUser.id) {
             const tmpIdx = COMMENTS[nc.post_id].findIndex(c => String(c.id).startsWith('tmp_') && c.text === nc.text && c.user_id === currentUser.id);
             if (tmpIdx !== -1) {
@@ -887,12 +923,22 @@ button:focus:not(:focus-visible){outline:none}
         })
         .subscribe();
 
-      // REACTIONS — refresh cached counts only (source of truth is posts.rx)
+      // REACTIONS — BUG M FIX: sync cross-device reaction state
       supabase.channel('hc-reactions-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'reactions' }, payload => {
           const row = payload.new || payload.old;
           if (!row || !row.post_id) return;
-          // Only update the count cache from posts; MY_REACTIONS is our own
+
+          // If this is OUR reaction changed elsewhere (other device), sync MY_REACTIONS
+          if (currentUser && row.user_id === currentUser.id) {
+            if (payload.eventType === 'DELETE') {
+              delete MY_REACTIONS[row.post_id];
+            } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+              if (row.emoji) MY_REACTIONS[row.post_id] = row.emoji;
+            }
+          }
+
+          // Refresh count cache from posts.rx (kept in sync by trigger)
           supabase.from('posts').select('rx').eq('id', row.post_id).maybeSingle()
             .then(({ data }) => {
               if (data?.rx) {
@@ -902,6 +948,19 @@ button:focus:not(:focus-visible){outline:none}
               }
             })
             .catch(() => {});
+        })
+        .subscribe();
+
+      // NOTIFICATIONS — BUG L FIX: live notifications
+      supabase.channel('hc-notifications-changes')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, payload => {
+          const n = payload.new;
+          if (!currentUser || !n || n.user_id !== currentUser.id) return;
+          NOTIFICATIONS.unshift(n);
+          unreadNotifs++;
+          updateNotifBadge();
+          if (currentPage === 'notifications') renderNotifs();
+          toast(n.text || 'New notification', 'info');
         })
         .subscribe();
     } catch (e) {
@@ -954,7 +1013,6 @@ button:focus:not(:focus-visible){outline:none}
         fresh[pid].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       });
 
-      // Merge: preserve any in-flight optimistic (tmp_) rows
       Object.keys(COMMENTS).forEach(pid => {
         const pending = (COMMENTS[pid] || []).filter(c => String(c.id).startsWith('tmp_'));
         COMMENTS[pid] = [...pending, ...(fresh[pid] || [])];
@@ -1114,7 +1172,6 @@ button:focus:not(:focus-visible){outline:none}
       }
       if (data?.user) {
         if (data.session) {
-          // Trigger created profile server-side. Fetch it.
           await restoreUserProfile(data.user);
           if (currentUser) {
             await fetchPosts();
@@ -1166,17 +1223,27 @@ button:focus:not(:focus-visible){outline:none}
     }
   }
 
+  // BUG A FIX: do NOT remove hc_user_data_<uid> — streak/achievements/prefs persist
   async function doLogout() {
-    const userId = currentUser?.id;
     if (supabase) { try { await supabase.auth.signOut(); } catch (e) { console.error('Sign out error:', e); } }
+
+    // Clear in-memory session state only
     currentUser = null;
     userStreak = 0;
     lastActiveDate = null;
     userAchievements = [];
     onboardingComplete = false;
     Object.keys(MY_REACTIONS).forEach(k => delete MY_REACTIONS[k]);
+    // BUG I FIX: clear optimistic posts that were never persisted
+    for (let i = POSTS.length - 1; i >= 0; i--) {
+      if (POSTS[i]._localId) POSTS.splice(i, 1);
+    }
+    NOTIFICATIONS.length = 0;
+    unreadNotifs = 0;
+    updateNotifBadge();
     rateLimiter.clear();
-    try { if (userId) localStorage.removeItem('hc_user_data_' + userId); } catch (e) {}
+    // NOTE: hc_user_data_<uid> and hc_pending_post are intentionally preserved.
+
     updateNav();
     toast('Logged out safely', 'info');
     go('home');
@@ -1209,15 +1276,21 @@ button:focus:not(:focus-visible){outline:none}
   // ============================================================
   // FEED
   // ============================================================
+  // BUG Q FIX: 'foryou' filter uses userPreferences.topics
   function getFilteredPosts() {
     if (!Array.isArray(POSTS)) return [];
     if (currentFilter === 'all') return [...POSTS];
-    return POSTS.filter(p => {
-      if (!p) return false;
-      if (currentFilter === 'confession') return p.type === 'confession';
-      if (currentFilter === 'advice') return p.type === 'advice';
-      return (p.tags && Array.isArray(p.tags) && p.tags.some(t => t && t.toLowerCase().includes(currentFilter)));
-    });
+    if (currentFilter === 'foryou') {
+      const topics = userPreferences.topics || [];
+      if (!topics.length) return [...POSTS];
+      return POSTS.filter(p => {
+        if (!p || !Array.isArray(p.tags)) return false;
+        return p.tags.some(t => topics.includes(String(t).toLowerCase()));
+      });
+    }
+    if (currentFilter === 'confession') return POSTS.filter(p => p.type === 'confession');
+    if (currentFilter === 'advice') return POSTS.filter(p => p.type === 'advice');
+    return POSTS.filter(p => p.tags && Array.isArray(p.tags) && p.tags.some(t => t && t.toLowerCase().includes(currentFilter)));
   }
 
   function renderFeed() {
@@ -1356,15 +1429,39 @@ button:focus:not(:focus-visible){outline:none}
   // ============================================================
   // COMMENTS
   // ============================================================
+  // BUG G FIX: preserve open reply boxes + typed text across re-renders
   function renderDetailComments(p) {
     const cmList = document.getElementById('cmList');
     if (!cmList) return;
+
+    // Snapshot open reply boxes and their typed text
+    const openReplies = {};
+    cmList.querySelectorAll('.rbox:not(.hidden)').forEach(box => {
+      const id = box.id.replace('rb-', '');
+      const ta = box.querySelector('.rbox-ta');
+      if (ta) openReplies[id] = { text: ta.value, selectionStart: ta.selectionStart };
+      else openReplies[id] = { text: '' };
+    });
+
     const cmts = COMMENTS[p.id] || [];
     const cmtsSorted = [...cmts];
     const sortSel = document.getElementById('sortSel');
     if (sortSel && sortSel.value === 'heated') cmtsSorted.sort((a, b) => (b.up + b.dn) - (a.up + a.dn));
     else if (sortSel && sortSel.value === 'top') cmtsSorted.sort((a, b) => b.up - a.up);
     cmList.innerHTML = cmtsSorted.length ? cmtsSorted.map(c => cmtHTML(c)).join('') : '<div class="empty"><div class="empty-ic">💬</div><p class="empty-tx">Be first to comment</p></div>';
+
+    // Restore open reply boxes
+    Object.keys(openReplies).forEach(id => {
+      const box = document.getElementById('rb-' + id);
+      if (!box) return;
+      box.classList.remove('hidden');
+      const ta = document.getElementById('ri-' + id);
+      if (ta) {
+        ta.value = openReplies[id].text || '';
+        try { ta.selectionStart = ta.selectionEnd = openReplies[id].selectionStart || ta.value.length; } catch (e) {}
+        resize(ta);
+      }
+    });
   }
 
   function cmtHTML(c, isReply) {
@@ -1600,8 +1697,6 @@ button:focus:not(:focus-visible){outline:none}
     if (dlhe) dlhe.textContent = '🟥 He ' + heP + '%'; if (dlsh) dlsh.textContent = '🟪 She ' + sheP + '%'; if (dlbo) dlbo.textContent = '⚪ Both ' + bothP + '%';
   }
 
-  // CRITICAL FIX (Issue 1): single source of truth is MY_REACTIONS[pid].
-  // Server RPC set_reaction atomically inserts/updates/deletes with row lock.
   async function doRx(pid, emoji, btn) {
     if (!currentUser) { showAuth('signup'); return; }
     if (!rateLimiter.check('react_' + currentUser.id, MAX_REACTIONS_PER_WINDOW)) { toast('Easy with the reactions!', 'warn'); return; }
@@ -1611,7 +1706,6 @@ button:focus:not(:focus-visible){outline:none}
     const prev = MY_REACTIONS[pid];
     const nextEmoji = (prev === emoji) ? null : emoji;
 
-    // Optimistic: derive UI from MY_REACTIONS
     if (nextEmoji) MY_REACTIONS[pid] = nextEmoji;
     else delete MY_REACTIONS[pid];
     applyReactionUI(pid, p);
@@ -1641,7 +1735,6 @@ button:focus:not(:focus-visible){outline:none}
     if (EMOJIS.every(e => (rx[e] || 0) > 0)) showAchievement('reaction_master');
   }
 
-  // Sync every visible reaction button for this post from MY_REACTIONS
   function applyReactionUI(pid, post) {
     if (!post) return;
     const rx = safeRx(post.rx);
@@ -1879,7 +1972,6 @@ button:focus:not(:focus-visible){outline:none}
       return;
     }
     const ini = (currentUser.username || 'U').slice(0, 2).toUpperCase();
-    // CRITICAL FIX: filter by user_id, not by author string
     const myPosts = POSTS.filter(p => p.user_id === currentUser.id && !p._localId);
     const totalRx = myPosts.reduce((s, p) => s + Object.values(safeRx(p.rx)).reduce((a, b) => a + b, 0), 0);
     const totalVotes = myPosts.reduce((s, p) => s + (p.votes?.he || 0) + (p.votes?.she || 0) + (p.votes?.both || 0), 0);
@@ -2013,6 +2105,15 @@ button:focus:not(:focus-visible){outline:none}
     const btnPwSignup = document.getElementById('btnPwSignup'); const btnPwLogin = document.getElementById('btnPwLogin');
     if (btnPwSignup) btnPwSignup.addEventListener('click', function() { closePw(); showAuth('signup'); });
     if (btnPwLogin) btnPwLogin.addEventListener('click', function() { closePw(); showAuth('login'); });
+
+    // BUG F FIX: warn before navigating away with unsaved draft post
+    window.addEventListener('beforeunload', function(e) {
+      const body = document.getElementById('pbody');
+      if (body && body.value.trim().length > 0) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
   }
 
   // ============================================================
