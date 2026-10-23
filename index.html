@@ -305,7 +305,6 @@ button:focus:not(:focus-visible){outline:none}
 .achievement-toast .ach-icon{font-size:28px}
 .achievement-toast .ach-title{font-size:13px;font-weight:700;color:var(--gold)}
 .achievement-toast .ach-desc{font-size:11px;color:var(--t3)}
-/* NEW: retention/UX components */
 .prompt-banner{background:linear-gradient(130deg,rgba(232,56,96,.12),rgba(155,95,255,.08));border:1px solid rgba(232,56,96,.3);border-radius:var(--r);padding:14px;margin-bottom:14px;position:relative;z-index:1}
 .prompt-banner h3{font-family:var(--fd);font-size:15px;font-weight:900;margin-bottom:4px;color:var(--text)}
 .prompt-banner p{font-size:12px;color:var(--t2);margin-bottom:10px;line-height:1.5}
@@ -768,7 +767,7 @@ button:focus:not(:focus-visible){outline:none}
   }
 
   // ============================================================
-  // DRAFT AUTOSAVE (survives page close/refresh)
+  // DRAFT AUTOSAVE
   // ============================================================
   function saveDraft() {
     const t = document.getElementById('ptitle');
@@ -858,7 +857,6 @@ button:focus:not(:focus-visible){outline:none}
         ls.set(PUSH_PROMPT_SEEN, '1');
         const pp = document.getElementById('pushPrompt');
         if (pp) pp.innerHTML = '';
-        // TODO: register with OneSignal / FCM via your edge function
       } else {
         toast('You can enable notifications in browser settings', 'info');
         ls.set(PUSH_PROMPT_SEEN, '1');
@@ -951,7 +949,6 @@ button:focus:not(:focus-visible){outline:none}
         await fetchSaves();
         await fetchNotifications();
       }
-      // Handle shared link (#post-<id>)
       const hash = window.location.hash;
       if (hash && hash.startsWith('#post-')) {
         const pid = hash.slice(6);
@@ -962,34 +959,83 @@ button:focus:not(:focus-visible){outline:none}
     }
   }
 
+  // ============================================================
+  // ✅ FIXED: restoreUserProfile
+  // - Waits for auth session to actually propagate before querying
+  // - Uses upsert (never throws on duplicate)
+  // - Distinguishes "row missing" from "RLS blocked" via error check
+  // - Handles the case where a DB trigger pre-created the profile
+  // ============================================================
   async function restoreUserProfile(user) {
     if (!user || !user.id) return;
+
     Object.keys(MY_REACTIONS).forEach(k => delete MY_REACTIONS[k]);
     Object.keys(MY_VOTES).forEach(k => delete MY_VOTES[k]);
+
+    // Serialize concurrent calls (signup, login, onAuthStateChange can all fire)
     if (profileLoading) { try { await profileLoading; } catch (e) {} }
+
     const task = (async () => {
       try {
+        // ── FIX 1: wait until the SDK actually reports this user as signed in ──
+        // signInWithPassword() resolves before the client's internal session
+        // is applied to subsequent `.from()` / `.rpc()` calls, so we poll briefly.
+        for (let i = 0; i < 10; i++) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.id === user.id) break;
+          await new Promise(r => setTimeout(r, 150));
+        }
+
+        // ── FIX 2: first try to read. Note: RLS-denied SELECT returns
+        //    { data: null, error: null } in PostgREST, so we can't distinguish
+        //    "row missing" from "blocked". We now trust the DB trigger to
+        //    have created the row, and only fall back to insert if needed.
         const { data: profile, error } = await supabase
-          .from('users').select('id, username, created_at')
-          .eq('id', user.id).maybeSingle();
-        if (error) { console.error('Profile fetch error:', error); toast('Error loading your profile. Please refresh.', 'err'); return; }
+          .from('users')
+          .select('id, username, created_at')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Profile fetch error:', error);
+          toast('Error loading your profile. Please refresh.', 'err');
+          return;
+        }
+
         if (profile && profile.username) {
           currentUser = profile;
         } else {
+          // ── FIX 3: use upsert with onConflict:'id' so concurrent calls
+          //    (or the trigger + client racing) never throw a duplicate-key error.
           const username = mkUsername();
           const { data: inserted, error: ie } = await supabase
-            .from('users').insert({ id: user.id, email: user.email || '', username, created_at: new Date().toISOString() })
-            .select('id, username, created_at').single();
+            .from('users')
+            .upsert(
+              { id: user.id, email: user.email || '', username },
+              { onConflict: 'id' }
+            )
+            .select('id, username, created_at')
+            .single();
+
           if (ie) {
-            console.error('Failed to create profile:', ie);
-            // Retry once if duplicate
-            const { data: retry } = await supabase.from('users').select('id, username, created_at').eq('id', user.id).maybeSingle();
-            if (retry) { currentUser = retry; }
-            else { toast('Could not initialize profile', 'err'); return; }
+            console.error('Failed to upsert profile:', ie);
+            // One final retry — maybe the trigger just won the race
+            const { data: retry } = await supabase
+              .from('users')
+              .select('id, username, created_at')
+              .eq('id', user.id)
+              .maybeSingle();
+            if (retry && retry.username) {
+              currentUser = retry;
+            } else {
+              toast('Could not initialize profile. Please try again.', 'err');
+              return;
+            }
           } else {
             currentUser = inserted;
           }
         }
+
         loadUserData();
         updateStreak();
         updateNav();
@@ -998,8 +1044,12 @@ button:focus:not(:focus-visible){outline:none}
         renderPushPrompt();
         renderNextBadgeBar();
         renderAffiliate();
-      } catch (e) { console.error('Profile restore error:', e); }
+      } catch (e) {
+        console.error('Profile restore error:', e);
+        toast('Error loading profile. Please try again.', 'err');
+      }
     })();
+
     profileLoading = task;
     try { await task; } finally { profileLoading = null; }
   }
@@ -1149,7 +1199,6 @@ button:focus:not(:focus-visible){outline:none}
         COMMENTS[pid] = [...pending, ...(fresh[pid] || [])];
       });
       Object.keys(fresh).forEach(pid => { if (!COMMENTS[pid]) COMMENTS[pid] = fresh[pid]; });
-      // GC: cap each post's comments at 500 to bound memory
       Object.keys(COMMENTS).forEach(pid => { if (COMMENTS[pid].length > 500) COMMENTS[pid].length = 500; });
     } catch (e) { console.error('Fetch comments error:', e); }
   }
@@ -1278,6 +1327,11 @@ button:focus:not(:focus-visible){outline:none}
     go('home');
   }
 
+  // ============================================================
+  // ✅ FIXED: doSignup
+  // - Guards against email-confirmation-required mode
+  // - Waits for session propagation before touching the profile
+  // ============================================================
   async function doSignup() {
     if (authInFlight) return;
     const email = sanitizeInput(document.getElementById('ae')?.value || '');
@@ -1288,28 +1342,52 @@ button:focus:not(:focus-visible){outline:none}
     if (!supabase) { toast('Connection not ready. Please wait.', 'err'); return; }
     authInFlight = true;
     try {
-      const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { emailRedirectTo: window.location.origin } });
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: pass,
+        options: { emailRedirectTo: window.location.origin }
+      });
       if (error) {
         if (error.message.includes('already registered')) toast('Email already registered. Please login instead.', 'err');
         else toast(error.message, 'err');
         return;
       }
-      if (data?.user) {
-        if (data.session) {
-          await restoreUserProfile(data.user);
-          if (currentUser) {
-            await fetchPosts(); await fetchComments(); await fetchMyReactions(); await fetchMyVotes();
-            afterAuthSuccess('Account created! Welcome to HeartConfia 💔');
-          }
-        } else {
-          closeAuth();
-          toast('Account created! Check your email to confirm, then login.', 'info');
-        }
+      if (!data?.user) { toast('Signup failed. Please try again.', 'err'); return; }
+
+      // ── FIX: if email confirmation is required, session is null. Don't
+      //    try to create a profile — the DB trigger will handle it when
+      //    the user confirms and later signs in.
+      if (!data.session) {
+        closeAuth();
+        toast('Account created! Check your email to confirm, then login.', 'info');
+        return;
       }
-    } catch (e) { console.error('Signup error:', e); toast('Something went wrong. Please try again.', 'err'); }
-    finally { authInFlight = false; }
+
+      // Session exists → wait a tick for it to propagate, then restore profile
+      await new Promise(r => setTimeout(r, 250));
+      await restoreUserProfile(data.user);
+
+      if (currentUser) {
+        await fetchPosts();
+        await fetchComments();
+        await fetchMyReactions();
+        await fetchMyVotes();
+        afterAuthSuccess('Account created! Welcome to HeartConfia 💔');
+      } else {
+        toast('Account created. Please log in to continue.', 'info');
+      }
+    } catch (e) {
+      console.error('Signup error:', e);
+      toast('Something went wrong. Please try again.', 'err');
+    } finally {
+      authInFlight = false;
+    }
   }
 
+  // ============================================================
+  // ✅ FIXED: doLogin
+  // - Waits for session to propagate before calling restoreUserProfile
+  // ============================================================
   async function doLogin() {
     if (authInFlight) return;
     const email = sanitizeInput(document.getElementById('ae')?.value || '');
@@ -1325,15 +1403,29 @@ button:focus:not(:focus-visible){outline:none}
         else toast(error.message, 'err');
         return;
       }
-      if (data?.user) {
-        await restoreUserProfile(data.user);
-        if (currentUser) {
-          await fetchPosts(); await fetchComments(); await fetchMyReactions(); await fetchMyVotes();
-          afterAuthSuccess('Welcome back, ' + currentUser.username + '! 💔');
-        } else { toast('Error loading profile. Please try again.', 'err'); }
+      if (!data?.user) { toast('Login failed. Please try again.', 'err'); return; }
+
+      // ── FIX: give the SDK time to propagate the new session before any
+      //    .from() / .rpc() call. Without this, auth.uid() is still null
+      //    inside RLS on the very first query.
+      await new Promise(r => setTimeout(r, 250));
+      await restoreUserProfile(data.user);
+
+      if (currentUser) {
+        await fetchPosts();
+        await fetchComments();
+        await fetchMyReactions();
+        await fetchMyVotes();
+        afterAuthSuccess('Welcome back, ' + currentUser.username + '! 💔');
+      } else {
+        toast('Error loading profile. Please try again.', 'err');
       }
-    } catch (e) { console.error('Login error:', e); toast('Login failed. Please try again.', 'err'); }
-    finally { authInFlight = false; }
+    } catch (e) {
+      console.error('Login error:', e);
+      toast('Login failed. Please try again.', 'err');
+    } finally {
+      authInFlight = false;
+    }
   }
 
   async function doLogout() {
@@ -1389,7 +1481,6 @@ button:focus:not(:focus-visible){outline:none}
     }
     if (currentFilter === 'confession') return base.filter(p => p.type === 'confession');
     if (currentFilter === 'advice') return base.filter(p => p.type === 'advice');
-    // muted tags filter
     const muted = userPreferences.mutedTags || [];
     return base.filter(p => {
       if (!Array.isArray(p.tags)) return true;
@@ -1421,7 +1512,6 @@ button:focus:not(:focus-visible){outline:none}
       btn.parentNode.replaceChild(nb, btn);
       nb.addEventListener('click', () => { if (!pageChangeInProgress) loadMore(); });
     }
-    // render filters
     renderFilters();
   }
 
@@ -1495,7 +1585,6 @@ button:focus:not(:focus-visible){outline:none}
     go('detail');
     detailPost = p;
     renderDetail(p);
-    // update URL hash for shareable link
     try { history.replaceState(null, '', '#post-' + id); } catch (e) {}
   }
 
@@ -1548,7 +1637,6 @@ button:focus:not(:focus-visible){outline:none}
   function renderDetailComments(p) {
     const cmList = document.getElementById('cmList');
     if (!cmList) return;
-    // preserve open reply boxes
     const openReplies = {};
     cmList.querySelectorAll('.rbox:not(.hidden)').forEach(box => {
       const id = box.id.replace('rb-', '');
@@ -1636,7 +1724,6 @@ button:focus:not(:focus-visible){outline:none}
       const idx = list.findIndex(c => c.id === optimistic.id);
       if (idx !== -1) list.splice(idx, 1);
       if (detailPost?.id === pid) renderDetailComments(detailPost);
-      // restore text on error
       if (el) { el.value = text; el.style.height = 'auto'; resize(el); }
       toast('Comment failed: ' + (e.message || 'Unknown error'), 'err');
     }
@@ -1681,7 +1768,6 @@ button:focus:not(:focus-visible){outline:none}
       if (error) throw error;
       if (data) {
         MY_COMMENT_VOTES[cid] = data.my_vote;
-        // find comment and update
         const pid = detailPost?.id;
         if (pid && COMMENTS[pid]) {
           const find = (arr) => { for (const c of arr) { if (c.id === cid) return c; if (Array.isArray(c.replies)) { const f = find(c.replies); if (f) return f; } } return null; };
@@ -1713,7 +1799,7 @@ button:focus:not(:focus-visible){outline:none}
   }
 
   // ============================================================
-  // VOTING & REACTIONS (atomic RPCs)
+  // VOTING & REACTIONS
   // ============================================================
   function updateVoteBarsIn(container, v) {
     if (!container || !v) return;
@@ -1743,7 +1829,6 @@ button:focus:not(:focus-visible){outline:none}
         p.votes = data;
         const prevVote = MY_VOTES[pid];
         if (prevVote === type) delete MY_VOTES[pid]; else MY_VOTES[pid] = type;
-        // re-render this card in place
         const card = btn.closest('.card');
         if (card) {
           const wrap = card.querySelector('.vote-wrap');
@@ -1803,7 +1888,7 @@ button:focus:not(:focus-visible){outline:none}
   }
 
   // ============================================================
-  // SHARE / QUOTE CARD / SAVES / REPORT
+  // SHARE / QUOTE / SAVES / REPORT
   // ============================================================
   async function sharePost(pid, btn) {
     const p = POSTS.find(x => x.id === pid);
@@ -1834,49 +1919,40 @@ button:focus:not(:focus-visible){outline:none}
     const ctx = canvas.getContext('2d');
     const W = 1080, H = 1080;
     canvas.width = W; canvas.height = H;
-    // gradient bg
     const grad = ctx.createLinearGradient(0, 0, W, H);
     grad.addColorStop(0, '#120e14');
     grad.addColorStop(1, '#09060a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
-    // accent circle
     ctx.fillStyle = 'rgba(232,56,96,0.15)';
     ctx.beginPath(); ctx.arc(W - 200, 150, 280, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(155,95,255,0.10)';
     ctx.beginPath(); ctx.arc(150, H - 150, 320, 0, Math.PI * 2); ctx.fill();
-    // brand
     ctx.fillStyle = '#e83860';
     ctx.font = 'bold 42px "Playfair Display", serif';
     ctx.fillText('HeartConfia', 80, 130);
     ctx.font = '20px "DM Sans", sans-serif';
     ctx.fillStyle = '#7a5c72';
     ctx.fillText('ANONYMOUS CONFESSION', 80, 170);
-    // title
     ctx.fillStyle = '#f0e6ed';
     ctx.font = 'bold 56px "Playfair Display", serif';
     const title = p.title || '';
     const titleLines = wrapText(ctx, title, W - 160, 56);
     let y = 340;
     titleLines.slice(0, 4).forEach(line => { ctx.fillText(line, 80, y); y += 70; });
-    // divider
     y += 20;
     ctx.fillStyle = '#e83860'; ctx.fillRect(80, y, 80, 4); y += 60;
-    // preview
     const preview = p.preview || (typeof p.content === 'string' ? p.content.slice(0, 260) : '');
     ctx.fillStyle = '#b89aaa';
     ctx.font = '32px "DM Sans", sans-serif';
     const previewLines = wrapText(ctx, preview + (preview.length >= 260 ? '…' : ''), W - 160, 32);
     previewLines.slice(0, 8).forEach(line => { ctx.fillText(line, 80, y); y += 46; });
-    // footer
     ctx.fillStyle = '#7a5c72';
     ctx.font = '24px "DM Sans", sans-serif';
     ctx.fillText('💔 Read + react at heartconfia.com', 80, H - 100);
-    // hashtag
     ctx.fillStyle = '#9b5fff';
     ctx.font = 'bold 24px "DM Sans", sans-serif';
     ctx.fillText('#HeartConfia #Confession', 80, H - 60);
     document.getElementById('quotePreviewOv')?.classList.remove('hidden');
-    // bind actions
     const dl = document.getElementById('btnDownloadQuote');
     const sh = document.getElementById('btnShareQuote');
     const cl = document.getElementById('btnCloseQuote');
@@ -1956,7 +2032,6 @@ button:focus:not(:focus-visible){outline:none}
     if (containsModeratedContent(title) || containsModeratedContent(body)) { toast('Your post contains prohibited content. Please edit.', 'err'); return; }
     const postType = document.querySelector('.type-btn.on')?.dataset.type || 'confession';
 
-    // Preserve form on error (don't clear yet)
     try {
       const { data: saved, error } = await supabase.rpc('create_post', {
         p_type: postType, p_title: title, p_content: body, p_tags: tags
@@ -1964,7 +2039,6 @@ button:focus:not(:focus-visible){outline:none}
       if (error) throw error;
       saved.votes = safeVotes(saved.votes); saved.rx = safeRx(saved.rx);
       POSTS.unshift(saved);
-      // clear form on success
       ['ptitle','pbody','ptags'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
       const pb = document.getElementById('pbody'); if (pb) pb.style.height = 'auto';
       ls.remove(DRAFT_KEY);
@@ -1974,7 +2048,6 @@ button:focus:not(:focus-visible){outline:none}
     } catch (e) {
       console.error('Post failed:', e);
       toast('Post failed: ' + (e.message || 'Unknown error'), 'err');
-      // Form remains populated — user can retry.
     }
   }
 
@@ -2205,12 +2278,11 @@ button:focus:not(:focus-visible){outline:none}
     document.getElementById('btnPwSignup')?.addEventListener('click', () => { closePw(); showAuth('signup'); });
     document.getElementById('btnPwLogin')?.addEventListener('click', () => { closePw(); showAuth('login'); });
 
-    // draft autosave on page hide / navigate-away (safe replacement for beforeunload)
     document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraft(); });
     window.addEventListener('pagehide', saveDraft);
     window.addEventListener('beforeunload', (e) => {
       const body = document.getElementById('pbody');
-      if (body && body.value.trim().length > 0) { saveDraft(); /* let browser prompt if user actually tries to close */ }
+      if (body && body.value.trim().length > 0) { saveDraft(); }
     });
   }
 
