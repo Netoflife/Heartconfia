@@ -95,6 +95,10 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .hero-title{font-size:clamp(30px,8vw,40px);line-height:1.08;letter-spacing:-.8px;font-weight:800}
 .hero-title em{color:var(--rose2);font-weight:600}
 .hero-sub{font-size:14px;color:var(--t3);margin-top:8px;max-width:46ch}
+.swipe-cta{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:13px 16px;border-radius:var(--r);text-align:left;background:linear-gradient(130deg,rgba(160,123,255,.16),rgba(242,72,111,.10));border:1px solid rgba(160,123,255,.3);font-weight:700;font-size:14.5px}
+.swipe-cta small{display:block;font-weight:500;font-size:12.5px;color:var(--t3);margin-top:1px}
+.swipe-cta .sc-ic{font-size:24px}
+.swipe-cta .sc-go{margin-left:auto;color:var(--violet);font-size:18px}
 .ftabs{display:flex;gap:8px;overflow-x:auto;padding:16px 0 12px;scrollbar-width:none;-webkit-overflow-scrolling:touch;position:sticky;top:calc(56px + var(--st));z-index:50;background:linear-gradient(var(--bg) 75%,transparent);margin:0 -16px;padding-left:16px;padding-right:16px}
 .ftabs::-webkit-scrollbar{display:none}
 .ftab{flex:0 0 auto;padding:8px 15px;border-radius:100px;font-size:13px;font-weight:600;color:var(--t2);background:var(--s2);border:1px solid var(--line);white-space:nowrap}
@@ -115,6 +119,7 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .badge-t{color:var(--gold);border-color:rgba(243,176,74,.3);background:rgba(243,176,74,.08)}
 .badge-n{color:var(--violet);border-color:rgba(160,123,255,.3);background:rgba(160,123,255,.08)}
 .badge-s{color:var(--rose2);border-color:rgba(242,72,111,.3);background:rgba(242,72,111,.08)}
+.badge-u{color:var(--green);border-color:rgba(89,217,142,.3);background:rgba(89,217,142,.08)}
 .c-title{font-family:var(--fd);font-size:20px;font-weight:700;line-height:1.25;letter-spacing:-.2px;margin-bottom:8px;overflow-wrap:anywhere}
 .c-title a{display:block}
 .c-title a:hover{color:var(--rose2)}
@@ -130,11 +135,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .verdict{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .vopt{position:relative;overflow:hidden;border-radius:var(--rs);padding:9px 10px;background:var(--s2);border:1.5px solid var(--line);text-align:left;display:flex;flex-direction:column;gap:1px;min-height:54px;transition:border-color .15s,transform .1s}
 .vopt:active{transform:scale(.98)}
+.vopt:disabled{cursor:default;transform:none}
 .vfill{position:absolute;left:0;top:0;bottom:0;background:var(--c);opacity:.18;transition:width .55s cubic-bezier(.4,0,.2,1);pointer-events:none}
 .vlabel{position:relative;font-size:12.5px;font-weight:600}
 .vpct{position:relative;font-size:12px;font-weight:700;color:var(--c)}
 .vopt.on{border-color:var(--c)}
 .vopt-he{--c:var(--he)}.vopt-she{--c:var(--she)}.vopt-both{--c:var(--both)}
+.vstatus{display:inline-block;font-size:12px;font-weight:700;color:var(--gold);margin:8px 2px 0;background:rgba(243,176,74,.08);border:1px solid rgba(243,176,74,.25);padding:3px 10px;border-radius:100px}
+.vstatus.closed{color:var(--green);background:rgba(89,217,142,.08);border-color:rgba(89,217,142,.28)}
 .vtotal{font-size:11.5px;color:var(--t3);margin:7px 2px 0}
 .rxrow{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
 .rxrow::-webkit-scrollbar{display:none}
@@ -148,6 +156,8 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .foot-btn:active{background:var(--s2)}
 .foot-btn.is-saved{color:var(--gold)}
 .foot-btn.is-saved .ic{fill:currentColor}
+.foot-btn.is-following{color:var(--rose2)}
+.foot-btn.is-following .ic{fill:currentColor}
 .spacer{flex:1}
 
 /* detail */
@@ -169,6 +179,60 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .sec-line{display:flex;align-items:center;justify-content:space-between;margin:22px 0 12px}
 .sec-title{font-family:var(--fd);font-size:19px}
 .sort-sel{background:var(--s2);border:1px solid var(--line);color:var(--t2);font-size:13px;padding:7px 10px;border-radius:10px}
+
+/* author updates */
+.upd-sec{background:linear-gradient(130deg,rgba(89,217,142,.07),transparent);border:1px solid rgba(89,217,142,.25);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.upd-title{font-family:var(--fd);font-size:17px;margin-bottom:10px;color:var(--green)}
+.upd-item{padding:10px 0;border-top:1px solid var(--line)}
+.upd-item:first-of-type{border-top:0;padding-top:0}
+.upd-time{font-size:12px;color:var(--t3);margin-bottom:3px}
+.upd-text{font-size:15px;line-height:1.7;color:#e4d6dc;white-space:pre-line;overflow-wrap:anywhere}
+.upd-form{margin:12px 0 4px}
+#updBlock{margin-bottom:6px}
+#updBlock>.btn{margin-bottom:12px}
+
+/* level + reputation */
+.lvl{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:1px 7px;border-radius:100px;margin-left:6px;vertical-align:1px;border:1px solid;color:var(--t3);border-color:var(--line2)}
+.lvl-listener{color:var(--blue);border-color:rgba(115,153,255,.35)}
+.lvl-counsellor{color:var(--violet);border-color:rgba(160,123,255,.4)}
+.lvl-oracle{color:var(--gold);border-color:rgba(243,176,74,.45);background:rgba(243,176,74,.08)}
+.repcard{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:22px}
+.rep-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.rep-level{font-family:var(--fd);font-size:20px;font-weight:700}
+.rep-pts{font-size:13px;color:var(--gold);font-weight:700}
+.rep-note{font-size:12.5px;color:var(--t3);margin-top:6px}
+.rep-match{font-size:14px;color:var(--t2);margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.rep-match strong{color:var(--green)}
+.rep-match span{color:var(--t3);font-size:12.5px}
+
+/* settings toggles */
+.prefs{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);margin-bottom:22px}
+.pref-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border-top:1px solid var(--line)}
+.pref-row:first-child{border-top:0}
+.pref-name{font-weight:600;font-size:14.5px}
+.pref-desc{font-size:12.5px;color:var(--t3);margin-top:1px}
+.tgl{flex:0 0 auto;width:46px;height:28px;border-radius:14px;background:var(--s3);border:1px solid var(--line2);position:relative;transition:background .2s}
+.tgl::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--t2);transition:transform .2s,background .2s}
+.tgl[aria-checked="true"]{background:var(--rose);border-color:var(--rose)}
+.tgl[aria-checked="true"]::after{transform:translateX(18px);background:#fff}
+
+/* swipe / quick verdicts */
+.sw-prog{font-size:12px;color:var(--t3);margin-bottom:8px;display:flex;justify-content:space-between}
+.sw-card{background:linear-gradient(180deg,var(--s1),#100c12);border:1px solid var(--line2);border-radius:22px;padding:20px;animation:pgIn .25s ease both;touch-action:pan-y}
+.sw-title{font-family:var(--fd);font-size:23px;line-height:1.2;font-weight:800;margin:10px 0 12px;overflow-wrap:anywhere}
+.sw-body{font-size:16px;line-height:1.75;color:#e4d6dc;white-space:pre-line;overflow-wrap:anywhere;margin-bottom:14px}
+.sw-q{font-family:var(--fd);font-size:17px;margin:16px 0 10px}
+.sw-btns{display:grid;gap:8px}
+.sw-btn{padding:14px;border-radius:var(--rs);font-weight:700;font-size:15px;border:1.5px solid var(--c);background:rgba(255,255,255,.02);color:var(--text)}
+.sw-btn:active{background:var(--c);color:#fff}
+.sw-he{--c:var(--he)}.sw-she{--c:var(--she)}.sw-both{--c:var(--both)}
+.sw-links{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+.sw-res{margin:14px 0}
+.sw-bar{position:relative;overflow:hidden;border-radius:10px;background:var(--s2);border:1.5px solid var(--line);padding:10px 12px;margin-bottom:6px;display:flex;justify-content:space-between;font-size:13.5px;font-weight:600}
+.sw-bar.on{border-color:var(--c)}
+.sw-bar i{position:absolute;left:0;top:0;bottom:0;background:var(--c);opacity:.2}
+.sw-bar span{position:relative}
+.sw-hint{text-align:center;font-size:12px;color:var(--t3);margin-top:12px}
 
 /* comments */
 .cm-box{background:var(--s1);border:1.5px solid var(--line);border-radius:var(--r);padding:12px;margin-bottom:18px;transition:border-color .15s}
@@ -364,8 +428,10 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
         </div>
         <h1 class="hero-title" id="homeTitle">Where hearts <em>break</em> in public.</h1>
         <p class="hero-sub">Real relationship confessions. Read, judge, debate, relate.</p>
+        <button class="swipe-cta" data-action="go-swipe"><span class="sc-ic" aria-hidden="true">⚡</span><span>Quick verdicts<small>Short stories. One tap. No typing.</small></span><span class="sc-go" aria-hidden="true">→</span></button>
       </div>
       <div id="streakBar"></div>
+      <div id="pushBanner"></div>
       <div id="promptBanner"></div>
       <div id="nextBadgeBar"></div>
       <div class="ftabs" id="ftabs" role="group" aria-label="Filter confessions"></div>
@@ -374,6 +440,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
       <div id="feedMore" class="feed-more"></div>
       <div id="affiliateSlot"></div>
       <p class="support-line">Going through something heavy? <button class="linkbtn" data-action="go-resources">Find support</button></p>
+    </div>
+  </section>
+
+  <section id="pg-swipe" class="page" aria-labelledby="swTitle">
+    <div class="container">
+      <button class="back-btn" data-page="home">‹ Feed</button>
+      <div class="page-head" style="padding-top:0"><h1 class="page-title" id="swTitle">Quick verdicts</h1><p class="page-sub">Short stories, one tap. Swipe left to skip.</p></div>
+      <div id="swWrap"></div>
     </div>
   </section>
 
@@ -485,13 +559,16 @@ const CFG = {
   AFFILIATE_URL: '',
   // Set these to your real pages. When empty, the signup checkbox shows plain text.
   TERMS_URL: '',
-  PRIVACY_URL: ''
+  PRIVACY_URL: '',
+  // Web Push public key (VAPID). Leave empty to hide push prompts until the push backend is ready.
+  VAPID_PUBLIC_KEY: ''
 };
-const LIM = { comment: 1000, title: 120, titleMin: 10, story: 50, storyMax: 10000, page: 10, tags: 5, tagLen: 24, postCooldown: 30000, commentCooldown: 4000 };
+const LIM = { comment: 1000, title: 120, titleMin: 10, story: 50, storyMax: 10000, page: 10, tags: 5, tagLen: 24, postCooldown: 30000, commentCooldown: 4000, updMin: 20, updMax: 3000, updPerPost: 5 };
 const EMOJIS = ['❤️','💔','😭','😡','😳','😂','🔥'];
+const VL = { he: "He's wrong", she: "She's wrong", both: 'Both wrong' };
 const TAG_FILTERS = ['cheating','breakup','toxic','trust'];
 const FILTERS = [
-  {v:'all',l:'All'},{v:'foryou',l:'For you'},{v:'saved',l:'Saved'},{v:'confession',l:'Confessions'},
+  {v:'all',l:'All'},{v:'foryou',l:'For you'},{v:'following',l:'Following'},{v:'saved',l:'Saved'},{v:'confession',l:'Confessions'},
   {v:'advice',l:'Advice'},{v:'debate',l:'Debates'},{v:'cheating',l:'Cheating'},{v:'breakup',l:'Breakups'},
   {v:'toxic',l:'Toxic'},{v:'trust',l:'Trust'}
 ];
@@ -533,7 +610,8 @@ const ICONS = {
   image:'<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>',
   flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
   back:'<polyline points="15 18 9 12 15 6"/>',
-  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>'
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  bell:'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>'
 };
 function ico(n){ return '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[n]||'') + '</svg>'; }
 
@@ -572,7 +650,7 @@ function errMsg(e, fb){
   const m = String((e && e.message) || '');
   if (!m) return fb;
   if (/jwt|expired|not authenticated|invalid token/i.test(m)) return 'Your session expired. Please log in again.';
-  if (/rate|too many|limit/i.test(m)) return 'Slow down a little and try again shortly.';
+  if (/rate|too many|limit/i.test(m) && !/reached the limit of/i.test(m)) return 'Slow down a little and try again shortly.';
   if (/failed to fetch|network|load failed/i.test(m)) return 'Network problem. Check your connection.';
   return m.length > 140 ? fb : m;
 }
@@ -608,6 +686,42 @@ function setBusy(btn, busy, label){
 }
 function chunk(a, n){ const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; }
 
+/* verdict window helpers */
+function calcResult(v){
+  const he = num(v.he), she = num(v.she), bo = num(v.both), mx = Math.max(he, she, bo);
+  if (!mx) return 'none';
+  const tops = [he === mx, she === mx, bo === mx].filter(Boolean).length;
+  if (tops > 1) return 'tie';
+  return he === mx ? 'he' : (she === mx ? 'she' : 'both');
+}
+function verdictClosed(p){
+  if (!p) return false;
+  if (p.verdict_closed) return true;
+  if (p.closes_at) { const t = new Date(p.closes_at).getTime(); return !isNaN(t) && t <= Date.now(); }
+  return false;
+}
+function leftText(iso){
+  const ms = new Date(iso).getTime() - Date.now();
+  if (isNaN(ms) || ms <= 60000) return 'Closing soon';
+  const m = Math.floor(ms / 60000), h = Math.floor(m / 60), d = Math.floor(h / 24);
+  if (d >= 1) return 'Closes in ' + d + 'd ' + (h % 24) + 'h';
+  if (h >= 1) return 'Closes in ' + h + 'h ' + (m % 60) + 'm';
+  return 'Closes in ' + m + 'm';
+}
+function vstatusHTML(p){
+  if (!p) return '';
+  const v = p.votes, t = v.he + v.she + v.both;
+  if (verdictClosed(p)) {
+    const r = p.verdict_result && p.verdict_result !== 'none' ? p.verdict_result : calcResult(v);
+    let txt = 'Verdict closed';
+    if (r === 'he' || r === 'she' || r === 'both') txt = 'Final verdict: ' + VL[r] + ' (' + (t ? Math.round(num(v[r]) / t * 100) : 0) + '%)';
+    else if (r === 'tie') txt = 'Final verdict: the jury is split';
+    return '<div class="vstatus closed">⚖️ ' + esc(txt) + '</div>';
+  }
+  if (!p.closes_at) return '';
+  return '<div class="vstatus" data-closes="' + esc(p.closes_at) + '" data-pid="' + esc(p.id) + '">⏳ ' + esc(leftText(p.closes_at)) + '</div>';
+}
+
 /* =====================================================================
    STATE
    ===================================================================== */
@@ -617,16 +731,20 @@ const S = {
   feed: { ids: [], hasMore: false, loading: false, error: null, token: 0, rendered: 0 },
   newPosts: 0, online: 0, scrollHome: 0, inApp: false,
   detail: { id: null, token: 0, sort: 'recent', status: 'idle' },
-  saved: new Set(), authMode: 'login', trendAt: 0, lastPostAt: 0, lastCmtAt: 0
+  saved: new Set(), follow: new Set(), authMode: 'login', trendAt: 0, lastPostAt: 0, lastCmtAt: 0
 };
 const POSTS = new Map();
 const COMMENTS = {};
+const UPDATES = {};
+const LV = {};
 const MY = { rx: {}, vote: {}, cvote: {}, hearts: new Set() };
+const SW = { queue: [], i: 0, loading: false, voted: null, err: null };
 const inflight = new Set();
 let NOTIFS = [], unread = 0;
 let prefs = { topics: [] }, streak = 0, lastActive = null, ach = [], rxUsed = [], onboarded = false;
+let PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true };
 let chPosts = null, chComments = null, chUser = null, chPresence = null;
-let sessTask = null, sessUid = null, authBusy = false;
+let sessTask = null, sessUid = null, authBusy = false, seenAt = 0;
 let crisisCb = null, reportCtx = null, quotePost = null, onbStep = 0;
 const lastFocus = {};
 
@@ -639,13 +757,31 @@ function upsertPost(row){
   const p = ex ? Object.assign(ex, row) : row;
   p.votes = safeVotes(p.votes); p.rx = safeRx(p.rx);
   p.tags = Array.isArray(p.tags) ? p.tags.map(String) : [];
-  p.cmt = num(p.cmt); p.views = num(p.views);
+  p.cmt = num(p.cmt); p.views = num(p.views); p.updates_count = num(p.updates_count);
   POSTS.set(p.id, p);
   return p;
 }
 function previewText(p){
   const raw = clean(typeof p.preview === 'string' && p.preview ? p.preview : (typeof p.content === 'string' ? p.content : ''));
   return raw.length > 170 ? raw.slice(0,170).trimEnd() + '…' : raw;
+}
+function lvlBadge(userId){
+  const l = userId && LV[userId];
+  if (!l || !l.level || l.level === 'Newcomer') return '';
+  return '<span class="lvl lvl-' + esc(String(l.level).toLowerCase()) + '">' + esc(l.level) + '</span>';
+}
+async function loadLevels(ids){
+  if (!me || !sb) return;
+  const need = Array.from(new Set((ids || []).filter(i => i && !LV[i])));
+  if (!need.length) return;
+  try {
+    for (const part of chunk(need, 200)) {
+      const { data, error } = await sb.rpc('get_user_levels', { p_user_ids: part });
+      if (error) throw error;
+      (data || []).forEach(r => { LV[r.user_id] = { rep: num(r.rep), level: r.level }; });
+      part.forEach(i => { if (!LV[i]) LV[i] = { rep: 0, level: 'Newcomer' }; });
+    }
+  } catch(e) { console.warn('levels', e); }
 }
 
 /* =====================================================================
@@ -676,6 +812,22 @@ function updateStreak(){
   if (streak >= 3) award('streak_3');
   if (streak >= 7) award('streak_7');
 }
+/* Server-side streak (source of truth when the retention SQL is installed) */
+async function syncSeen(){
+  if (!me || !sb) return;
+  if (Date.now() - seenAt < 6 * 3600 * 1000) return;
+  seenAt = Date.now();
+  try {
+    let tz = 'UTC'; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){}
+    const { data, error } = await sb.rpc('touch_seen', { p_tz: tz });
+    if (error) throw error;
+    if (data && typeof data.streak === 'number') {
+      streak = data.streak; saveUserData(); renderStreak(); renderNextBadge();
+      if (streak >= 3) award('streak_3');
+      if (streak >= 7) award('streak_7');
+    }
+  } catch(e) { console.warn('touch_seen', e); seenAt = 0; }
+}
 function award(id){
   if (!me) return;
   const a = ACHIEVEMENTS.find(x => x.id === id);
@@ -686,7 +838,88 @@ function award(id){
   el.className = 'ach-toast';
   el.innerHTML = '<span style="font-size:28px">' + a.icon + '</span><div><div class="ach-title">' + esc(a.title) + ' unlocked</div><div class="ach-desc">' + esc(a.desc) + '</div></div>';
   c.appendChild(el); setTimeout(() => el.remove(), 4200);
-  renderNextBadge();
+  renderNextBadge(); renderPushBanner();
+}
+
+/* =====================================================================
+   PUSH NOTIFICATIONS
+   ===================================================================== */
+function pushSupported(){
+  return !!(CFG.VAPID_PUBLIC_KEY && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window);
+}
+function pushOn(){ return pushSupported() && Notification.permission === 'granted' && !!PREFS.push; }
+function b64uToU8(s){
+  const pad = '='.repeat((4 - s.length % 4) % 4), b = (s + pad).replace(/-/g,'+').replace(/_/g,'/'), raw = atob(b), out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+function swReady(){
+  return Promise.race([navigator.serviceWorker.ready, sleep(5000).then(() => { throw new Error('Service worker not ready'); })]);
+}
+async function enablePush(){
+  if (!me) { showAuth('signup'); return false; }
+  if (!pushSupported()) { toast("Push alerts aren't available on this device.", 'warn'); return false; }
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm !== 'granted') { toast('Notifications are blocked. Enable them in your browser settings.', 'warn'); renderPushBanner(); return false; }
+    const reg = await swReady();
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64uToU8(CFG.VAPID_PUBLIC_KEY) });
+    const j = sub.toJSON(), k = j.keys || {};
+    const { error } = await sb.rpc('save_push_subscription', { p_endpoint: sub.endpoint, p_p256dh: k.p256dh, p_auth: k.auth, p_ua: navigator.userAgent });
+    if (error) throw error;
+    const r = await sb.rpc('set_notification_prefs', { p_push: true });
+    if (r.error) throw r.error;
+    PREFS.push = true; toast('Alerts are on 🔔', 'ok'); renderPushBanner();
+    return true;
+  } catch(e) { console.error('push', e); toast(errMsg(e, 'Could not turn on alerts.'), 'err'); return false; }
+}
+async function disablePush(){
+  try {
+    if (pushSupported()) {
+      const reg = await swReady(), sub = await reg.pushManager.getSubscription();
+      if (sub) { await sb.rpc('remove_push_subscription', { p_endpoint: sub.endpoint }); await sub.unsubscribe(); }
+    }
+    await sb.rpc('set_notification_prefs', { p_push: false });
+    PREFS.push = false; toast('Push alerts off', 'info');
+  } catch(e) { toast(errMsg(e, 'Could not turn off alerts.'), 'err'); }
+}
+async function fetchPrefs(){
+  if (!me) return;
+  try {
+    const { data, error } = await sb.from('notification_prefs').select('push,email_digest,email_replies,daily_prompt').eq('user_id', me.id).maybeSingle();
+    if (error) throw error;
+    if (data) PREFS = Object.assign(PREFS, data);
+  } catch(e) { console.warn('prefs', e); }
+}
+function renderPrefs(){
+  const b = $('#prefsBox'); if (!b) return;
+  const rows = [
+    ['push', 'Push alerts', pushSupported() ? 'Replies, closed verdicts and story updates.' : 'Not available on this device yet.', pushOn(), !pushSupported()],
+    ['email_replies', 'Email me about replies', 'Only when someone replies to you.', !!PREFS.email_replies, false],
+    ['email_digest', 'Weekly digest', 'Top debates and stories you may like.', !!PREFS.email_digest, false],
+    ['daily_prompt', 'Daily prompt reminder', 'One question a day, in the evening.', !!PREFS.daily_prompt, false]
+  ];
+  b.innerHTML = rows.map(r => '<div class="pref-row"><div><div class="pref-name">' + esc(r[1]) + '</div><div class="pref-desc">' + esc(r[2]) + '</div></div><button class="tgl" role="switch" aria-checked="' + r[3] + '" aria-label="' + esc(r[1]) + '" data-action="pref-toggle" data-key="' + r[0] + '"' + (r[4] ? ' disabled style="opacity:.4"' : '') + '></button></div>').join('');
+}
+async function togglePref(key){
+  if (!me) return;
+  if (key === 'push') { if (pushOn()) await disablePush(); else await enablePush(); renderPrefs(); return; }
+  const map = { email_digest: 'p_email_digest', email_replies: 'p_email_replies', daily_prompt: 'p_daily_prompt' };
+  if (!map[key]) return;
+  const next = !PREFS[key], args = {}; args[map[key]] = next;
+  PREFS[key] = next; renderPrefs();
+  try {
+    const { error } = await sb.rpc('set_notification_prefs', args);
+    if (error) throw error;
+  } catch(e) { PREFS[key] = !next; renderPrefs(); toast(errMsg(e, 'Could not save that setting.'), 'err'); }
+}
+function renderPushBanner(){
+  const c = $('#pushBanner'); if (!c) return;
+  const until = num(ls.get('hc_push_dismiss_until'));
+  const engaged = ach.length > 0 || Object.keys(MY.vote).length > 0;
+  if (!me || !engaged || !pushSupported() || Notification.permission !== 'default' || Date.now() < until) { c.innerHTML = ''; return; }
+  c.innerHTML = '<div class="banner banner-prompt"><h3>🔔 Never miss a reply</h3><p>Get a ping when someone replies, a verdict closes, or an author shares what happened next.</p><div class="banner-actions"><button class="btn btn-primary btn-sm" data-action="enable-push">Turn on alerts</button><button class="btn btn-ghost btn-sm" data-action="dismiss-push">Not now</button></div></div>';
 }
 
 /* =====================================================================
@@ -712,7 +945,7 @@ function topOverlay(){ const o = $$('.overlay:not(.hidden),.quote-preview:not(.h
 /* =====================================================================
    NAVIGATION
    ===================================================================== */
-const PAGES = ['home','trending','confess','notifications','profile','detail','resources'];
+const PAGES = ['home','trending','confess','notifications','profile','detail','resources','swipe'];
 const BASE_TITLE = 'HeartConfia — Anonymous Relationship Confessions';
 function go(next){
   if (!PAGES.includes(next)) next = 'home';
@@ -736,6 +969,7 @@ function go(next){
     case 'notifications': renderNotifs(); markNotifsRead(); break;
     case 'profile': renderProfile(); break;
     case 'resources': renderResources(); break;
+    case 'swipe': loadSwipe(); break;
   }
   window.scrollTo(0, (next === 'home' && prev === 'detail') ? S.scrollHome : 0);
 }
@@ -746,6 +980,7 @@ function rerenderCurrent(){
     case 'confess': renderConfess(); break;
     case 'notifications': renderNotifs(); break;
     case 'profile': renderProfile(); break;
+    case 'swipe': loadSwipe(true); break;
     case 'detail': if (S.detail.id) showDetail(S.detail.id, true); break;
   }
 }
@@ -811,11 +1046,12 @@ function establishSession(user){
       const prof = await loadProfile(user);
       if (!prof) { toast('Could not load your profile. Please refresh.', 'err'); return null; }
       me = prof; loadUserData(); updateStreak();
-      await Promise.all([fetchSaves(), fetchNotifs()]);
+      await Promise.all([fetchSaves(), fetchFollows(), fetchNotifs()]);
       await hydrateMine(Array.from(POSTS.keys()).slice(0, 150));
       subscribeUserChannel();
       updateNav(); updateNotifBadge();
       rerenderCurrent();
+      syncSeen(); fetchPrefs().then(() => { if (page === 'profile') renderPrefs(); });
       return me;
     } catch(e) { console.error('Session error:', e); return null; }
   })();
@@ -827,11 +1063,13 @@ function establishSession(user){
 function resetSession(){
   const had = !!me;
   me = null; streak = 0; lastActive = null; ach = []; rxUsed = []; onboarded = false; prefs = { topics: [] };
+  PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true }; seenAt = 0;
   MY.rx = {}; MY.vote = {}; MY.cvote = {}; MY.hearts = new Set();
-  S.saved.clear(); NOTIFS = []; unread = 0; sessTask = null; sessUid = null;
+  S.saved.clear(); S.follow.clear(); NOTIFS = []; unread = 0; sessTask = null; sessUid = null;
+  SW.queue = []; SW.i = 0; SW.voted = null; SW.err = null;
   if (chUser && sb) { try { sb.removeChannel(chUser); } catch(e){} chUser = null; }
   updateNav(); updateNotifBadge();
-  if (S.filter === 'saved' || S.filter === 'foryou') { S.filter = 'all'; renderFilters(); loadFeed(true); }
+  if (S.filter === 'saved' || S.filter === 'foryou' || S.filter === 'following') { S.filter = 'all'; renderFilters(); loadFeed(true); }
   if (had) { if (page === 'detail') go('home'); else rerenderCurrent(); }
 }
 
@@ -988,6 +1226,14 @@ async function fetchSaves(){
     S.saved = new Set((data || []).map(s => s.post_id));
   } catch(e) { console.warn('saves', e); }
 }
+async function fetchFollows(){
+  if (!me) return;
+  try {
+    const { data, error } = await sb.from('post_follows').select('post_id').eq('user_id', me.id).limit(1000);
+    if (error) throw error;
+    S.follow = new Set((data || []).map(s => s.post_id));
+  } catch(e) { console.warn('follows (retention SQL installed?)', e); }
+}
 async function fetchNotifs(){
   if (!me) return;
   try {
@@ -1008,8 +1254,8 @@ async function loadFeed(reset){
   try {
     let q = sb.from('posts').select('*').eq('hidden', false);
     const flt = S.filter;
-    if (flt === 'saved') {
-      const ids = Array.from(S.saved).slice(-100);
+    if (flt === 'saved' || flt === 'following') {
+      const ids = Array.from(flt === 'saved' ? S.saved : S.follow).slice(-100);
       if (!ids.length) { f.loading = false; f.hasMore = false; renderFeed(); return; }
       q = q.in('id', ids);
     } else if (flt === 'foryou' && prefs.topics.length) {
@@ -1057,6 +1303,7 @@ function skeletonHTML(n){
 function emptyHTML(){
   const f = S.filter;
   if (f === 'saved') return '<div class="empty"><div class="empty-ic">🔖</div><p>Nothing saved yet. Tap the bookmark on a story to keep it.</p></div>';
+  if (f === 'following') return '<div class="empty"><div class="empty-ic">🔔</div><p>You\'re not following any stories yet. Vote or comment on one and it will show up here, with updates.</p></div>';
   if (f === 'foryou' && !prefs.topics.length) return '<div class="empty"><div class="empty-ic">✨</div><p>Pick a few interests and we\'ll tune this feed.</p><button class="btn btn-primary" data-page="profile">Choose interests</button></div>';
   return '<div class="empty"><div class="empty-ic">💔</div><p>No confessions here yet. Be the first to share.</p><button class="btn btn-primary" data-page="confess">Share your story</button></div>';
 }
@@ -1087,12 +1334,12 @@ function updateNewPill(){
 }
 
 function verdictHTML(p){
-  const v = p.votes, t = v.he + v.she + v.both, my = MY.vote[p.id];
+  const v = p.votes, t = v.he + v.she + v.both, my = MY.vote[p.id], closed = verdictClosed(p);
   const he = t ? Math.round(v.he / t * 100) : 0, she = t ? Math.round(v.she / t * 100) : 0, both = t ? Math.max(0, 100 - he - she) : 0;
-  const opts = [['he',"He's wrong",he],['she',"She's wrong",she],['both','Both wrong',both]];
+  const opts = [['he',VL.he,he],['she',VL.she,she],['both',VL.both,both]];
   return '<div class="verdict-wrap"><div class="verdict" role="group" aria-label="Who is wrong?">' + opts.map(o =>
-    '<button class="vopt vopt-' + o[0] + (my === o[0] ? ' on' : '') + '" data-action="vote" data-pid="' + esc(p.id) + '" data-v="' + o[0] + '" aria-pressed="' + (my === o[0]) + '"><span class="vfill" style="width:' + o[2] + '%"></span><span class="vlabel">' + o[1] + '</span><span class="vpct">' + (t ? o[2] + '%' : '–') + '</span></button>').join('') +
-    '</div><div class="vtotal">' + fmt(t) + (t === 1 ? ' verdict' : ' verdicts') + '</div></div>';
+    '<button class="vopt vopt-' + o[0] + (my === o[0] ? ' on' : '') + '" data-action="vote" data-pid="' + esc(p.id) + '" data-v="' + o[0] + '" aria-pressed="' + (my === o[0]) + '"' + (closed ? ' disabled' : '') + '><span class="vfill" style="width:' + o[2] + '%"></span><span class="vlabel">' + o[1] + '</span><span class="vpct">' + (t ? o[2] + '%' : '–') + '</span></button>').join('') +
+    '</div>' + vstatusHTML(p) + '<div class="vtotal">' + fmt(t) + (t === 1 ? ' verdict' : ' verdicts') + '</div></div>';
 }
 function rxRowHTML(p){
   const rx = safeRx(p.rx);
@@ -1115,6 +1362,7 @@ function cardHTML(p, idx){
   const author = p.author || 'Anon', ini = author.slice(0,2).toUpperCase();
   const isNew = p.created_at && Date.now() - new Date(p.created_at).getTime() < 86400000;
   let badges = p.trending ? '<span class="badge badge-t">Trending</span>' : (isNew ? '<span class="badge badge-n">New</span>' : '');
+  if (p.updates_count > 0) badges += '<span class="badge badge-u">Updated</span>';
   if (p.sensitive) badges += '<span class="badge badge-s">Sensitive</span>';
   const tags = p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('');
   let preview;
@@ -1129,14 +1377,17 @@ function cardHTML(p, idx){
 
 /* in-place UI patching */
 function patchVerdict(root, p){
-  const v = p.votes, t = v.he + v.she + v.both, my = MY.vote[p.id];
+  const v = p.votes, t = v.he + v.she + v.both, my = MY.vote[p.id], closed = verdictClosed(p);
   const he = t ? Math.round(v.he / t * 100) : 0, she = t ? Math.round(v.she / t * 100) : 0, both = t ? Math.max(0, 100 - he - she) : 0;
   const pct = { he, she, both };
   $$('.vopt', root).forEach(b => {
     const k = b.dataset.v, f = $('.vfill', b), pc = $('.vpct', b);
     if (f) f.style.width = pct[k] + '%'; if (pc) pc.textContent = t ? pct[k] + '%' : '–';
-    b.classList.toggle('on', my === k); b.setAttribute('aria-pressed', String(my === k));
+    b.classList.toggle('on', my === k); b.setAttribute('aria-pressed', String(my === k)); b.disabled = closed;
   });
+  const st = $('.vstatus', root), html = vstatusHTML(p);
+  if (st) { if (html) st.outerHTML = html; else st.remove(); }
+  else if (html) { const tt0 = $('.vtotal', root); if (tt0) tt0.insertAdjacentHTML('beforebegin', html); }
   const tt = $('.vtotal', root); if (tt) tt.textContent = fmt(t) + (t === 1 ? ' verdict' : ' verdicts');
 }
 function patchPostUI(p){
@@ -1159,12 +1410,32 @@ function patchSaveUI(pid){
   const k = String(pid).replace(/"/g,''), on = S.saved.has(pid);
   $$('[data-action="save"][data-pid="' + k + '"]').forEach(b => { b.classList.toggle('is-saved', on); b.setAttribute('aria-pressed', String(on)); });
 }
+function patchFollowUI(pid){
+  const k = String(pid).replace(/"/g,''), on = S.follow.has(pid);
+  $$('[data-action="follow"][data-pid="' + k + '"]').forEach(b => {
+    b.classList.toggle('is-following', on); b.setAttribute('aria-pressed', String(on));
+    b.setAttribute('aria-label', on ? 'Following. Tap to unfollow' : 'Follow for updates');
+  });
+}
 function removePostLocal(id){
   POSTS.delete(id);
   const i = S.feed.ids.indexOf(id); if (i !== -1) { S.feed.ids.splice(i, 1); if (S.feed.rendered > i) S.feed.rendered--; }
   $$('[data-card="' + String(id).replace(/"/g,'') + '"]').forEach(e => { if (e.tagName === 'ARTICLE') e.remove(); });
   if (S.detail.id === id && page === 'detail') { toast('That confession was removed', 'info'); go('home'); }
   if (page === 'home' && !S.feed.ids.length) renderFeed();
+}
+/* countdown tick: refresh "closes in" labels and flip closed verdicts */
+function tickVerdicts(){
+  $$('.vstatus[data-closes]').forEach(el => {
+    const iso = el.dataset.closes, p = POSTS.get(el.dataset.pid);
+    const t = new Date(iso).getTime();
+    if (!isNaN(t) && t <= Date.now()) {
+      if (!p) return;
+      const root = el.closest('[data-card]');
+      if (root && $('.verdict-wrap', root)) patchPostUI(p); else el.outerHTML = vstatusHTML(p);
+      if (page === 'swipe') renderSwipe();
+    } else el.textContent = '⏳ ' + leftText(iso);
+  });
 }
 
 /* =====================================================================
@@ -1200,10 +1471,17 @@ async function showDetail(id, silent){
   if (!p) { w.innerHTML = '<button class="back-btn" data-action="back">' + ico('back') + ' Back</button><div class="empty"><div class="empty-ic">💔</div><p>This confession doesn\'t exist or was removed.</p><button class="btn btn-primary" data-page="home">Back to feed</button></div>'; return; }
   document.title = (p.title || 'Confession').slice(0, 70) + ' · HeartConfia';
   renderDetail(p);
+  renderUpdates();
   if (!COMMENTS[id]) COMMENTS[id] = [];
   subscribeComments(id);
   hydrateMine([id]).then(() => { if (token === S.detail.token) patchPostUI(p); });
-  loadComments(id).then(() => { if (token === S.detail.token) renderComments(); }).catch(e => { if (token === S.detail.token) { const l = $('#cmList'); if (l) l.innerHTML = '<div class="empty"><p>' + esc(errMsg(e, 'Could not load comments.')) + '</p><button class="btn btn-ghost btn-sm" data-action="retry-detail">Retry</button></div>'; } });
+  loadUpdates(id).then(() => { if (token === S.detail.token) renderUpdates(); }).catch(e => console.warn('updates', e));
+  loadLevels([p.user_id]).then(() => { if (token === S.detail.token) { const dn = $('#dtWrap .d-name'); if (dn) dn.innerHTML = esc(p.author || 'Anon') + lvlBadge(p.user_id); } });
+  loadComments(id).then(() => {
+    if (token !== S.detail.token) return;
+    renderComments();
+    loadLevels((COMMENTS[id] || []).map(c => c.user_id)).then(() => { if (token === S.detail.token) renderComments(); });
+  }).catch(e => { if (token === S.detail.token) { const l = $('#cmList'); if (l) l.innerHTML = '<div class="empty"><p>' + esc(errMsg(e, 'Could not load comments.')) + '</p><button class="btn btn-ghost btn-sm" data-action="retry-detail">Retry</button></div>'; } });
   if (!silent && !p._local && markViewedOnce(id)) { sb.rpc('increment_post_views', { p_post_id: id }).then(() => {}, () => {}); }
 }
 
@@ -1212,27 +1490,87 @@ function renderDetail(p){
   const author = p.author || 'Anon';
   const content = typeof p.content === 'string' ? p.content : '';
   const own = me && p.user_id === me.id;
+  const closed = verdictClosed(p);
   const body = p.sensitive
     ? '<div class="sensitive-wrap"><div class="sensitive-blur d-body" id="sensContent" aria-hidden="true">' + esc(content) + '</div><button class="sensitive-overlay" data-action="reveal"><span style="font-size:30px">⚠️</span>This story covers a sensitive topic.<br>Tap to reveal</button></div>'
     : '<div class="d-body">' + esc(content) + '</div>';
   const similar = Array.from(POSTS.values()).filter(x => x.id !== p.id && !x.sensitive && x.tags.some(t => p.tags.includes(t))).slice(0, 3);
-  const saved = S.saved.has(p.id);
+  const saved = S.saved.has(p.id), following = S.follow.has(p.id);
   w.innerHTML =
     '<button class="back-btn" data-action="back">' + ico('back') + ' Back</button>' +
     '<div data-card="' + esc(p.id) + '">' +
-      '<div class="d-author"><div class="d-ava" aria-hidden="true">' + esc(author.slice(0,2).toUpperCase()) + '</div><div class="d-info"><div class="d-name">' + esc(author) + '</div><div class="d-meta">' + esc(tAgo(p.created_at)) + ' · <span class="js-views">' + fmt(p.views) + '</span> views</div></div>' +
+      '<div class="d-author"><div class="d-ava" aria-hidden="true">' + esc(author.slice(0,2).toUpperCase()) + '</div><div class="d-info"><div class="d-name">' + esc(author) + lvlBadge(p.user_id) + '</div><div class="d-meta">' + esc(tAgo(p.created_at)) + ' · <span class="js-views">' + fmt(p.views) + '</span> views</div></div>' +
+      '<button class="foot-btn' + (following ? ' is-following' : '') + '" data-action="follow" data-pid="' + esc(p.id) + '" aria-pressed="' + following + '" aria-label="' + (following ? 'Following. Tap to unfollow' : 'Follow for updates') + '">' + ico('bell') + '</button>' +
       '<button class="foot-btn' + (saved ? ' is-saved' : '') + '" data-action="save" data-pid="' + esc(p.id) + '" aria-pressed="' + saved + '" aria-label="Save">' + ico('bookmark') + '</button>' +
       '<button class="foot-btn" data-action="share" data-pid="' + esc(p.id) + '" aria-label="Share link">' + ico('share') + '</button>' +
       '<button class="foot-btn" data-action="report-post" data-pid="' + esc(p.id) + '" aria-label="Report">' + ico('flag') + '</button></div>' +
       (p.tags.length ? '<div class="c-tags">' + p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
-      '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + rxRowHTML(p) +
-      '<div class="vpanel"><div class="vpanel-title">⚖️ Who is wrong here?' + (own ? ' <span class="vpanel-note">(you can\'t vote on your own post)</span>' : '') + '</div>' + verdictHTML(p) + '</div>' +
+      '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + '<div id="updBlock"></div>' + rxRowHTML(p) +
+      '<div class="vpanel"><div class="vpanel-title">⚖️ Who is wrong here?' + (own ? ' <span class="vpanel-note">(you can\'t vote on your own post)</span>' : (closed ? ' <span class="vpanel-note">(voting has closed)</span>' : '')) + '</div>' + verdictHTML(p) + '</div>' +
       '<div class="sec-line"><h2 class="sec-title">💬 <span class="js-cmt-total">' + fmt(p.cmt) + '</span> comments</h2><select class="sort-sel" id="sortSel" aria-label="Sort comments"><option value="recent">Recent</option><option value="heated">Most heated</option><option value="top">Top rated</option></select></div>' +
       '<div class="cm-box"><label class="sr" for="cmIn">Write a comment</label><textarea class="cm-ta" id="cmIn" placeholder="What\'s your verdict? Be honest, be kind…" maxlength="' + LIM.comment + '"></textarea><div class="cm-foot"><span class="cm-count" id="cmCount">0 / ' + LIM.comment + '</span><button class="btn btn-primary btn-sm" data-action="post-comment" data-pid="' + esc(p.id) + '">Post</button></div></div>' +
       '<div id="cmList">' + skeletonHTML(1) + '</div>' +
     '</div>' +
     (similar.length ? '<div style="margin-top:28px"><h2 class="sec-title" style="margin-bottom:12px">Similar confessions</h2>' + similar.map((s, i) => cardHTML(s, i)).join('') + '</div>' : '');
   const sel = $('#sortSel'); if (sel) sel.value = S.detail.sort;
+}
+
+/* author updates: "what happened next" */
+async function loadUpdates(pid){
+  const { data, error } = await sb.from('post_updates').select('*').eq('post_id', pid).order('created_at', { ascending: true }).limit(10);
+  if (error) throw error;
+  UPDATES[pid] = data || [];
+}
+function renderUpdates(){
+  const box = $('#updBlock'), pid = S.detail.id; if (!box || !pid) return;
+  const p = POSTS.get(pid); if (!p) return;
+  const list = UPDATES[pid] || [], own = me && p.user_id === me.id;
+  const openForm = !!($('#updForm') && !$('#updForm').classList.contains('hidden'));
+  const draft = ($('#updIn') || {}).value || '';
+  let h = '';
+  if (list.length) h += '<div class="upd-sec"><div class="upd-title">📖 What happened next</div>' + list.map(u => '<div class="upd-item"><div class="upd-time">' + esc(tAgo(u.created_at)) + '</div><div class="upd-text">' + esc(u.text) + '</div></div>').join('') + '</div>';
+  if (own && p.updates_count < LIM.updPerPost) {
+    h += '<button class="btn btn-ghost btn-sm" data-action="upd-toggle">＋ Share what happened next</button>' +
+      '<div class="upd-form' + (openForm ? '' : ' hidden') + '" id="updForm"><label class="sr" for="updIn">Update</label><textarea class="ta" id="updIn" maxlength="' + LIM.updMax + '" placeholder="Tell people what happened next. Followers will be notified.">' + esc(draft) + '</textarea><div class="cc" id="updCC">0 / ' + LIM.updMax + ' (min ' + LIM.updMin + ')</div><button class="btn btn-primary btn-sm" data-action="upd-post" data-pid="' + esc(p.id) + '">Post update</button></div>';
+  }
+  box.innerHTML = h;
+  const ta = $('#updIn'); if (ta) { resize(ta); const c = $('#updCC'); if (c) c.textContent = ta.value.length + ' / ' + LIM.updMax + (ta.value.trim().length < LIM.updMin ? ' (min ' + LIM.updMin + ')' : ''); }
+}
+async function postUpdate(pid){
+  if (!me) { showAuth('login'); return; }
+  const p = POSTS.get(pid), ta = $('#updIn'); if (!p || !ta) return;
+  const text = clean(ta.value);
+  if (text.length < LIM.updMin) { toast('Tell us a bit more. At least ' + LIM.updMin + ' characters.', 'err'); return; }
+  if (!checkContentRules(text, 'update')) return;
+  const btn = $('[data-action="upd-post"]'); setBusy(btn, true, 'Posting…');
+  try {
+    const { data, error } = await sb.rpc('add_post_update', { p_post_id: pid, p_text: text });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    (UPDATES[pid] = UPDATES[pid] || []).push(row || { text, created_at: new Date().toISOString() });
+    p.updates_count = num(p.updates_count) + 1;
+    ta.value = ''; const f = $('#updForm'); if (f) f.classList.add('hidden');
+    renderUpdates(); toast('Update posted. Followers will be notified.', 'ok');
+  } catch(e) { console.error(e); toast(errMsg(e, 'Could not post the update'), 'err'); setBusy(btn, false); }
+}
+
+async function toggleFollow(pid){
+  if (!me) { showAuth('signup'); return; }
+  const key = 'f' + pid; if (inflight.has(key)) return; inflight.add(key);
+  const was = S.follow.has(pid);
+  if (was) S.follow.delete(pid); else S.follow.add(pid);
+  patchFollowUI(pid);
+  try {
+    const { data, error } = await sb.rpc('toggle_follow', { p_post_id: pid });
+    if (error) throw error;
+    if (data === true) S.follow.add(pid); else if (data === false) S.follow.delete(pid);
+    patchFollowUI(pid);
+    if (data === true) { toast("You're following this story 🔔", 'ok'); if (pushSupported() && Notification.permission === 'default') renderPushBanner(); }
+    else toast('Unfollowed', 'info');
+  } catch(e) {
+    if (was) S.follow.add(pid); else S.follow.delete(pid);
+    patchFollowUI(pid); toast(errMsg(e, 'Could not update follow'), 'err');
+  } finally { inflight.delete(key); }
 }
 
 async function loadComments(pid){
@@ -1278,7 +1616,7 @@ function cmtHTML(c, isReply){
   const box = isReply ? '' : '<div class="rbox hidden" id="rb-' + id + '"><textarea class="rbox-ta" aria-label="Reply" placeholder="Reply to ' + esc(c.author || 'Anon') + '…" maxlength="' + LIM.comment + '"></textarea><div class="rbox-foot"><button class="btn btn-ghost btn-sm" data-action="reply-cancel" data-cid="' + id + '">Cancel</button><button class="btn btn-primary btn-sm" data-action="reply-post" data-cid="' + id + '">Reply</button></div></div>';
   const dis = pending ? ' disabled' : '';
   return '<div class="' + (isReply ? 'reply' : 'cm') + (pending ? ' pending' : '') + '" id="cmt-' + id + '"><div class="' + (isReply ? 'reply-bubble' : 'cm-bubble') + '">' +
-    '<div class="cm-head"><span class="cm-auth">' + esc(c.author || 'Anon') + (c.pin ? '<span class="pin">📌 Pinned</span>' : '') + '</span><span class="cm-time">' + esc(tAgo(c.time || c.created_at)) + '</span></div>' +
+    '<div class="cm-head"><span class="cm-auth">' + esc(c.author || 'Anon') + (isReply ? '' : lvlBadge(c.user_id)) + (c.pin ? '<span class="pin">📌 Pinned</span>' : '') + '</span><span class="cm-time">' + esc(tAgo(c.time || c.created_at)) + '</span></div>' +
     '<div class="cm-text">' + esc(c.text || '') + '</div>' +
     '<div class="cm-acts"><button class="cm-act up' + (mv === 'up' ? ' on' : '') + '" data-action="cmt-up" data-cid="' + id + '" aria-label="Upvote"' + dis + '>▲ ' + num(c.up) + '</button>' +
     '<button class="cm-act dn' + (mv === 'dn' ? ' on' : '') + '" data-action="cmt-dn" data-cid="' + id + '" aria-label="Downvote"' + dis + '>▼ ' + num(c.dn) + '</button>' +
@@ -1315,6 +1653,7 @@ async function postCmt(pid){
     saved.replies = parseReplies(saved.replies);
     const list = COMMENTS[pid] || [], i = list.findIndex(c => c.id === opt.id), dup = list.findIndex(c => c.id === saved.id);
     if (dup !== -1 && i !== -1) list.splice(i, 1); else if (i !== -1) list[i] = saved;
+    S.follow.add(pid); patchFollowUI(pid);
     if (S.detail.id === pid) renderComments();
     award('first_comment'); toast('Comment posted', 'ok');
   } catch(e) {
@@ -1391,20 +1730,27 @@ function spawnHeart(src){
    VERDICTS, REACTIONS, SAVES, SHARE, REPORT
    ===================================================================== */
 async function doVote(pid, type){
-  if (!me) { showAuth('signup'); return; }
-  const p = POSTS.get(pid); if (!p) return;
-  if (p.user_id === me.id) { toast("You can't give a verdict on your own confession 😅", 'warn'); return; }
-  const key = 'v' + pid; if (inflight.has(key)) return; inflight.add(key);
+  if (!me) { showAuth('signup'); return false; }
+  const p = POSTS.get(pid); if (!p) return false;
+  if (p.user_id === me.id) { toast("You can't give a verdict on your own confession 😅", 'warn'); return false; }
+  if (verdictClosed(p)) { toast('Voting has closed on this confession.', 'warn'); patchPostUI(p); return false; }
+  const key = 'v' + pid; if (inflight.has(key)) return false; inflight.add(key);
+  let ok = false;
   try {
     const { data, error } = await sb.rpc('toggle_post_vote', { p_post_id: pid, p_vote: type });
     if (error) throw error;
     if (data) {
       p.votes = safeVotes(data);
       if (MY.vote[pid] === type) delete MY.vote[pid]; else MY.vote[pid] = type;
-      patchPostUI(p); award('first_vote');
+      S.follow.add(pid); patchFollowUI(pid);
+      patchPostUI(p); award('first_vote'); ok = true;
     }
-  } catch(e) { toast(errMsg(e, 'Verdict failed'), 'err'); }
+  } catch(e) {
+    if (/closed/i.test(String((e && e.message) || ''))) { p.verdict_closed = true; patchPostUI(p); }
+    toast(errMsg(e, 'Verdict failed'), 'err');
+  }
   finally { inflight.delete(key); }
+  return ok;
 }
 async function doRx(pid, emoji){
   if (!me) { showAuth('signup'); return; }
@@ -1438,6 +1784,7 @@ async function toggleSave(pid){
     } else {
       const { error } = await sb.from('saves').insert({ user_id: me.id, post_id: pid });
       if (error && error.code !== '23505') throw error;
+      S.follow.add(pid); patchFollowUI(pid);
       toast('Saved 🔖', 'ok'); award('first_save');
     }
   } catch(e) {
@@ -1514,6 +1861,54 @@ function wrapText(ctx, text, maxW){
 function quoteBlob(){ return new Promise(res => $('#quoteCanvas').toBlob(res, 'image/png')); }
 
 /* =====================================================================
+   QUICK VERDICTS (swipe mode)
+   ===================================================================== */
+async function loadSwipe(force){
+  if (!me) { renderSwipe(); return; }
+  if (SW.loading) return;
+  if (!force && SW.queue.length && SW.i < SW.queue.length) { renderSwipe(); return; }
+  SW.loading = true; SW.err = null; SW.voted = null; renderSwipe();
+  try {
+    const { data, error } = await sb.rpc('get_swipe_queue', { p_limit: 20 });
+    if (error) throw error;
+    SW.queue = (data || []).map(upsertPost).filter(Boolean); SW.i = 0;
+  } catch(e) { console.error('swipe', e); SW.err = errMsg(e, 'Could not load stories.'); SW.queue = []; SW.i = 0; }
+  SW.loading = false; renderSwipe();
+}
+function swResultHTML(p){
+  const v = p.votes, t = v.he + v.she + v.both, my = MY.vote[p.id];
+  return '<div class="sw-res">' + ['he','she','both'].map(k => {
+    const pc = t ? Math.round(num(v[k]) / t * 100) : 0;
+    return '<div class="sw-bar sw-' + k + (my === k ? ' on' : '') + '"><i style="width:' + pc + '%"></i><span>' + esc(VL[k]) + (my === k ? ' · you' : '') + '</span><span>' + pc + '%</span></div>';
+  }).join('') + '<div class="vtotal">' + fmt(t) + (t === 1 ? ' verdict so far' : ' verdicts so far') + '</div></div>';
+}
+function renderSwipe(){
+  const w = $('#swWrap'); if (!w) return;
+  if (!me) { w.innerHTML = '<div class="empty"><div class="empty-ic">⚡</div><p>Join free to give quick verdicts on short stories.</p><button class="btn btn-primary" data-action="auth-signup">Create free account</button></div>'; return; }
+  if (SW.loading) { w.innerHTML = skeletonHTML(1); return; }
+  if (SW.err) { w.innerHTML = '<div class="empty"><div class="empty-ic">📡</div><p>' + esc(SW.err) + '</p><button class="btn btn-primary" data-action="sw-reload">Try again</button></div>'; return; }
+  const p = SW.queue[SW.i];
+  if (!p) { w.innerHTML = '<div class="empty"><div class="empty-ic">🎉</div><p>You\'re all caught up on quick verdicts.</p><button class="btn btn-primary" data-action="sw-reload">Look for more</button><div style="margin-top:12px"><button class="linkbtn" data-page="home">Back to the feed</button></div></div>'; return; }
+  const tags = p.tags.slice(0,4).map(t => '<span class="tag">' + esc(t) + '</span>').join('');
+  const voted = SW.voted;
+  w.innerHTML = '<div class="sw-prog"><span>' + (SW.i + 1) + ' of ' + SW.queue.length + '</span><span>' + esc(p.author || 'Anon') + ' · ' + esc(tAgo(p.created_at)) + '</span></div>' +
+    '<article class="sw-card" data-card="' + esc(p.id) + '"><h2 class="sw-title">' + esc(p.title || '') + '</h2><div class="sw-body">' + esc(p.content || '') + '</div>' + (tags ? '<div class="c-tags">' + tags + '</div>' : '') + vstatusHTML(p) +
+    (voted
+      ? '<div class="sw-q">Here\'s how people voted</div>' + swResultHTML(p) + '<button class="btn btn-primary btn-block" data-action="sw-next">Next story →</button>'
+      : '<div class="sw-q">Who is wrong here?</div><div class="sw-btns"><button class="sw-btn sw-he" data-action="sw-vote" data-v="he">' + esc(VL.he) + '</button><button class="sw-btn sw-both" data-action="sw-vote" data-v="both">' + esc(VL.both) + '</button><button class="sw-btn sw-she" data-action="sw-vote" data-v="she">' + esc(VL.she) + '</button></div>' +
+        '<div class="sw-links"><button class="linkbtn" data-action="sw-skip">Skip</button><button class="linkbtn" data-action="open" data-pid="' + esc(p.id) + '">Open full story</button></div><p class="sw-hint">Swipe left to skip</p>') +
+    '</article>';
+}
+async function swipeVote(v){
+  const p = SW.queue[SW.i]; if (!p || SW.voted) return;
+  const ok = await doVote(p.id, v);
+  if (ok) { SW.voted = v; renderSwipe(); }
+  else if (verdictClosed(p)) { SW.i++; SW.voted = null; renderSwipe(); }
+}
+function swipeNext(){ SW.i++; SW.voted = null; renderSwipe(); window.scrollTo(0, 0); }
+function swipeSkip(){ if (SW.voted) return; SW.i++; renderSwipe(); window.scrollTo(0, 0); }
+
+/* =====================================================================
    CREATE POST
    ===================================================================== */
 function draftKey(){ return 'hc_draft_v3_' + (me ? me.id : 'guest'); }
@@ -1546,6 +1941,7 @@ function renderConfess(){
     '<label class="sr" for="pbody">Your story</label><textarea class="ta" id="pbody" placeholder="Tell your story. Be specific, the details are what make people feel it…" maxlength="' + LIM.storyMax + '"></textarea><div class="cc" id="bodyCC">0 / ' + LIM.storyMax + ' (min ' + LIM.story + ')</div>' +
     '<label class="sr" for="ptags">Tags</label><input type="text" class="tags-i" id="ptags" placeholder="Tags: cheating, breakup, trust" autocomplete="off"/><div class="hint">Use 2 to 5 tags, separated by commas.</div>' +
     '<p class="note">Don\'t include real names, phone numbers, emails or where anyone lives or works.</p>' +
+    '<p class="note">⏳ People get 24 hours to give their verdict. Everyone who votes is told the result, and you can share what happened next.</p>' +
     '<button class="btn btn-primary btn-block" data-action="submit-post" id="btnSubmitPost">🖤 Post anonymously</button>' +
     '<p class="draft-note" id="draftNote">You\'ll appear as <strong style="color:var(--t2)">' + esc(me.username) + '</strong>. Your email stays private.</p></div>';
   restoreDraft();
@@ -1566,7 +1962,7 @@ async function submitPost(force){
     const { data, error } = await sb.rpc('create_post', { p_type: type, p_title: title, p_content: body, p_tags: tags });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
-    if (row) upsertPost(row);
+    if (row) { upsertPost(row); S.follow.add(row.id); }
     S.lastPostAt = Date.now(); ls.remove(draftKey());
     toast('Story posted anonymously 💔', 'ok'); award('first_post');
     S.filter = 'all'; renderFilters(); go('home'); loadFeed(true);
@@ -1616,7 +2012,7 @@ function updateNotifBadge(){
 function renderNotifs(){
   const w = $('#nfWrap'); if (!w) return;
   if (!me) { w.innerHTML = '<div class="empty"><div class="empty-ic">🔔</div><p>Log in to see your alerts.</p><button class="btn btn-primary btn-sm" data-action="auth-login">Log in</button></div>'; return; }
-  if (!NOTIFS.length) { w.innerHTML = '<div class="empty"><div class="empty-ic">🔔</div><p>Nothing yet. Replies to your stories will show up here.</p></div>'; return; }
+  if (!NOTIFS.length) { w.innerHTML = '<div class="empty"><div class="empty-ic">🔔</div><p>Nothing yet. Replies, closed verdicts and story updates will show up here.</p></div>'; return; }
   w.innerHTML = NOTIFS.map(n => '<button class="nf-item' + (n.read ? '' : ' unread') + '" data-action="open-notif" data-link="' + esc(n.link || '') + '"><span class="nf-icon">' + esc(n.icon || '💬') + '</span><span style="flex:1"><span class="nf-text" style="display:block">' + esc(n.text || '') + '</span><span class="nf-time" style="display:block">' + esc(tAgo(n.created_at || n.time)) + '</span></span></button>').join('');
 }
 async function markNotifsRead(){
@@ -1629,6 +2025,23 @@ async function markNotifsRead(){
 /* =====================================================================
    PROFILE
    ===================================================================== */
+function repCardHTML(s){
+  if (!s) return '';
+  const next = s.next_level_at ? num(s.next_level_at) : 0, rep = num(s.rep);
+  return '<div class="repcard"><div class="rep-top"><span class="rep-level">' + esc(s.level || 'Newcomer') + '</span><span class="rep-pts">' + fmt(rep) + ' rep</span></div>' +
+    (next ? '<div class="nb-bar"><div class="nb-fill" style="width:' + Math.min(100, Math.round(rep / next * 100)) + '%"></div></div><div class="rep-note">' + Math.max(0, next - rep) + ' rep to the next level</div>' : '<div class="rep-note">You\'ve reached the top level 👑</div>') +
+    (s.match_pct != null ? '<div class="rep-match">⚖️ You matched the crowd <strong>' + num(s.match_pct) + '%</strong> of the time <span>(' + num(s.verdicts_matched) + ' of ' + num(s.verdicts_settled) + ' settled verdicts)</span></div>' : '<div class="rep-match">⚖️ Give verdicts and see how often you match the crowd once debates close.</div>') + '</div>';
+}
+async function loadRepCard(){
+  try {
+    const { data, error } = await sb.rpc('get_my_stats');
+    if (error) throw error;
+    if (page !== 'profile' || !data) return;
+    const box = $('#pfRep'); if (box) box.innerHTML = repCardHTML(data);
+    if (typeof data.streak === 'number' && data.streak >= streak) { streak = data.streak; saveUserData(); }
+    LV[me.id] = { rep: num(data.rep), level: data.level };
+  } catch(e) { console.warn('stats', e); }
+}
 async function renderProfile(){
   const w = $('#pfWrap'); if (!w) return;
   if (!me) { w.innerHTML = '<div class="empty" style="padding-top:80px"><div class="empty-ic">👤</div><p>Create an account to build your anonymous identity.</p><button class="btn btn-primary" data-action="auth-signup">Join HeartConfia</button></div>'; return; }
@@ -1636,10 +2049,13 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
+    '<div id="pfRep"></div>' +
+    '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
     '<h2 class="sec-title" style="margin-bottom:12px">Your confessions</h2><div id="myPosts">' + skeletonHTML(1) + '</div>' +
     '<div style="text-align:center;padding:24px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ghost" data-action="go-resources">🫂 Support</button><button class="btn btn-ghost" data-action="logout">Sign out</button></div>';
   w.innerHTML = shell;
+  renderPrefs(); loadRepCard(); fetchPrefs().then(() => { if (page === 'profile') renderPrefs(); });
   try {
     const { data, error } = await sb.from('posts').select('*').eq('user_id', me.id).eq('hidden', false).order('created_at', { ascending: false }).limit(20);
     if (error) throw error;
@@ -1703,7 +2119,7 @@ function showCrisis(onContinue){
 /* =====================================================================
    HOME EXTRAS
    ===================================================================== */
-function renderHomeExtras(){ renderStreak(); renderPrompt(); renderNextBadge(); renderAffiliate(); updateNewPill(); }
+function renderHomeExtras(){ renderStreak(); renderPushBanner(); renderPrompt(); renderNextBadge(); renderAffiliate(); updateNewPill(); }
 function renderStreak(){
   const b = $('#streakBar'); if (!b) return;
   b.innerHTML = me && streak >= 2 ? '<div class="streak">🔥 ' + streak + ' day streak</div>' : '';
@@ -1740,7 +2156,7 @@ function renderOnb(){
   const steps = [
     { e:'💔', t:'Welcome to HeartConfia', d:'A place to share, judge and heal. Everything here is anonymous.', b:'Next' },
     { e:'✨', t:'Pick your stories', d:'Choose what you like and we\'ll tune your "For you" feed.', b:'Next', tags:true },
-    { e:'🤝', t:'You\'re not alone', d:'Be kind. Vote honestly. Support each other. Never share real names or personal details.', b:'Start exploring' }
+    { e:'🤝', t:'You\'re not alone', d:'Be kind. Vote honestly. Every debate closes after 24 hours, and you\'ll be told how it ended. Never share real names or personal details.', b:'Start exploring' }
   ];
   const s = steps[onbStep];
   $('#onbBody').innerHTML = '<div class="onb-emoji">' + s.e + '</div><h2 class="onb-title">' + esc(s.t) + '</h2><p class="onb-desc">' + esc(s.d) + '</p>' +
@@ -1766,6 +2182,7 @@ function queuePatch(row){
       if (row.hidden) { removePostLocal(id); return; }
       if (!POSTS.has(id)) return;
       patchPostUI(upsertPost(row));
+      if (page === 'swipe') renderSwipe();
     });
   }, 500);
 }
@@ -1790,6 +2207,7 @@ function subscribeComments(pid){
         if (nc.hidden || list.some(c => c.id === nc.id)) return;
         const ti = me ? list.findIndex(c => c._pending && c.text === nc.text && c.user_id === me.id) : -1;
         if (ti !== -1) list[ti] = nc; else list.unshift(nc);
+        loadLevels([nc.user_id]).then(() => { if (S.detail.id === pid) renderComments(); });
       } else if (pl.eventType === 'UPDATE' && pl.new) {
         const u = pl.new; u.replies = parseReplies(u.replies);
         const i = list.findIndex(c => c.id === u.id);
@@ -1809,7 +2227,7 @@ function subscribeUserChannel(){
       const n = pl.new; if (!n) return;
       NOTIFS.unshift(n); unread++; updateNotifBadge(); updateNav();
       if (page === 'notifications') { renderNotifs(); markNotifsRead(); }
-      else { const el = document.createElement('div'); el.className = 'reply-toast'; el.textContent = '💬 ' + (n.text || 'New notification'); document.body.appendChild(el); setTimeout(() => el.remove(), 4600); }
+      else { const el = document.createElement('div'); el.className = 'reply-toast'; el.textContent = (n.icon || '💬') + ' ' + (n.text || 'New notification'); document.body.appendChild(el); setTimeout(() => el.remove(), 4600); }
     }).subscribe();
 }
 function setupPresence(){
@@ -1840,6 +2258,7 @@ function bindEvents(){
       case 'vote': doVote(pid, el.dataset.v); break;
       case 'react': doRx(pid, el.dataset.e); break;
       case 'save': toggleSave(pid); break;
+      case 'follow': toggleFollow(pid); break;
       case 'quote': showQuoteCard(pid); break;
       case 'share': sharePost(pid); break;
       case 'report-post': showReport(pid, 'post'); break;
@@ -1851,7 +2270,7 @@ function bindEvents(){
         break;
       case 'filter': {
         const f = el.dataset.f;
-        if ((f === 'saved' || f === 'foryou') && !me) { showAuth('signup'); break; }
+        if ((f === 'saved' || f === 'foryou' || f === 'following') && !me) { showAuth('signup'); break; }
         if (f === S.filter) break;
         S.filter = f; renderFilters(); loadFeed(true); break;
       }
@@ -1868,6 +2287,8 @@ function bindEvents(){
       case 'cmt-up': voteCmt(cid, 'up'); break;
       case 'cmt-dn': voteCmt(cid, 'dn'); break;
       case 'cmt-heart': heartComment(cid, el); break;
+      case 'upd-toggle': { const f = $('#updForm'); if (f) { f.classList.toggle('hidden'); if (!f.classList.contains('hidden')) { const t = $('#updIn'); if (t) t.focus(); } } break; }
+      case 'upd-post': postUpdate(pid); break;
       case 'reveal': { const c = $('#sensContent'); if (c) { c.classList.add('revealed'); c.removeAttribute('aria-hidden'); } el.remove(); break; }
       case 'auth-login': showAuth('login'); break;
       case 'auth-signup': showAuth('signup'); break;
@@ -1881,12 +2302,20 @@ function bindEvents(){
       case 'crisis-edit': crisisCb = null; closeOv('ovCrisis'); break;
       case 'crisis-continue': { const cb = crisisCb; crisisCb = null; closeOv('ovCrisis'); if (cb) cb(); break; }
       case 'pref-topic': { const t = el.dataset.tag; prefs.topics = prefs.topics.includes(t) ? prefs.topics.filter(x => x !== t) : prefs.topics.concat(t); saveUserData(); el.classList.toggle('on', prefs.topics.includes(t)); el.setAttribute('aria-pressed', String(prefs.topics.includes(t))); break; }
+      case 'pref-toggle': togglePref(el.dataset.key); break;
+      case 'enable-push': enablePush(); break;
+      case 'dismiss-push': ls.set('hc_push_dismiss_until', String(Date.now() + 7 * 86400000)); renderPushBanner(); break;
       case 'onb-tag': { const t = el.dataset.tag; prefs.topics = prefs.topics.includes(t) ? prefs.topics.filter(x => x !== t) : prefs.topics.concat(t); el.classList.toggle('on', prefs.topics.includes(t)); el.setAttribute('aria-pressed', String(prefs.topics.includes(t))); break; }
       case 'onb-next': if (onbStep < (window.__onbSteps || 3) - 1) { onbStep++; renderOnb(); } else finishOnb(); break;
       case 'onb-skip': finishOnb(); break;
       case 'delete-post': deletePost(pid); break;
       case 'logout': doLogout(); break;
       case 'go-resources': go('resources'); break;
+      case 'go-swipe': if (!me) showAuth('signup'); else go('swipe'); break;
+      case 'sw-vote': swipeVote(el.dataset.v); break;
+      case 'sw-next': swipeNext(); break;
+      case 'sw-skip': swipeSkip(); break;
+      case 'sw-reload': loadSwipe(true); break;
       case 'answer-prompt': { const prompt = DAILY_PROMPTS[dayOfYear() % DAILY_PROMPTS.length]; go('confess'); setTimeout(() => { const t = $('#ptitle'), b = $('#pbody'); if (t && !t.value) { t.value = prompt.slice(0, LIM.title); updateCounters(); } if (b) b.focus(); }, 120); break; }
       case 'dismiss-prompt': ls.set('hc_prompt_dismissed_' + new Date().toDateString(), '1'); renderPrompt(); break;
       case 'dismiss-aff': ls.set('hc_aff_until', String(Date.now() + 7 * 86400000)); renderAffiliate(); break;
@@ -1906,6 +2335,7 @@ function bindEvents(){
     if (t.id === 'ptitle' || t.id === 'pbody') { if (t.id === 'pbody') resize(t); updateCounters(); scheduleDraft(); }
     else if (t.id === 'ptags') scheduleDraft();
     else if (t.id === 'cmIn') { resize(t); const c = $('#cmCount'); if (c) c.textContent = t.value.length + ' / ' + LIM.comment; }
+    else if (t.id === 'updIn') { resize(t); const c = $('#updCC'); if (c) c.textContent = t.value.length + ' / ' + LIM.updMax + (t.value.trim().length < LIM.updMin ? ' (min ' + LIM.updMin + ')' : ''); }
     else if (t.classList && t.classList.contains('rbox-ta')) resize(t);
   });
   document.addEventListener('change', e => { if (e.target.id === 'sortSel') { S.detail.sort = e.target.value; renderComments(); } });
@@ -1925,16 +2355,26 @@ function bindEvents(){
   ['ovAuth','ovPw','ovRpt','ovCrisis'].forEach(id => { const el = document.getElementById(id); el.addEventListener('mousedown', ev => { if (ev.target === el) closeOv(id); }); });
   window.addEventListener('hashchange', handleHash);
   window.addEventListener('pagehide', saveDraft);
-  document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraft(); });
+  document.addEventListener('visibilitychange', () => { if (document.hidden) saveDraft(); else { syncSeen(); tickVerdicts(); } });
   window.addEventListener('offline', () => $('#offlineBar').classList.remove('hidden'));
   window.addEventListener('online', () => { $('#offlineBar').classList.add('hidden'); if (S.feed.error || !S.feed.ids.length) loadFeed(true); });
   if (!navigator.onLine) $('#offlineBar').classList.remove('hidden');
+  setInterval(tickVerdicts, 30000);
 
   // pull to refresh (home only, never while an overlay is open)
   let y0 = 0, pulling = false, lastPull = 0;
   document.addEventListener('touchstart', e => { pulling = page === 'home' && window.scrollY < 4 && !topOverlay() && !e.target.closest('.ftabs,.rxrow,textarea'); if (pulling) y0 = e.touches[0].clientY; }, { passive: true });
   document.addEventListener('touchmove', e => { if (!pulling) return; if (e.touches[0].clientY - y0 > 110) { pulling = false; if (Date.now() - lastPull > 8000) { lastPull = Date.now(); loadFeed(true).then(() => toast('Feed refreshed', 'info')); } } }, { passive: true });
   document.addEventListener('touchend', () => { pulling = false; }, { passive: true });
+
+  // quick verdicts: swipe left to skip
+  let sx = 0, sy = 0, swEl = null;
+  document.addEventListener('touchstart', e => { swEl = page === 'swipe' ? e.target.closest('.sw-card') : null; if (swEl) { sx = e.touches[0].clientX; sy = e.touches[0].clientY; } }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if (!swEl) return;
+    const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; swEl = null;
+    if (dx < -90 && Math.abs(dy) < 60 && !SW.voted) swipeSkip();
+  }, { passive: true });
 }
 
 /* =====================================================================
