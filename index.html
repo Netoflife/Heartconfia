@@ -561,7 +561,7 @@ const CFG = {
   TERMS_URL: '',
   PRIVACY_URL: '',
   // Web Push public key (VAPID). Leave empty to hide push prompts until the push backend is ready.
-  VAPID_PUBLIC_KEY:'BHecPsrWEPzk7ackEnQmXCX8IFktJu8jw3tjOqpA-dpYgyYZ6KCqd7S_Gw3n-nyigHwTvluoXbTlPAvBZJZnSas'
+  VAPID_PUBLIC_KEY: ''
 };
 const LIM = { comment: 1000, title: 120, titleMin: 10, story: 50, storyMax: 10000, page: 10, tags: 5, tagLen: 24, postCooldown: 30000, commentCooldown: 4000, updMin: 20, updMax: 3000, updPerPost: 5 };
 const EMOJIS = ['❤️','💔','😭','😡','😳','😂','🔥'];
@@ -2380,6 +2380,19 @@ function bindEvents(){
 /* =====================================================================
    INIT
    ===================================================================== */
+/* One-click email unsubscribe: /?unsubscribe=<token> */
+async function handleUnsubscribeLink(){
+  let tok = null;
+  try { tok = new URLSearchParams(location.search).get('unsubscribe'); } catch(e){}
+  if (!tok || !/^[0-9a-fA-F-]{36}$/.test(tok)) return;
+  try {
+    const { data, error } = await sb.rpc('unsubscribe_email', { p_token: tok });
+    if (error) throw error;
+    toast(data ? "You're unsubscribed from HeartConfia emails." : 'That unsubscribe link is no longer valid.', data ? 'ok' : 'warn');
+  } catch(e) { toast(errMsg(e, 'Could not unsubscribe. Try again.'), 'err'); }
+  try { history.replaceState(null, '', location.pathname + location.hash); } catch(e){}
+}
+
 async function init(){
   bindEvents(); renderFilters(); updateNav(); renderFeed();
   if (!window.supabase) {
@@ -2394,6 +2407,7 @@ async function init(){
     if (data && data.session && data.session.user) await establishSession(data.session.user);
   } catch(e) { console.error('Session error:', e); }
   setupRealtime(); setupPresence();
+  handleUnsubscribeLink();
   await loadFeed(true);
   if (/^#post-/.test(location.hash)) handleHash();
 }
