@@ -368,6 +368,10 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .badge-th{color:#b99bff;border-color:rgba(160,123,255,.4);background:rgba(160,123,255,.1)}
 .remind-box{margin:12px 0;padding:12px 14px;border:1px dashed var(--bd,rgba(255,255,255,.18));border-radius:var(--r);font-size:13px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 .adm-chip{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:100px;border:1px solid rgba(160,123,255,.4);color:#b99bff;font-size:12px;font-weight:700;text-decoration:none}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff!important;color:#1f1f1f!important;border:1px solid #dadce0!important;font-weight:700}
+.gbtn:hover{background:#f6f6f6!important}
+.or{display:flex;align-items:center;gap:10px;color:var(--t3);font-size:12px;margin:14px 0}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
 .banner-prompt{background:linear-gradient(130deg,rgba(242,72,111,.14),rgba(160,123,255,.08));border:1px solid rgba(242,72,111,.28)}
 .banner h3{font-size:15px;margin-bottom:4px}
 .banner p{font-size:14px;color:var(--t2);margin-bottom:12px;line-height:1.5}
@@ -593,6 +597,7 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 /* =====================================================================
    CONFIG
    ===================================================================== */
+const BOOT_HASH = location.hash || '';
 const CFG = {
   SUPABASE_URL: 'https://rihritdkzvmqoeckleud.supabase.co',
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaHJpdGRrenZtcW9lY2tsZXVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NjE5MzYsImV4cCI6MjA5MzMzNzkzNn0.gWTE4vyCid3vE6-pxAf_ccRB7o5Gec8vd5nHJrTDe1M',
@@ -1048,9 +1053,14 @@ function handleHash(){
 /* =====================================================================
    AUTH / SESSION
    ===================================================================== */
+function finishLinkLogin(){
+  if (!S.linkLogin || !me) return;
+  S.linkLogin = false;
+  afterAuthSuccess('Welcome to HeartConfia 💔');
+}
 function onAuthEvent(event, session){
   if (event === 'SIGNED_IN' && session && session.user) {
-    establishSession(session.user);
+    establishSession(session.user).then(u => { if (u) finishLinkLogin(); });
   } else if (event === 'SIGNED_OUT') {
     resetSession();
   } else if (event === 'PASSWORD_RECOVERY') {
@@ -1123,9 +1133,12 @@ function showAuth(mode){
   const terms = CFG.TERMS_URL ? '<a class="linkbtn" href="' + esc(CFG.TERMS_URL) + '" target="_blank" rel="noopener">Terms</a>' : 'Terms';
   const priv = CFG.PRIVACY_URL ? '<a class="linkbtn" href="' + esc(CFG.PRIVACY_URL) + '" target="_blank" rel="noopener">Privacy Policy</a>' : 'Privacy Policy';
   const pw = (id, ac, ph) => '<div class="pwwrap"><input type="password" class="finput" id="' + id + '" placeholder="' + ph + '" autocomplete="' + ac + '"/><button type="button" class="pwtoggle" data-action="toggle-pw" data-target="' + id + '" aria-label="Show password">Show</button></div>';
+  const gIcon = '<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.9-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
+  const googleBlock = (note) => '<button type="button" class="btn btn-ghost btn-block gbtn" data-action="google-auth">' + gIcon + '<span>Continue with Google</span></button>' + (note ? '<p class="note" style="text-align:center;margin:8px 0 0">' + note + '</p>' : '') + '<div class="or"><span>or use your email</span></div>';
+  const emailField = '<div class="fgrp"><label class="flabel" for="ae">Email</label><input type="email" class="finput" id="ae" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off"/></div>';
   if (mode === 'signup') {
     head.innerHTML = '<div class="m-icon">💔</div><h2 class="m-title" id="authTitle">Join HeartConfia</h2><p class="m-sub">Anonymous. Free. No judgment.</p>';
-    body.innerHTML = '<form data-form="signup" novalidate>' +
+    body.innerHTML = googleBlock('By continuing you confirm you are 18+ and accept the ' + terms + ' and ' + priv + '.') + '<form data-form="signup" novalidate>' +
       '<div class="fgrp"><label class="flabel" for="ae">Email</label><input type="email" class="finput" id="ae" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off"/></div>' +
       '<div class="fgrp"><label class="flabel" for="ap">Password</label>' + pw('ap','new-password','At least 8 characters') + '</div>' +
       '<p class="note">Your email is never shown. You\'ll appear under a random name like <strong style="color:var(--t2)">Quiet_48213</strong>.</p>' +
@@ -1137,11 +1150,11 @@ function showAuth(mode){
     body.innerHTML = '<form data-form="forgot" novalidate><div class="fgrp"><label class="flabel" for="ae">Email</label><input type="email" class="finput" id="ae" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off"/></div><button class="btn btn-primary btn-block" type="submit">Send reset link</button></form><div class="m-foot"><button class="linkbtn" data-action="auth-login">Back to log in</button></div>';
   } else if (mode === 'recovery') {
     head.innerHTML = '<div class="m-icon">🔐</div><h2 class="m-title" id="authTitle">Choose a new password</h2><p class="m-sub">Make it at least 8 characters.</p>';
-    body.innerHTML = '<form data-form="recovery" novalidate><div class="fgrp"><label class="flabel" for="ap">New password</label>' + pw('ap','new-password','New password') + '</div><button class="btn btn-primary btn-block" type="submit">Update password</button></form>';
+    body.innerHTML = '<form data-form="recovery" novalidate><div class="fgrp"><label class="flabel" for="ap">New password</label>' + pw('ap','new-password','New password') + '</div><div class="fgrp"><label class="flabel" for="ap2">Confirm new password</label>' + pw('ap2','new-password','Type it again') + '</div><button class="btn btn-primary btn-block" type="submit">Update password</button></form>';
   } else {
     S.authMode = 'login';
     head.innerHTML = '<div class="m-icon">🔐</div><h2 class="m-title" id="authTitle">Welcome back</h2><p class="m-sub">Pick up where you left off.</p>';
-    body.innerHTML = '<form data-form="login" novalidate>' +
+    body.innerHTML = googleBlock('') + '<form data-form="login" novalidate>' +
       '<div class="fgrp"><label class="flabel" for="ae">Email</label><input type="email" class="finput" id="ae" placeholder="you@email.com" autocomplete="email" inputmode="email" autocapitalize="off"/></div>' +
       '<div class="fgrp"><label class="flabel" for="ap">Password</label>' + pw('ap','current-password','Your password') + '</div>' +
       '<div style="text-align:right;margin:-4px 0 14px"><button type="button" class="linkbtn" style="font-size:13px" data-action="auth-forgot">Forgot password?</button></div>' +
@@ -1176,7 +1189,7 @@ async function doSignup(form){
   if (!sb) { toast('Still connecting. Try again in a moment.', 'err'); return; }
   const btn = $('button[type=submit]', form); authBusy = true; setBusy(btn, true, 'Creating account…');
   try {
-    const { data, error } = await sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: location.origin + location.pathname } });
+    const { data, error } = await sb.auth.signUp({ email, password: pass, options: { emailRedirectTo: location.origin + '/' } });
     if (error) { toast(/already registered/i.test(error.message) ? 'That email is already registered. Try logging in.' : errMsg(error, 'Signup failed'), 'err'); return; }
     if (!data || !data.user) { toast('Signup failed. Please try again.', 'err'); return; }
     if (Array.isArray(data.user.identities) && data.user.identities.length === 0) { toast('That email is already registered. Try logging in.', 'err'); return; }
@@ -1211,24 +1224,46 @@ async function doForgot(form){
   if (authBusy) return;
   const email = clean($('#ae', form).value).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Enter a valid email address', 'err'); return; }
+  if (!sb) { toast('Still connecting. Try again in a moment.', 'err'); return; }
   const btn = $('button[type=submit]', form); authBusy = true; setBusy(btn, true, 'Sending…');
   try {
-    await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-    toast('If that email has an account, a reset link is on its way.', 'ok'); closeOv('ovAuth');
-  } catch(e) { toast(errMsg(e, 'Could not send the email'), 'err'); }
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/' });
+    if (error) throw error;
+    closeOv('ovAuth'); toast('If that email has an account, a reset link is on its way. Check spam too.', 'ok');
+  } catch(e) {
+    console.error('Reset error:', e);
+    toast(/rate|seconds|too many/i.test(String(e && e.message)) ? 'Too many requests. Please wait a few minutes and try again.' : errMsg(e, 'Could not send the email. Please try again.'), 'err');
+  }
   finally { authBusy = false; setBusy(btn, false); }
 }
 async function doRecovery(form){
   if (authBusy) return;
-  const pass = $('#ap', form).value || '';
+  const pass = $('#ap', form).value || '', pass2 = $('#ap2', form).value || '';
   if (pass.length < 8) { toast('Password needs at least 8 characters', 'err'); return; }
+  if (pass !== pass2) { toast('The two passwords do not match', 'err'); return; }
   const btn = $('button[type=submit]', form); authBusy = true; setBusy(btn, true, 'Saving…');
   try {
     const { error } = await sb.auth.updateUser({ password: pass });
     if (error) throw error;
-    closeOv('ovAuth'); toast('Password updated 🔐', 'ok');
-  } catch(e) { toast(errMsg(e, 'Could not update password'), 'err'); }
+    S.recovery = false;
+    closeOv('ovAuth'); toast('Password updated 🔐 You are logged in.', 'ok');
+    try { history.replaceState(null, '', location.pathname); } catch(e){}
+    if (me) rerenderCurrent();
+  } catch(e) { toast(errMsg(e, 'Could not update password. Ask for a new link and try again.'), 'err'); }
   finally { authBusy = false; setBusy(btn, false); }
+}
+async function doGoogle(btn){
+  if (authBusy) return;
+  if (!sb) { toast('Still connecting. Try again in a moment.', 'err'); return; }
+  authBusy = true; if (btn) btn.disabled = true;
+  try {
+    const { error } = await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + '/', queryParams: { prompt: 'select_account' } } });
+    if (error) throw error;   // on success the browser leaves for Google and comes back signed in
+  } catch(e) {
+    console.error('Google sign-in error:', e);
+    toast(/not enabled|unsupported provider/i.test(String(e && e.message)) ? 'Google sign-in is not switched on yet.' : errMsg(e, 'Could not start Google sign-in. Please try again.'), 'err');
+    authBusy = false; if (btn) btn.disabled = false;
+  }
 }
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
@@ -2423,6 +2458,7 @@ function bindEvents(){
       case 'auth-login': showAuth('login'); break;
       case 'auth-signup': showAuth('signup'); break;
       case 'auth-forgot': showAuth('forgot'); break;
+      case 'google-auth': doGoogle(el); break;
       case 'toggle-pw': { const i = document.getElementById(el.dataset.target); if (i) { const show = i.type === 'password'; i.type = show ? 'text' : 'password'; el.textContent = show ? 'Hide' : 'Show'; el.setAttribute('aria-label', show ? 'Hide password' : 'Show password'); } break; }
       case 'pw-signup': closeOv('ovPw'); showAuth('signup'); break;
       case 'pw-login': closeOv('ovPw'); showAuth('login'); break;
@@ -2536,11 +2572,27 @@ async function init(){
   sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   // Never await Supabase calls directly inside this callback (can deadlock the auth lock)
   sb.auth.onAuthStateChange((event, session) => { setTimeout(() => onAuthEvent(event, session), 0); });
+  const isRecovery = /type=recovery/.test(BOOT_HASH);
+  if (/access_token=/.test(BOOT_HASH) && !isRecovery) S.linkLogin = true;
   try {
     const { data } = await sb.auth.getSession();
     if (data && data.session && data.session.user) await establishSession(data.session.user);
   } catch(e) { console.error('Session error:', e); }
+  if (isRecovery) { S.recovery = true; if (me) showAuth('recovery'); else setTimeout(() => { if (S.recovery) showAuth('recovery'); }, 1500); }
+  else finishLinkLogin();
+  if (/error_code|error_description/.test(BOOT_HASH)) {
+    let msg = 'That link has expired or was already used. Please ask for a new one.';
+    try { const d = new URLSearchParams(BOOT_HASH.replace(/^#/, '')).get('error_description'); if (d && !/expired|invalid/i.test(d)) msg = d; } catch(e){}
+    toast(msg, 'err'); setTimeout(() => showAuth(/recover/i.test(BOOT_HASH) ? 'forgot' : 'login'), 400);
+    try { history.replaceState(null, '', location.pathname); } catch(e){}
+  }
+  if ('serviceWorker' in navigator) navigator.serviceWorker.addEventListener('message', ev => {
+    const d = ev.data; if (!d || d.type !== 'open') return;
+    const m = String(d.url || '').match(/#post-([A-Za-z0-9-]{8,64})/);
+    if (m) openPost(m[1]); else go('home');
+  });
   setupRealtime(); setupPresence(); loadExtras(true);
+
   handleUnsubscribeLink();
   await loadFeed(true);
   if (/^#post-/.test(location.hash)) handleHash();
