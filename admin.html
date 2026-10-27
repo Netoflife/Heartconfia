@@ -389,15 +389,21 @@ async function viewSettings(v){
     sw('comments_enabled', 'New comments and replies', 'Turn off to pause commenting.') +
     '<label>Verdict window (hours, applies to NEW stories)</label><input id="vh" type="number" min="1" max="168" value="' + esc(S.verdict_hours || 24) + '"/>' +
     '<label>Notice shown at the top of the home page (leave empty for none)</label><input id="mn" maxlength="200" value="' + esc(S.maintenance_note || '') + '"/>' +
-    '<button class="b p" id="ssave" style="margin-top:12px">Save</button></div>';
+    '<label>Welcome comment the HeartConfia_Team account leaves on a new person\'s first story (leave empty to turn it off)</label><textarea id="wc" maxlength="500">' + esc(S.welcome_comment || '') + '</textarea>' +
+    '<button class="b p" id="ssave" style="margin-top:12px">Save</button></div>' +
+    '<h3>Starter stories</h3><div class="card"><p class="hint">The team-written starter stories keep the feed from looking empty. When you have enough real stories, remove them here. Real stories and comments are never touched.</p><button class="b d" id="rmseed">Remove all starter stories</button></div>';
   async function put(key, value){ return tbl(sb.from('site_settings').upsert({ key: key, value: value, updated_at: new Date().toISOString() })); }
   on(v, '[data-k]', function(b){
     var k = b.dataset.k, nv = S[k] === false;
     act(function(){ return put(k, nv); }, nv ? 'Turned on' : 'Paused').then(render);
   });
+  $('#rmseed').onclick = async function(){
+    if (!confirm('Remove all starter stories and starter accounts? This cannot be undone.')) return;
+    var n = await act(function(){ return rpc('admin_remove_seed'); }); if (n !== undefined) toast('Removed ' + n + ' starter stories', 'ok');
+  };
   $('#ssave').onclick = async function(){
     var h = parseInt($('#vh').value, 10); if (!(h >= 1 && h <= 168)) { toast('Hours must be between 1 and 168', 'bad'); return; }
-    var ok = await act(async function(){ await put('verdict_hours', h); await put('maintenance_note', $('#mn').value.trim()); return true; }, 'Saved'); if (ok) render();
+    var ok = await act(async function(){ await put('verdict_hours', h); await put('maintenance_note', $('#mn').value.trim()); await put('welcome_comment', $('#wc').value.trim()); return true; }, 'Saved'); if (ok) render();
   };
 }
 
