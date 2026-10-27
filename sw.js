@@ -5,7 +5,7 @@
  * - Web Push: shows notifications and opens the right story when tapped
  * Bump VERSION whenever you change this file or the shell, so old caches are removed.
  */
-const VERSION = 'v2';
+const VERSION = 'v3';
 const SHELL_CACHE = 'hc-shell-' + VERSION;
 const ASSET_CACHE = 'hc-assets-' + VERSION;
 
@@ -139,10 +139,10 @@ self.addEventListener('push', function (event) {
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
   const raw = (event.notification.data && event.notification.data.url) || '/';
-  let target;
-  try { target = new URL(raw, self.location.origin); } catch (e) { target = new URL('/', self.location.origin); }
-  // Only ever open our own site.
-  if (target.origin !== self.location.origin) target = new URL('/', self.location.origin);
+  // Keep only the path and #hash, then open it on THIS app's own address (never a different domain).
+  let path = '/';
+  try { const u = new URL(raw, self.location.origin); path = (u.pathname || '/') + (u.search || '') + (u.hash || ''); } catch (e) {}
+  const target = new URL(path, self.location.origin);
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (list) {
@@ -151,7 +151,7 @@ self.addEventListener('notificationclick', function (event) {
         if (new URL(c.url).origin === self.location.origin && 'focus' in c) {
           return c.focus().then(function (focused) {
             const w = focused || c;
-            if ('navigate' in w) return w.navigate(target.href).catch(function () {});
+            try { w.postMessage({ type: 'open', url: path }); } catch (e) {}
           });
         }
       }
