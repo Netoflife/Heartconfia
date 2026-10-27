@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<meta name="robots" content="noindex,nofollow"/>
+<meta name="theme-color" content="#0b080c"/>
+<title>HeartConfia Admin</title>
+<link rel="icon" href="/favicon.png"/>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#0b080c;--s1:#130f15;--s2:#1a141d;--s3:#251c29;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.18);--rose:#f2486f;--violet:#a07bff;--gold:#f3b04a;--green:#59d98e;--red:#ff6470;--text:#f6eef1;--t2:#c4b3bb;--t3:#93808b;--r:14px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--violet)}
+header{position:sticky;top:0;z-index:20;background:rgba(11,8,12,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top,0px))}
+.top{display:flex;align-items:center;gap:10px;max-width:980px;margin:0 auto}
+.top h1{font-size:16px;margin:0;flex:1}
+.top .who{font-size:12px;color:var(--t3)}
+nav{display:flex;gap:6px;overflow-x:auto;max-width:980px;margin:10px auto 0;scrollbar-width:none;padding-bottom:2px}
+nav button{flex:0 0 auto;border:1px solid var(--line);background:var(--s1);color:var(--t2);padding:7px 13px;border-radius:100px;font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+nav button.on{background:linear-gradient(130deg,var(--rose),var(--violet));color:#fff;border-color:transparent}
+nav button .n{background:var(--red);color:#fff;border-radius:100px;font-size:11px;padding:0 6px;margin-left:5px}
+main{max-width:980px;margin:0 auto;padding:16px 14px 80px}
+h2{font-size:18px;margin:0 0 12px}
+h3{font-size:14px;margin:18px 0 8px;color:var(--t2);text-transform:uppercase;letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.stat{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.stat b{display:block;font-size:26px;line-height:1.1}
+.stat span{font-size:12px;color:var(--t3)}
+.stat.warn b{color:var(--gold)} .stat.bad b{color:var(--red)} .stat.good b{color:var(--green)}
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.card .t{font-weight:700;margin-bottom:4px;word-break:break-word}
+.card .m{font-size:12px;color:var(--t3);margin-bottom:8px;word-break:break-word}
+.card .body{white-space:pre-wrap;font-size:14px;color:var(--t2);background:var(--s2);border-radius:10px;padding:10px;margin:8px 0;max-height:260px;overflow:auto}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:100px;border:1px solid var(--line2);color:var(--t2)}
+.tag.red{color:var(--red);border-color:rgba(255,100,112,.4)} .tag.gold{color:var(--gold);border-color:rgba(243,176,74,.4)}
+.tag.green{color:var(--green);border-color:rgba(89,217,142,.4)} .tag.vio{color:var(--violet);border-color:rgba(160,123,255,.45)}
+button.b{font:inherit;font-size:13px;font-weight:600;border-radius:10px;border:1px solid var(--line2);background:var(--s2);color:var(--text);padding:7px 12px;cursor:pointer}
+button.b:hover{background:var(--s3)} button.b:disabled{opacity:.5;cursor:default}
+button.p{background:linear-gradient(130deg,var(--rose),var(--violet));border-color:transparent;color:#fff}
+button.d{color:var(--red);border-color:rgba(255,100,112,.45)}
+button.g{color:var(--green);border-color:rgba(89,217,142,.4)}
+input,select,textarea{font:inherit;font-size:14px;width:100%;background:var(--s2);color:var(--text);border:1px solid var(--line2);border-radius:10px;padding:9px 11px}
+textarea{min-height:70px;resize:vertical}
+label{display:block;font-size:12px;color:var(--t3);margin:10px 0 4px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.bar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.bar input,.bar select{flex:1;min-width:140px;width:auto}
+.empty{text-align:center;color:var(--t3);padding:30px 10px}
+.login{max-width:380px;margin:12vh auto 0;padding:0 16px}
+.login .card{padding:20px}
+.err{color:var(--red);font-size:13px;margin-top:8px;min-height:18px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--s3);border:1px solid var(--line2);padding:10px 16px;border-radius:100px;font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center}
+#toast.on{opacity:1} #toast.bad{border-color:var(--red)} #toast.ok{border-color:var(--green)}
+.chart{display:flex;align-items:flex-end;gap:4px;height:90px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.chart .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;gap:2px;height:100%;min-width:0}
+.chart .c i{display:block;border-radius:3px 3px 0 0;min-height:1px}
+.legend{font-size:12px;color:var(--t3);margin:6px 2px 0;display:flex;gap:14px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.switch small{display:block;color:var(--t3);font-size:12px}
+.hint{font-size:12px;color:var(--t3);margin:6px 0}
+@media(max-width:520px){.two{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" role="status"></div>
+<script>
+(function(){
+'use strict';
+var CFG = {
+  URL: 'https://rihritdkzvmqoeckleud.supabase.co',
+  KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpaHJpdGRrenZtcW9lY2tsZXVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc3NjE5MzYsImV4cCI6MjA5MzMzNzkzNn0.gWTE4vyCid3vE6-pxAf_ccRB7o5Gec8vd5nHJrTDe1M'
+};
+var $ = function(s, r){ return (r || document).querySelector(s); };
+var APP = $('#app');
+function esc(v){ return String(v == null ? '' : v).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function ago(iso){
+  if (!iso) return 'never';
+  var s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 60) return 'just now'; if (s < 3600) return Math.floor(s/60) + 'm ago';
+  if (s < 86400) return Math.floor(s/3600) + 'h ago'; if (s < 2592000) return Math.floor(s/86400) + 'd ago';
+  return new Date(iso).toLocaleDateString();
+}
+var tt;
+function toast(msg, kind){
+  var t = $('#toast'); t.textContent = msg; t.className = 'on ' + (kind || ''); clearTimeout(tt);
+  tt = setTimeout(function(){ t.className = ''; }, 3200);
+}
+function msgOf(e){ return (e && (e.message || e.error_description)) || 'Something went wrong'; }
+
+if (!window.supabase) { APP.innerHTML = '<div class="login"><div class="card">Could not load. Check your internet and reload.</div></div>'; return; }
+var sb = window.supabase.createClient(CFG.URL, CFG.KEY, { auth: { persistSession: true, autoRefreshToken: true } });
+
+async function rpc(name, args){
+  var r = await sb.rpc(name, args || {});
+  if (r.error) throw r.error;
+  return r.data;
+}
+async function tbl(q){ var r = await q; if (r.error) throw r.error; return r.data; }
+async function act(fn, okMsg){
+  try { var out = await fn(); if (okMsg) toast(okMsg, 'ok'); return out; }
+  catch(e){ console.error(e); toast(msgOf(e), 'bad'); return undefined; }
+}
+
+/* ---------------- login ---------------- */
+function showLogin(msg){
+  APP.innerHTML = '<div class="login"><div class="card"><h2>🛠 HeartConfia Admin</h2><p class="hint">Sign in with your admin account.</p>' +
+    '<label for="em">Email</label><input id="em" type="email" autocomplete="username"/>' +
+    '<label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password"/>' +
+    '<div class="err" id="lerr">' + esc(msg || '') + '</div><button class="b p" id="lgo" style="width:100%;margin-top:6px">Sign in</button></div></div>';
+  var go = async function(){
+    var b = $('#lgo'); b.disabled = true; $('#lerr').textContent = '';
+    var r = await sb.auth.signInWithPassword({ email: $('#em').value.trim(), password: $('#pw').value });
+    if (r.error) { $('#lerr').textContent = r.error.message; b.disabled = false; return; }
+    start();
+  };
+  $('#lgo').onclick = go; $('#pw').onkeydown = function(e){ if (e.key === 'Enter') go(); };
+}
+
+/* ---------------- shell ---------------- */
+var TABS = [
+  ['dash','Dashboard'],['reports','Reports'],['stories','Stories'],['comments','Comments'],['people','People'],
+  ['themes','Themes'],['prompts','Prompts'],['news','Announcements'],['settings','Settings'],['delivery','Delivery & jobs'],['audit','Audit log']
+];
+var cur = 'dash', me = null, openReports = 0;
+function shell(){
+  APP.innerHTML = '<header><div class="top"><h1>🛠 HeartConfia Admin</h1><span class="who" id="who"></span><a class="b" style="text-decoration:none;padding:6px 10px;border:1px solid var(--line2);border-radius:10px;font-size:13px;color:var(--text)" href="/">Open app</a><button class="b" id="out">Sign out</button></div><nav id="nav"></nav></header><main id="view"></main>';
+  $('#who').textContent = me && me.email ? me.email : '';
+  $('#out').onclick = async function(){ await sb.auth.signOut(); showLogin(); };
+  drawNav();
+}
+function drawNav(){
+  $('#nav').innerHTML = TABS.map(function(t){
+    return '<button data-t="' + t[0] + '" class="' + (t[0] === cur ? 'on' : '') + '">' + esc(t[1]) + (t[0] === 'reports' && openReports ? '<span class="n">' + openReports + '</span>' : '') + '</button>';
+  }).join('');
+  Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function(b){ b.onclick = function(){ cur = b.dataset.t; drawNav(); render(); }; });
+}
+async function render(){
+  var v = $('#view'); v.innerHTML = '<div class="empty">Loading…</div>';
+  try { await VIEWS[cur](v); } catch(e){ console.error(e); v.innerHTML = '<div class="empty">' + esc(msgOf(e)) + '</div>'; }
+}
+function on(root, sel, fn){ Array.prototype.forEach.call(root.querySelectorAll(sel), function(el){ el.onclick = function(ev){ fn(el, ev); }; }); }
+
+/* ---------------- dashboard ---------------- */
+function statCard(n, label, cls){ return '<div class="stat ' + (cls || '') + '"><b>' + esc(n) + '</b><span>' + esc(label) + '</span></div>'; }
+async function viewDash(v){
+  var s = await rpc('admin_stats'); openReports = s.open_reports; drawNav();
+  var hot = null;
+  try { var h = await rpc('get_hot_seat'); if (h && h.post_id) { var p = await rpc('admin_get_post', { p_post_id: h.post_id }); hot = p; } } catch(e){}
+  var days = s.daily || [], mx = Math.max.apply(null, [1].concat(days.map(function(d){ return d.posts + d.users + d.comments; })));
+  var chart = days.map(function(d){
+    function seg(n, col){ return '<i style="height:' + (n / mx * 100) + '%;background:' + col + '" title="' + n + '"></i>'; }
+    return '<div class="c" title="' + esc(d.day) + '">' + seg(d.comments, '#7399ff') + seg(d.posts, '#f2486f') + seg(d.users, '#59d98e') + '</div>';
+  }).join('');
+  v.innerHTML = '<h2>Overview</h2><div class="grid">' +
+    statCard(s.users, 'people total') + statCard(s.users_24h, 'new today', 'good') + statCard(s.active_24h, 'active in 24h') + statCard(s.active_7d, 'active in 7 days') +
+    statCard(s.posts, 'stories') + statCard(s.posts_24h, 'stories today', 'good') + statCard(s.comments_24h, 'comments today') + statCard(s.votes_24h, 'verdicts today') +
+    statCard(s.open_verdicts, 'open verdicts') + statCard(s.open_reports, 'reports waiting', s.open_reports ? 'bad' : '') + statCard(s.posts_hidden, 'hidden stories', s.posts_hidden ? 'warn' : '') + statCard(s.banned, 'restricted people') +
+    statCard(s.push_devices, 'phones with alerts') + '</div>' +
+    '<h3>Last 14 days</h3><div class="chart">' + chart + '</div><div class="legend"><span><i style="background:#f2486f"></i>stories</span><span><i style="background:#59d98e"></i>new people</span><span><i style="background:#7399ff"></i>comments</span></div>' +
+    '<h3>Today\'s Hot Seat</h3>' +
+    (hot ? '<div class="card"><div class="t">🔥 ' + esc(hot.title) + '</div><div class="m">by ' + esc(hot.author) + '</div></div>' : '<div class="card"><div class="m">Nothing in the Hot Seat yet today.</div><button class="b p" id="pickHot">Pick the best story now</button></div>');
+  var ph = $('#pickHot'); if (ph) ph.onclick = async function(){ await act(function(){ return rpc('admin_run_job', { p_job: 'pick-hot-seat' }); }, 'Hot Seat picked'); render(); };
+}
+
+/* ---------------- reports ---------------- */
+async function viewReports(v){
+  var rows = await rpc('admin_list_reports', { p_limit: 100 }); openReports = rows.length; drawNav();
+  if (!rows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>'; return; }
+  v.innerHTML = '<h2>Reports waiting (' + rows.length + ')</h2>' + rows.map(function(r){
+    return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span><span class="tag">' + esc(r.type) + '</span>' + (r.hidden ? '<span class="tag red">hidden</span>' : '') + '</div>' +
+      '<div class="t" style="margin-top:8px">' + esc(r.preview || '(content already removed)') + '</div><div class="m">Reasons: ' + esc((r.reasons || []).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
+      '<div class="row"><button class="b g" data-a="dismiss" data-id="' + esc(r.content_id) + '">Looks fine</button><button class="b" data-a="hide" data-id="' + esc(r.content_id) + '">Hide</button><button class="b d" data-a="delete" data-id="' + esc(r.content_id) + '">Delete</button>' +
+      (r.author_id ? '<button class="b d" data-ban="' + esc(r.author_id) + '">Restrict author</button>' : '') +
+      (r.post_id ? '<a class="b" style="text-decoration:none;color:var(--text)" target="_blank" rel="noopener" href="/#post-' + esc(r.post_id) + '">View</a>' : '') + '</div></div>';
+  }).join('');
+  on(v, '[data-a]', function(b){
+    if (b.dataset.a === 'delete' && !confirm('Delete this permanently?')) return;
+    act(function(){ return rpc('admin_resolve_report', { p_content_id: b.dataset.id, p_action: b.dataset.a }); }, 'Done').then(render);
+  });
+  on(v, '[data-ban]', function(b){ banUser(b.dataset.ban, true).then(render); });
+}
+
+/* ---------------- stories ---------------- */
+var storyState = { q: '', f: 'all', rows: [], off: 0 };
+async function viewStories(v){
+  v.innerHTML = '<h2>Stories</h2><div class="bar"><input id="sq" placeholder="Search title or author or id" value="' + esc(storyState.q) + '"/><select id="sf">' +
+    [['all','All'],['reported','Reported'],['hidden','Hidden'],['trending','Trending'],['open','Verdict open']].map(function(o){ return '<option value="' + o[0] + '"' + (o[0] === storyState.f ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('') +
+    '</select><button class="b p" id="sgo">Search</button></div><div id="slist"></div>';
+  $('#sgo').onclick = function(){ storyState.q = $('#sq').value.trim(); storyState.f = $('#sf').value; storyState.rows = []; storyState.off = 0; loadStories(true); };
+  $('#sq').onkeydown = function(e){ if (e.key === 'Enter') $('#sgo').click(); };
+  $('#sf').onchange = function(){ $('#sgo').click(); };
+  storyState.rows = []; storyState.off = 0; await loadStories(true);
+}
+async function loadStories(reset){
+  var rows = await rpc('admin_list_posts', { p_search: storyState.q, p_filter: storyState.f, p_limit: 30, p_offset: storyState.off });
+  storyState.rows = reset ? rows : storyState.rows.concat(rows); storyState.more = rows.length === 30;
+  var box = $('#slist'); if (!box) return;
+  box.innerHTML = storyState.rows.length ? storyState.rows.map(function(p){
+    var t = (p.votes.he || 0) + (p.votes.she || 0) + (p.votes.both || 0);
+    return '<div class="card" data-pid="' + esc(p.id) + '"><div class="row">' + (p.hidden ? '<span class="tag red">hidden</span>' : '') + (p.trending ? '<span class="tag gold">trending</span>' : '') +
+      (p.reports ? '<span class="tag red">' + p.reports + ' reports</span>' : '') + (p.theme_label ? '<span class="tag vio">' + esc(p.theme_label) + '</span>' : '') +
+      '<span class="tag ' + (p.verdict_closed ? '' : 'green') + '">' + (p.verdict_closed ? 'verdict closed' : 'open') + '</span></div>' +
+      '<div class="t" style="margin-top:6px">' + esc(p.title) + '</div><div class="m">by ' + esc(p.author) + ' · ' + ago(p.created_at) + ' · ' + t + ' verdicts · ' + p.cmt + ' comments · ' + p.views + ' views' + (p.remind_count ? ' · ' + p.remind_count + ' waiting for outcome' : '') + '</div>' +
+      '<div class="row"><button class="b" data-a="view">Read</button><button class="b" data-a="' + (p.hidden ? 'unhide' : 'hide') + '">' + (p.hidden ? 'Unhide' : 'Hide') + '</button>' +
+      '<button class="b" data-a="hot">🔥 Hot Seat</button><button class="b" data-a="reopen">Reopen verdict</button><button class="b d" data-a="ban">Restrict author</button><button class="b d" data-a="del">Delete</button></div><div class="slot"></div></div>';
+  }).join('') + (storyState.more ? '<button class="b" id="smore" style="width:100%">Load more</button>' : '') : '<div class="empty">No stories found.</div>';
+  on(box, '[data-a]', function(b){
+    var card = b.closest('.card'), id = card.dataset.pid, p = storyState.rows.filter(function(x){ return x.id === id; })[0];
+    var a = b.dataset.a;
+    if (a === 'view') {
+      act(function(){ return rpc('admin_get_post', { p_post_id: id }); }).then(function(full){ if (full) card.querySelector('.slot').innerHTML = '<div class="body">' + esc(full.content) + '</div>'; });
+    } else if (a === 'hide' || a === 'unhide') {
+      act(function(){ return rpc('admin_set_post_hidden', { p_post_id: id, p_hidden: a === 'hide' }); }, a === 'hide' ? 'Hidden' : 'Visible again').then(function(){ loadStories(true); });
+    } else if (a === 'hot') {
+      act(function(){ return rpc('admin_set_hot_seat', { p_post_id: id }); }, 'In the Hot Seat. The author was notified.');
+    } else if (a === 'reopen') {
+      var h = prompt('Reopen voting for how many hours?', '24'); if (!h) return;
+      act(function(){ return rpc('admin_reopen_verdict', { p_post_id: id, p_hours: parseInt(h, 10) || 24 }); }, 'Verdict reopened').then(function(){ loadStories(true); });
+    } else if (a === 'ban') { banUser(p.user_id, true); }
+    else if (a === 'del') {
+      if (!confirm('Delete this story and all its comments forever?')) return;
+      act(function(){ return rpc('admin_delete_post', { p_post_id: id }); }, 'Deleted').then(function(){ loadStories(true); });
+    }
+  });
+  var m = $('#smore'); if (m) m.onclick = function(){ storyState.off += 30; loadStories(false); };
+}
+
+/* ---------------- comments ---------------- */
+var cmState = { q: '', rows: [], off: 0 };
+async function viewComments(v){
+  v.innerHTML = '<h2>Comments</h2><div class="bar"><input id="cq" placeholder="Search text or author" value="' + esc(cmState.q) + '"/><button class="b p" id="cgo">Search</button></div><div id="clist"></div>';
+  $('#cgo').onclick = function(){ cmState.q = $('#cq').value.trim(); cmState.off = 0; loadComments(true); };
+  $('#cq').onkeydown = function(e){ if (e.key === 'Enter') $('#cgo').click(); };
+  cmState.off = 0; await loadComments(true);
+}
+async function loadComments(reset){
+  var rows = await rpc('admin_list_comments', { p_search: cmState.q, p_limit: 30, p_offset: cmState.off });
+  cmState.rows = reset ? rows : cmState.rows.concat(rows); cmState.more = rows.length === 30;
+  var box = $('#clist'); if (!box) return;
+  box.innerHTML = cmState.rows.length ? cmState.rows.map(function(c){
+    return '<div class="card" data-id="' + esc(c.id) + '"><div class="row">' + (c.hidden ? '<span class="tag red">hidden</span>' : '') + (c.reports ? '<span class="tag red">' + c.reports + ' reports</span>' : '') + '</div>' +
+      '<div class="t" style="white-space:pre-wrap">' + esc(c.text) + '</div><div class="m">' + esc(c.author) + ' on "' + esc(c.post_title) + '" · ' + ago(c.created_at) + ' · ' + c.replies + ' replies</div>' +
+      '<div class="row"><button class="b" data-a="' + (c.hidden ? 'unhide' : 'hide') + '">' + (c.hidden ? 'Unhide' : 'Hide') + '</button><button class="b d" data-a="ban">Restrict author</button><button class="b d" data-a="del">Delete</button></div></div>';
+  }).join('') + (cmState.more ? '<button class="b" id="cmore" style="width:100%">Load more</button>' : '') : '<div class="empty">No comments found.</div>';
+  on(box, '[data-a]', function(b){
+    var card = b.closest('.card'), id = card.dataset.id, c = cmState.rows.filter(function(x){ return x.id === id; })[0], a = b.dataset.a;
+    if (a === 'hide' || a === 'unhide') act(function(){ return rpc('admin_set_comment_hidden', { p_comment_id: id, p_hidden: a === 'hide' }); }, 'Done').then(function(){ loadComments(true); });
+    else if (a === 'ban') banUser(c.user_id, true);
+    else if (a === 'del') { if (!confirm('Delete this comment and its replies?')) return; act(function(){ return rpc('admin_delete_comment', { p_comment_id: id }); }, 'Deleted').then(function(){ loadComments(true); }); }
+  });
+  var m = $('#cmore'); if (m) m.onclick = function(){ cmState.off += 30; loadComments(false); };
+}
+
+/* ---------------- people ---------------- */
+async function banUser(uid, ban){
+  var reason = null;
+  if (ban) { reason = prompt('Why are you restricting this person? (they will see this)', 'Breaking community rules'); if (reason === null) return; }
+  await act(function(){ return rpc('admin_ban_user', { p_user_id: uid, p_ban: ban, p_reason: reason }); }, ban ? 'Restricted' : 'Restored');
+}
+var pplState = { q: '', rows: [], off: 0 };
+async function viewPeople(v){
+  v.innerHTML = '<h2>People</h2><div class="bar"><input id="pq" placeholder="Search username, email or id" value="' + esc(pplState.q) + '"/><button class="b p" id="pgo">Search</button></div><div id="plist"></div>';
+  $('#pgo').onclick = function(){ pplState.q = $('#pq').value.trim(); pplState.off = 0; loadPeople(true); };
+  $('#pq').onkeydown = function(e){ if (e.key === 'Enter') $('#pgo').click(); };
+  pplState.off = 0; await loadPeople(true);
+}
+async function loadPeople(reset){
+  var rows = await rpc('admin_list_users', { p_search: pplState.q, p_limit: 30, p_offset: pplState.off });
+  pplState.rows = reset ? rows : pplState.rows.concat(rows); pplState.more = rows.length === 30;
+  var box = $('#plist'); if (!box) return;
+  box.innerHTML = pplState.rows.length ? pplState.rows.map(function(u){
+    return '<div class="card" data-id="' + esc(u.id) + '"><div class="row">' + (u.is_admin ? '<span class="tag vio">admin</span>' : '') + (u.banned_at ? '<span class="tag red">restricted</span>' : '') + (u.devices ? '<span class="tag green">alerts on</span>' : '') + '</div>' +
+      '<div class="t" style="margin-top:6px">' + esc(u.username) + '</div><div class="m">' + esc(u.email || 'no email') + ' · joined ' + ago(u.created_at) + ' · seen ' + ago(u.last_seen_at) + ' · ' + u.posts + ' stories · ' + u.comments + ' comments · streak ' + (u.streak || 0) + (u.ban_reason ? ' · reason: ' + esc(u.ban_reason) : '') + '</div>' +
+      '<div class="row">' + (u.banned_at ? '<button class="b g" data-a="unban">Restore</button>' : (u.is_admin ? '' : '<button class="b d" data-a="ban">Restrict</button>')) +
+      (u.is_admin ? '<button class="b" data-a="unadmin">Remove admin</button>' : '<button class="b" data-a="admin">Make admin</button>') + '</div></div>';
+  }).join('') + (pplState.more ? '<button class="b" id="pmore" style="width:100%">Load more</button>' : '') : '<div class="empty">No one found.</div>';
+  on(box, '[data-a]', function(b){
+    var id = b.closest('.card').dataset.id, a = b.dataset.a;
+    if (a === 'ban') banUser(id, true).then(function(){ loadPeople(true); });
+    else if (a === 'unban') banUser(id, false).then(function(){ loadPeople(true); });
+    else if (a === 'admin') { if (!confirm('Give this person full admin access?')) return; act(function(){ return rpc('admin_set_admin', { p_user_id: id, p_admin: true }); }, 'They are now an admin').then(function(){ loadPeople(true); }); }
+    else if (a === 'unadmin') act(function(){ return rpc('admin_set_admin', { p_user_id: id, p_admin: false }); }, 'Admin removed').then(function(){ loadPeople(true); });
+  });
+  var m = $('#pmore'); if (m) m.onclick = function(){ pplState.off += 30; loadPeople(false); };
+}
+
+/* ---------------- themes ---------------- */
+function isoDay(d){ return d.toISOString().slice(0, 10); }
+async function viewThemes(v){
+  var rows = await tbl(sb.from('themes').select('*').order('starts_on', { ascending: false }).limit(50));
+  var now = new Date(), dow = (now.getDay() + 6) % 7, mon = new Date(now.getTime() - dow * 86400000), sun = new Date(mon.getTime() + 6 * 86400000);
+  var today = isoDay(now);
+  v.innerHTML = '<h2>Weekly themes</h2><p class="hint">A theme shows as a banner on the home page. Stories that use the theme tag during its dates get a badge.</p>' +
+    '<div class="card"><div class="two"><div><label>Name</label><input id="tn" placeholder="Rainy Day Regrets" maxlength="60"/></div><div><label>Emoji</label><input id="te" value="🔥" maxlength="4"/></div></div>' +
+    '<label>Short description</label><input id="td" placeholder="Stories about the one that got away"/>' +
+    '<label>Prompt (fills the title when someone taps Share your story)</label><input id="tp" placeholder="Who got away, and why?"/>' +
+    '<div class="two"><div><label>Tag (letters, numbers, dash)</label><input id="tg" placeholder="gotaway" maxlength="24"/></div><div></div></div>' +
+    '<div class="two"><div><label>Starts</label><input id="ts" type="date" value="' + isoDay(mon) + '"/></div><div><label>Ends</label><input id="tx" type="date" value="' + isoDay(sun) + '"/></div></div>' +
+    '<button class="b p" id="tadd" style="margin-top:12px">Add theme</button></div>' +
+    '<h3>All themes</h3>' + (rows.length ? rows.map(function(t){
+      var live = t.active && t.starts_on <= today && t.ends_on >= today;
+      return '<div class="card" data-id="' + esc(t.id) + '"><div class="row">' + (live ? '<span class="tag green">live now</span>' : '') + (!t.active ? '<span class="tag">off</span>' : '') + '<span class="tag">#' + esc(t.tag) + '</span></div>' +
+        '<div class="t" style="margin-top:6px">' + esc(t.emoji) + ' ' + esc(t.name) + '</div><div class="m">' + esc(t.starts_on) + ' to ' + esc(t.ends_on) + (t.description ? ' · ' + esc(t.description) : '') + '</div>' +
+        '<div class="row"><button class="b" data-a="toggle">' + (t.active ? 'Turn off' : 'Turn on') + '</button><button class="b d" data-a="del">Delete</button></div></div>';
+    }).join('') : '<div class="empty">No themes yet.</div>');
+  $('#tadd').onclick = async function(){
+    var row = { name: $('#tn').value.trim(), emoji: $('#te').value.trim() || '🔥', description: $('#td').value.trim(), prompt: $('#tp').value.trim(),
+      tag: $('#tg').value.trim().toLowerCase().replace(/^#/, ''), starts_on: $('#ts').value, ends_on: $('#tx').value };
+    if (!row.name || !row.tag || !row.starts_on || !row.ends_on) { toast('Fill in name, tag and both dates', 'bad'); return; }
+    var ok = await act(function(){ return tbl(sb.from('themes').insert(row)); }, 'Theme added'); if (ok !== undefined) render();
+  };
+  on(v, '[data-a]', function(b){
+    var id = b.closest('.card').dataset.id, t = rows.filter(function(x){ return x.id === id; })[0];
+    if (b.dataset.a === 'toggle') act(function(){ return tbl(sb.from('themes').update({ active: !t.active }).eq('id', id)); }, 'Updated').then(render);
+    else if (confirm('Delete this theme?')) act(function(){ return tbl(sb.from('themes').delete().eq('id', id)); }, 'Deleted').then(render);
+  });
+}
+
+/* ---------------- daily prompts ---------------- */
+async function viewPrompts(v){
+  var rows = await tbl(sb.from('daily_prompts').select('*').order('created_at', { ascending: true }).limit(500));
+  var today = await rpc('get_today_prompt');
+  v.innerHTML = '<h2>Daily prompts</h2><p class="hint">One prompt is chosen each day from the ones that are switched on, and sent as the 7:30pm notification. Add more so it doesn\'t repeat.</p>' +
+    '<div class="card"><div class="t">Today: ' + esc(today || '(none)') + '</div></div>' +
+    '<div class="card"><label>New prompt</label><input id="np" maxlength="200" placeholder="What is something you wish you had asked?"/><button class="b p" id="padd" style="margin-top:10px">Add prompt</button></div>' +
+    rows.map(function(r){
+      return '<div class="card" data-id="' + esc(r.id) + '"><div class="t">' + esc(r.text) + '</div><div class="row">' + (r.active ? '<span class="tag green">on</span>' : '<span class="tag">off</span>') +
+        '<button class="b" data-a="toggle">' + (r.active ? 'Turn off' : 'Turn on') + '</button><button class="b" data-a="edit">Edit</button><button class="b d" data-a="del">Delete</button></div></div>';
+    }).join('');
+  $('#padd').onclick = async function(){
+    var t = $('#np').value.trim(); if (t.length < 5) { toast('Write a longer prompt', 'bad'); return; }
+    var ok = await act(function(){ return tbl(sb.from('daily_prompts').insert({ text: t })); }, 'Added'); if (ok !== undefined) render();
+  };
+  on(v, '[data-a]', function(b){
+    var id = b.closest('.card').dataset.id, r = rows.filter(function(x){ return x.id === id; })[0], a = b.dataset.a;
+    if (a === 'toggle') act(function(){ return tbl(sb.from('daily_prompts').update({ active: !r.active }).eq('id', id)); }, 'Updated').then(render);
+    else if (a === 'edit') { var t = prompt('Edit prompt', r.text); if (t && t.trim().length >= 5) act(function(){ return tbl(sb.from('daily_prompts').update({ text: t.trim() }).eq('id', id)); }, 'Saved').then(render); }
+    else if (confirm('Delete this prompt?')) act(function(){ return tbl(sb.from('daily_prompts').delete().eq('id', id)); }, 'Deleted').then(render);
+  });
+}
+
+/* ---------------- announcements ---------------- */
+async function viewNews(v){
+  var rows = await tbl(sb.from('announcements').select('*').order('created_at', { ascending: false }).limit(30));
+  v.innerHTML = '<h2>Announcements</h2><h3>Banner on the home page</h3><div class="card"><p class="hint">Everyone sees it at the top of the home page until they dismiss it or it expires. Only the newest active banner shows.</p>' +
+    '<label>Title</label><input id="at" maxlength="80"/><label>Message (optional)</label><textarea id="ab" maxlength="300"></textarea>' +
+    '<div class="two"><div><label>Link (optional, like #post-... or /)</label><input id="al" placeholder="/"/></div><div><label>Hide on (optional)</label><input id="ax" type="datetime-local"/></div></div>' +
+    '<button class="b p" id="aadd" style="margin-top:12px">Publish banner</button></div>' +
+    '<h3>Past banners</h3>' + (rows.length ? rows.map(function(a){
+      return '<div class="card" data-id="' + esc(a.id) + '"><div class="row">' + (a.active ? '<span class="tag green">showing</span>' : '<span class="tag">off</span>') + '</div><div class="t" style="margin-top:6px">' + esc(a.title) + '</div><div class="m">' + esc(a.body) + ' · ' + ago(a.created_at) + '</div>' +
+        '<div class="row"><button class="b" data-a="toggle">' + (a.active ? 'Turn off' : 'Turn on') + '</button><button class="b d" data-a="del">Delete</button></div></div>';
+    }).join('') : '<div class="empty">None yet.</div>') +
+    '<h3>Send to everyone now</h3><div class="card"><p class="hint">Goes to every active person\'s bell and sends a phone alert to those who have alerts on. Use sparingly: people mute apps that over-notify.</p>' +
+    '<label>Title</label><input id="bt" maxlength="80"/><label>Message (optional)</label><input id="bb" maxlength="150"/><label>Link (optional)</label><input id="bl" placeholder="/"/>' +
+    '<button class="b d" id="bsend" style="margin-top:12px">Send notification to everyone</button></div>';
+  $('#aadd').onclick = async function(){
+    var t = $('#at').value.trim(); if (t.length < 2) { toast('Add a title', 'bad'); return; }
+    var x = $('#ax').value;
+    var ok = await act(function(){ return tbl(sb.from('announcements').insert({ title: t, body: $('#ab').value.trim(), link: $('#al').value.trim() || null, expires_at: x ? new Date(x).toISOString() : null })); }, 'Published');
+    if (ok !== undefined) render();
+  };
+  $('#bsend').onclick = async function(){
+    var t = $('#bt').value.trim(); if (t.length < 2) { toast('Add a title', 'bad'); return; }
+    if (!confirm('Send this to everyone? This cannot be undone.')) return;
+    var n = await act(function(){ return rpc('admin_broadcast', { p_title: t, p_body: $('#bb').value.trim(), p_link: $('#bl').value.trim() || null }); });
+    if (n !== undefined) { toast('Sent to ' + n + ' people', 'ok'); $('#bt').value = ''; $('#bb').value = ''; }
+  };
+  on(v, '[data-a]', function(b){
+    var id = b.closest('.card').dataset.id, a = rows.filter(function(x){ return x.id === id; })[0];
+    if (b.dataset.a === 'toggle') act(function(){ return tbl(sb.from('announcements').update({ active: !a.active }).eq('id', id)); }, 'Updated').then(render);
+    else if (confirm('Delete this banner?')) act(function(){ return tbl(sb.from('announcements').delete().eq('id', id)); }, 'Deleted').then(render);
+  });
+}
+
+/* ---------------- settings ---------------- */
+async function viewSettings(v){
+  var rows = await tbl(sb.from('site_settings').select('*')), S = {};
+  rows.forEach(function(r){ S[r.key] = r.value; });
+  function sw(key, title, sub){
+    return '<div class="switch"><div>' + esc(title) + '<small>' + esc(sub) + '</small></div><button class="b ' + (S[key] === false ? 'd' : 'g') + '" data-k="' + key + '">' + (S[key] === false ? 'Paused' : 'On') + '</button></div>';
+  }
+  v.innerHTML = '<h2>Site settings</h2><div class="card">' +
+    sw('posting_enabled', 'New stories', 'Turn off to pause posting for everyone except admins (use in an emergency).') +
+    sw('comments_enabled', 'New comments and replies', 'Turn off to pause commenting.') +
+    '<label>Verdict window (hours, applies to NEW stories)</label><input id="vh" type="number" min="1" max="168" value="' + esc(S.verdict_hours || 24) + '"/>' +
+    '<label>Notice shown at the top of the home page (leave empty for none)</label><input id="mn" maxlength="200" value="' + esc(S.maintenance_note || '') + '"/>' +
+    '<button class="b p" id="ssave" style="margin-top:12px">Save</button></div>';
+  async function put(key, value){ return tbl(sb.from('site_settings').upsert({ key: key, value: value, updated_at: new Date().toISOString() })); }
+  on(v, '[data-k]', function(b){
+    var k = b.dataset.k, nv = S[k] === false;
+    act(function(){ return put(k, nv); }, nv ? 'Turned on' : 'Paused').then(render);
+  });
+  $('#ssave').onclick = async function(){
+    var h = parseInt($('#vh').value, 10); if (!(h >= 1 && h <= 168)) { toast('Hours must be between 1 and 168', 'bad'); return; }
+    var ok = await act(async function(){ await put('verdict_hours', h); await put('maintenance_note', $('#mn').value.trim()); return true; }, 'Saved'); if (ok) render();
+  };
+}
+
+/* ---------------- delivery & jobs ---------------- */
+var JOBS = [
+  ['close-verdicts','Close finished verdicts now','Closes any verdict that has run out of time and notifies voters and followers.'],
+  ['pick-hot-seat','Pick today\'s Hot Seat','Chooses the most talked-about recent story (if none is set today).'],
+  ['nudge-outcomes','Nudge authors about "what happened next"','Tells authors when people are waiting for an update.'],
+  ['refresh-trending','Refresh trending','Recomputes the Trending badge.'],
+  ['refresh-stats','Refresh levels and reputation','Recomputes everyone\'s reputation (takes a moment).'],
+  ['daily-prompt','Send today\'s prompt notification','Sends the daily prompt push now.'],
+  ['weekly-digest','Send the weekly digest','Emails the weekly digest now.'],
+  ['winback','Send win-back emails','Emails people who have been away.']
+];
+async function viewDelivery(v){
+  var h = await rpc('admin_delivery_health');
+  v.innerHTML = '<h2>Delivery health</h2><div class="grid">' +
+    statCard(h.devices, 'phones registered') + statCard(h.push_users, 'people with alerts') + statCard(h.notifs_24h, 'notifications (24h)') +
+    statCard(h.pushed_24h, 'delivered as push (24h)', 'good') + statCard(h.unpushed_24h, 'bell only (24h)', h.unpushed_24h > h.pushed_24h ? 'warn' : '') +
+    statCard(h.email_users, 'people with email') + statCard(h.digests_7d, 'digests (7 days)') + statCard(h.winbacks_7d, 'win-backs (7 days)') + '</div>' +
+    '<p class="hint">"Bell only" means the notification was saved but no phone alert went out. That is normal for people without alerts turned on.</p>' +
+    '<h3>Scheduled jobs</h3>' + ((h.jobs && h.jobs.length) ? h.jobs.map(function(j){
+      return '<div class="card"><div class="row"><span class="tag ' + (j.active ? 'green' : '') + '">' + (j.active ? 'on' : 'off') + '</span><span class="tag ' + (j.last_status === 'succeeded' ? 'green' : (j.last_status ? 'red' : '')) + '">' + esc(j.last_status || 'never run') + '</span></div><div class="t" style="margin-top:6px">' + esc(j.job) + '</div><div class="m">' + esc(j.schedule) + ' (UTC) · last run ' + ago(j.last_run) + '</div></div>';
+    }).join('') : '<div class="empty">No schedule information available.</div>') +
+    '<h3>Run something now</h3>' + JOBS.map(function(j){
+      return '<div class="card"><div class="t">' + esc(j[1]) + '</div><div class="m">' + esc(j[2]) + '</div><button class="b" data-job="' + j[0] + '">Run now</button></div>';
+    }).join('');
+  on(v, '[data-job]', function(b){
+    b.disabled = true;
+    act(function(){ return rpc('admin_run_job', { p_job: b.dataset.job }); }, 'Started. Give it a few seconds.').then(function(){ b.disabled = false; });
+  });
+}
+
+/* ---------------- audit ---------------- */
+async function viewAudit(v){
+  var rows = await tbl(sb.from('admin_audit').select('*').order('created_at', { ascending: false }).limit(150));
+  v.innerHTML = '<h2>Audit log</h2><p class="hint">Everything admins have done, newest first.</p>' + (rows.length ? rows.map(function(a){
+    var d = a.details ? JSON.stringify(a.details) : '';
+    return '<div class="card"><div class="t">' + esc(a.action) + '</div><div class="m">' + esc(a.admin_name || 'system') + ' · ' + new Date(a.created_at).toLocaleString() + (a.target ? ' · ' + esc(a.target) : '') + '</div>' + (d && d.length < 400 ? '<div class="m">' + esc(d) + '</div>' : '') + '</div>';
+  }).join('') : '<div class="empty">Nothing yet.</div>');
+}
+
+var VIEWS = { dash: viewDash, reports: viewReports, stories: viewStories, comments: viewComments, people: viewPeople, themes: viewThemes, prompts: viewPrompts, news: viewNews, settings: viewSettings, delivery: viewDelivery, audit: viewAudit };
+
+/* ---------------- start ---------------- */
+async function start(){
+  var s = await sb.auth.getSession();
+  if (!s.data || !s.data.session) { showLogin(); return; }
+  me = s.data.session.user;
+  var st = null;
+  try { st = await rpc('get_my_status'); } catch(e){ console.error(e); }
+  if (!st || !st.is_admin) {
+    APP.innerHTML = '<div class="login"><div class="card"><h2>No admin access</h2><p class="hint">This account (' + esc(me.email || '') + ') is not an admin.</p><button class="b" id="so">Sign out</button> <a class="b" style="text-decoration:none;color:var(--text);padding:7px 12px;border:1px solid var(--line2);border-radius:10px;font-size:13px" href="/">Back to app</a></div></div>';
+    $('#so').onclick = async function(){ await sb.auth.signOut(); showLogin(); };
+    return;
+  }
+  shell(); render();
+}
+start();
+})();
+</script>
+</body>
+</html>
