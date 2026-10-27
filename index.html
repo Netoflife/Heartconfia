@@ -148,6 +148,10 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .vopt.on{border-color:var(--c)}
 .vopt-he{--c:var(--he)}.vopt-she{--c:var(--she)}.vopt-both{--c:var(--both)}
 .vstatus{display:inline-block;font-size:12px;font-weight:700;color:var(--gold);margin:8px 2px 0;background:rgba(243,176,74,.08);border:1px solid rgba(243,176,74,.25);padding:3px 10px;border-radius:100px}
+.vstatus.live{color:var(--pink,#f2486f);background:rgba(242,72,111,.1);border-color:rgba(242,72,111,.35)}
+.vstatus.live .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#f2486f;margin-right:6px;animation:livePulse 1.2s ease-in-out infinite}
+@keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.7)}}
+.vopt.lead .vlabel{font-weight:800}
 .vstatus.closed{color:var(--green);background:rgba(89,217,142,.08);border-color:rgba(89,217,142,.28)}
 .vtotal{font-size:11.5px;color:var(--t3);margin:7px 2px 0}
 .rxrow{display:flex;gap:6px;overflow-x:auto;padding:12px 0 4px;scrollbar-width:none}
@@ -355,6 +359,15 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 
 /* banners */
 .banner{border-radius:var(--r);padding:14px 16px;margin-bottom:12px;position:relative}
+.banner-hot{background:linear-gradient(130deg,rgba(255,140,60,.18),rgba(242,72,111,.1));border:1px solid rgba(255,140,60,.4)}
+.banner-theme{background:linear-gradient(130deg,rgba(160,123,255,.16),rgba(80,160,255,.08));border:1px solid rgba(160,123,255,.35)}
+.banner-ann{background:rgba(243,176,74,.1);border:1px solid rgba(243,176,74,.35)}
+.banner-ban{background:rgba(242,72,111,.12);border:1px solid rgba(242,72,111,.45)}
+.banner h3{margin:0 0 6px;font-size:14px}.banner p{margin:0 0 10px;font-size:14px;line-height:1.5}
+.badge-hot{color:#ff9a4d;border-color:rgba(255,154,77,.4);background:rgba(255,154,77,.1)}
+.badge-th{color:#b99bff;border-color:rgba(160,123,255,.4);background:rgba(160,123,255,.1)}
+.remind-box{margin:12px 0;padding:12px 14px;border:1px dashed var(--bd,rgba(255,255,255,.18));border-radius:var(--r);font-size:13px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.adm-chip{display:inline-block;margin:0 0 10px;padding:6px 12px;border-radius:100px;border:1px solid rgba(160,123,255,.4);color:#b99bff;font-size:12px;font-weight:700;text-decoration:none}
 .banner-prompt{background:linear-gradient(130deg,rgba(242,72,111,.14),rgba(160,123,255,.08));border:1px solid rgba(242,72,111,.28)}
 .banner h3{font-size:15px;margin-bottom:4px}
 .banner p{font-size:14px;color:var(--t2);margin-bottom:12px;line-height:1.5}
@@ -454,7 +467,11 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
         <p class="hero-sub">Real relationship confessions. Read, judge, debate, relate.</p>
         <button class="swipe-cta" data-action="go-swipe"><span class="sc-ic" aria-hidden="true">⚡</span><span>Quick verdicts<small>Short stories. One tap. No typing.</small></span><span class="sc-go" aria-hidden="true">→</span></button>
       </div>
+      <div id="banBar"></div>
+      <div id="annBar"></div>
       <div id="streakBar"></div>
+      <div id="hotSeatBar"></div>
+      <div id="themeBar"></div>
       <div id="pushBanner"></div>
       <div id="promptBanner"></div>
       <div id="nextBadgeBar"></div>
@@ -732,6 +749,8 @@ function leftText(iso){
   if (h >= 1) return 'Closes in ' + h + 'h ' + (m % 60) + 'm';
   return 'Closes in ' + m + 'm';
 }
+function isLive(p){ const ms = new Date(p.closes_at).getTime() - Date.now(); return !isNaN(ms) && ms > 0 && ms <= 3600000; }
+function statusInner(p){ return isLive(p) ? '<span class="dot"></span>Live · ' + esc(leftText(p.closes_at).replace('Closes in ', 'closes in ')) : '⏳ ' + esc(leftText(p.closes_at)); }
 function vstatusHTML(p){
   if (!p) return '';
   const v = p.votes, t = v.he + v.she + v.both;
@@ -743,7 +762,7 @@ function vstatusHTML(p){
     return '<div class="vstatus closed">⚖️ ' + esc(txt) + '</div>';
   }
   if (!p.closes_at) return '';
-  return '<div class="vstatus" data-closes="' + esc(p.closes_at) + '" data-pid="' + esc(p.id) + '">⏳ ' + esc(leftText(p.closes_at)) + '</div>';
+  return '<div class="vstatus' + (isLive(p) ? ' live' : '') + '" data-closes="' + esc(p.closes_at) + '" data-pid="' + esc(p.id) + '">' + statusInner(p) + '</div>';
 }
 
 /* =====================================================================
@@ -758,6 +777,7 @@ const S = {
   saved: new Set(), follow: new Set(), authMode: 'login', trendAt: 0, lastPostAt: 0, lastCmtAt: 0
 };
 const POSTS = new Map();
+const X = { theme: null, hot: null, ann: null, prompt: null, settings: {}, status: { banned: false, is_admin: false }, remind: new Set(), at: 0 };
 const COMMENTS = {};
 const UPDATES = {};
 const LV = {};
@@ -781,7 +801,7 @@ function upsertPost(row){
   const p = ex ? Object.assign(ex, row) : row;
   p.votes = safeVotes(p.votes); p.rx = safeRx(p.rx);
   p.tags = Array.isArray(p.tags) ? p.tags.map(String) : [];
-  p.cmt = num(p.cmt); p.views = num(p.views); p.updates_count = num(p.updates_count);
+  p.cmt = num(p.cmt); p.views = num(p.views); p.updates_count = num(p.updates_count); p.remind_count = num(p.remind_count);
   POSTS.set(p.id, p);
   return p;
 }
@@ -1074,7 +1094,7 @@ function establishSession(user){
       await hydrateMine(Array.from(POSTS.keys()).slice(0, 150));
       subscribeUserChannel();
       updateNav(); updateNotifBadge();
-      rerenderCurrent();
+      rerenderCurrent(); loadExtras(true);
       syncSeen(); fetchPrefs().then(() => { if (page === 'profile') renderPrefs(); });
       return me;
     } catch(e) { console.error('Session error:', e); return null; }
@@ -1284,6 +1304,8 @@ async function loadFeed(reset){
       q = q.in('id', ids);
     } else if (flt === 'foryou' && prefs.topics.length) {
       q = q.overlaps('tags', prefs.topics);
+    } else if (flt === 'theme' && X.theme) {
+      q = q.eq('theme_label', X.theme.emoji + ' ' + X.theme.name);
     } else if (flt === 'confession' || flt === 'advice' || flt === 'debate') {
       q = q.eq('type', flt);
     } else if (TAG_FILTERS.includes(flt)) {
@@ -1362,7 +1384,7 @@ function verdictHTML(p){
   const he = t ? Math.round(v.he / t * 100) : 0, she = t ? Math.round(v.she / t * 100) : 0, both = t ? Math.max(0, 100 - he - she) : 0;
   const opts = [['he',VL.he,he],['she',VL.she,she],['both',VL.both,both]];
   return '<div class="verdict-wrap"><div class="verdict" role="group" aria-label="Who is wrong?">' + opts.map(o =>
-    '<button class="vopt vopt-' + o[0] + (my === o[0] ? ' on' : '') + '" data-action="vote" data-pid="' + esc(p.id) + '" data-v="' + o[0] + '" aria-pressed="' + (my === o[0]) + '"' + (closed ? ' disabled' : '') + '><span class="vfill" style="width:' + o[2] + '%"></span><span class="vlabel">' + o[1] + '</span><span class="vpct">' + (t ? o[2] + '%' : '–') + '</span></button>').join('') +
+    '<button class="vopt vopt-' + o[0] + (my === o[0] ? ' on' : '') + (t >= 3 && o[2] === Math.max(he, she, both) && o[2] > 0 ? ' lead' : '') + '" data-action="vote" data-pid="' + esc(p.id) + '" data-v="' + o[0] + '" aria-pressed="' + (my === o[0]) + '"' + (closed ? ' disabled' : '') + '><span class="vfill" style="width:' + o[2] + '%"></span><span class="vlabel">' + o[1] + '</span><span class="vpct">' + (t ? o[2] + '%' : '–') + '</span></button>').join('') +
     '</div>' + vstatusHTML(p) + '<div class="vtotal">' + fmt(t) + (t === 1 ? ' verdict' : ' verdicts') + '</div></div>';
 }
 function rxRowHTML(p){
@@ -1387,6 +1409,8 @@ function cardHTML(p, idx){
   const isNew = p.created_at && Date.now() - new Date(p.created_at).getTime() < 86400000;
   let badges = p.trending ? '<span class="badge badge-t">Trending</span>' : (isNew ? '<span class="badge badge-n">New</span>' : '');
   if (p.updates_count > 0) badges += '<span class="badge badge-u">Updated</span>';
+  if (X.hot && X.hot.post_id === p.id) badges = '<span class="badge badge-hot">🔥 Hot Seat</span>' + badges;
+  if (p.theme_label) badges += '<span class="badge badge-th">' + esc(p.theme_label) + '</span>';
   if (p.sensitive) badges += '<span class="badge badge-s">Sensitive</span>';
   const tags = p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('');
   let preview;
@@ -1408,6 +1432,7 @@ function patchVerdict(root, p){
     const k = b.dataset.v, f = $('.vfill', b), pc = $('.vpct', b);
     if (f) f.style.width = pct[k] + '%'; if (pc) pc.textContent = t ? pct[k] + '%' : '–';
     b.classList.toggle('on', my === k); b.setAttribute('aria-pressed', String(my === k)); b.disabled = closed;
+    b.classList.toggle('lead', t >= 3 && pct[k] > 0 && pct[k] === Math.max(he, she, both));
   });
   const st = $('.vstatus', root), html = vstatusHTML(p);
   if (st) { if (html) st.outerHTML = html; else st.remove(); }
@@ -1458,7 +1483,8 @@ function tickVerdicts(){
       const root = el.closest('[data-card]');
       if (root && $('.verdict-wrap', root)) patchPostUI(p); else el.outerHTML = vstatusHTML(p);
       if (page === 'swipe') renderSwipe();
-    } else el.textContent = '⏳ ' + leftText(iso);
+    } else if (p) { el.classList.toggle('live', isLive(p)); el.innerHTML = statusInner(p); }
+    else el.textContent = '⏳ ' + leftText(iso);
   });
 }
 
@@ -1530,7 +1556,7 @@ function renderDetail(p){
       '<button class="foot-btn" data-action="report-post" data-pid="' + esc(p.id) + '" aria-label="Report">' + ico('flag') + '</button></div>' +
       (p.tags.length ? '<div class="c-tags">' + p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
       '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + '<div id="updBlock"></div>' + rxRowHTML(p) +
-      '<div class="vpanel"><div class="vpanel-title">⚖️ Who is wrong here?' + (own ? ' <span class="vpanel-note">(you can\'t vote on your own post)</span>' : (closed ? ' <span class="vpanel-note">(voting has closed)</span>' : '')) + '</div>' + verdictHTML(p) + '</div>' +
+      '<div class="vpanel"><div class="vpanel-title">⚖️ Who is wrong here?' + (own ? ' <span class="vpanel-note">(you can\'t vote on your own post)</span>' : (closed ? ' <span class="vpanel-note">(voting has closed)</span>' : '')) + '</div>' + verdictHTML(p) + '</div><div id="remindSlot">' + remindBoxHTML(p) + '</div>' +
       '<div class="sec-line"><h2 class="sec-title">💬 <span class="js-cmt-total">' + fmt(p.cmt) + '</span> comments</h2><select class="sort-sel" id="sortSel" aria-label="Sort comments"><option value="recent">Recent</option><option value="heated">Most heated</option><option value="top">Top rated</option></select></div>' +
       '<div class="cm-box"><label class="sr" for="cmIn">Write a comment</label><textarea class="cm-ta" id="cmIn" placeholder="What\'s your verdict? Be honest, be kind…" maxlength="' + LIM.comment + '"></textarea><div class="cm-foot"><span class="cm-count" id="cmCount">0 / ' + LIM.comment + '</span><button class="btn btn-primary btn-sm" data-action="post-comment" data-pid="' + esc(p.id) + '">Post</button></div></div>' +
       '<div id="cmList">' + skeletonHTML(1) + '</div>' +
@@ -2143,7 +2169,7 @@ function showCrisis(onContinue){
 /* =====================================================================
    HOME EXTRAS
    ===================================================================== */
-function renderHomeExtras(){ renderStreak(); renderPushBanner(); renderPrompt(); renderNextBadge(); renderAffiliate(); updateNewPill(); }
+function renderHomeExtras(){ renderBan(); renderAnnouncement(); renderStreak(); renderHotSeat(); renderTheme(); renderPushBanner(); renderPrompt(); renderNextBadge(); renderAffiliate(); updateNewPill(); }
 function renderStreak(){
   const b = $('#streakBar'); if (!b) return;
   b.innerHTML = me && streak >= 2 ? '<div class="streak">🔥 ' + streak + ' day streak</div>' : '';
@@ -2152,7 +2178,7 @@ function renderPrompt(){
   const c = $('#promptBanner'); if (!c) return;
   const today = new Date().toDateString();
   if (!me || ls.get('hc_prompt_dismissed_' + today)) { c.innerHTML = ''; return; }
-  c.innerHTML = '<div class="banner banner-prompt"><h3>💬 Today\'s prompt</h3><p>' + esc(DAILY_PROMPTS[dayOfYear() % DAILY_PROMPTS.length]) + '</p><div class="banner-actions"><button class="btn btn-primary btn-sm" data-action="answer-prompt">Answer anonymously</button><button class="btn btn-ghost btn-sm" data-action="dismiss-prompt">Dismiss</button></div></div>';
+  c.innerHTML = '<div class="banner banner-prompt"><h3>💬 Today\'s prompt</h3><p>' + esc(todayPrompt()) + '</p><div class="banner-actions"><button class="btn btn-primary btn-sm" data-action="answer-prompt">Answer anonymously</button><button class="btn btn-ghost btn-sm" data-action="dismiss-prompt">Dismiss</button></div></div>';
 }
 function renderNextBadge(){
   const c = $('#nextBadgeBar'); if (!c) return;
@@ -2166,6 +2192,86 @@ function renderAffiliate(){
   const until = num(ls.get('hc_aff_until'));
   if (!CFG.AFFILIATE_URL || !me || Date.now() < until) { c.innerHTML = ''; return; }
   c.innerHTML = '<div class="affiliate"><a href="' + esc(CFG.AFFILIATE_URL) + '" target="_blank" rel="noopener noreferrer sponsored" style="display:flex;gap:12px;align-items:center;flex:1"><span style="font-size:26px">🫂</span><span><span class="aff-name" style="display:block">Talk to a licensed therapist<span class="spons">Sponsored</span></span><span class="aff-desc" style="display:block">BetterHelp, professional support from anywhere.</span></span></a><button class="x" data-action="dismiss-aff" aria-label="Dismiss">✕</button></div>';
+}
+
+/* =====================================================================
+   PLATFORM EXTRAS: weekly theme, Hot Seat, announcements, admin settings
+   ===================================================================== */
+function todayPrompt(){ return X.prompt || DAILY_PROMPTS[dayOfYear() % DAILY_PROMPTS.length]; }
+async function loadExtras(force){
+  if (!sb) return;
+  if (!force && Date.now() - X.at < 20000) return;
+  X.at = Date.now();
+  const rpc = (n) => sb.rpc(n).then(r => (r && !r.error) ? r.data : null, () => null);
+  const [theme, hot, ann, prompt, settings] = await Promise.all([rpc('get_current_theme'), rpc('get_hot_seat'), rpc('get_active_announcement'), rpc('get_today_prompt'), rpc('get_public_settings')]);
+  X.theme = theme || null; X.hot = hot || null; X.ann = ann || null;
+  X.prompt = typeof prompt === 'string' && prompt ? prompt : null; X.settings = settings || {};
+  if (me) {
+    const [st, rem] = await Promise.all([rpc('get_my_status'), sb.from('outcome_reminders').select('post_id').limit(500).then(r => (r && r.data) || [], () => [])]);
+    if (st) X.status = st;
+    X.remind = new Set(rem.map(r => r.post_id));
+  } else { X.status = { banned: false, is_admin: false }; X.remind = new Set(); }
+  if (X.hot && X.hot.post_id && !POSTS.has(X.hot.post_id)) {
+    try { const { data } = await sb.from('posts').select('*').eq('id', X.hot.post_id).eq('hidden', false).maybeSingle(); if (data) upsertPost(data); } catch(e){}
+  }
+  if (page === 'home') renderHomeExtras();
+  if (page === 'home' && S.feed.ids.length) renderFeed();
+}
+function renderBan(){
+  const c = $('#banBar'); if (!c) return;
+  c.innerHTML = me && X.status.banned ? '<div class="banner banner-ban"><h3>⛔ Your account is restricted</h3><p>You can read stories, but you can\'t post, comment or vote.' + (X.status.reason ? ' Reason: ' + esc(X.status.reason) : '') + '</p></div>' : '';
+}
+function renderAnnouncement(){
+  const c = $('#annBar'); if (!c) return;
+  let h = '';
+  if (me && X.status.is_admin) h += '<a class="adm-chip" href="/admin.html">🛠 Open admin panel</a>';
+  const note = X.settings && typeof X.settings.maintenance_note === 'string' ? X.settings.maintenance_note.trim() : '';
+  if (note) h += '<div class="banner banner-ann"><p style="margin:0">' + esc(note) + '</p></div>';
+  else if (X.settings && X.settings.posting_enabled === false) h += '<div class="banner banner-ann"><p style="margin:0">New stories are paused for a moment. You can still read and vote.</p></div>';
+  const a = X.ann;
+  if (a && a.id && !ls.get('hc_ann_' + a.id)) {
+    h += '<div class="banner banner-ann"><h3>📣 ' + esc(a.title) + '</h3>' + (a.body ? '<p>' + esc(a.body) + '</p>' : '') +
+      '<div class="banner-actions">' + (a.link && /^(#|\/)/.test(a.link) ? '<a class="btn btn-primary btn-sm" href="' + esc(a.link) + '">Open</a>' : '') +
+      '<button class="btn btn-ghost btn-sm" data-action="dismiss-ann" data-id="' + esc(a.id) + '">Dismiss</button></div></div>';
+  }
+  c.innerHTML = h;
+}
+function renderHotSeat(){
+  const c = $('#hotSeatBar'); if (!c) return;
+  const p = X.hot && POSTS.get(X.hot.post_id);
+  if (!p) { c.innerHTML = ''; return; }
+  const t = p.votes.he + p.votes.she + p.votes.both;
+  c.innerHTML = '<div class="banner banner-hot"><h3>🔥 Hot Seat today</h3><p><strong>' + esc(p.title) + '</strong><br><span style="opacity:.75;font-size:12px">' + fmt(t) + ' verdicts · ' + fmt(p.cmt) + ' comments</span></p><div class="banner-actions"><button class="btn btn-primary btn-sm" data-action="open" data-pid="' + esc(p.id) + '">Give your verdict</button></div></div>';
+}
+function renderTheme(){
+  const c = $('#themeBar'); if (!c) return;
+  const t = X.theme;
+  if (!t) { c.innerHTML = ''; return; }
+  c.innerHTML = '<div class="banner banner-theme"><h3>' + esc(t.emoji || '✨') + ' This week: ' + esc(t.name) + '</h3>' +
+    (t.description ? '<p>' + esc(t.description) + '</p>' : '') + (t.prompt ? '<p style="font-style:italic;opacity:.9">"' + esc(t.prompt) + '"</p>' : '') +
+    '<div class="banner-actions"><button class="btn btn-primary btn-sm" data-action="theme-post">Share your story</button><button class="btn btn-ghost btn-sm" data-action="theme-browse">See this week\'s stories</button></div></div>';
+}
+function remindBoxHTML(p){
+  if (!me) return '';
+  const own = p.user_id === me.id, n = num(p.remind_count);
+  if (own) return n > 0 ? '<div class="remind-box"><span>🔔 <strong>' + fmt(n) + '</strong> ' + (n === 1 ? 'person wants' : 'people want') + ' to hear what happened next. Share an update when you are ready.</span></div>' : '';
+  const on = X.remind.has(p.id);
+  return '<div class="remind-box"><span>📖 ' + (n > 0 ? fmt(n) + ' waiting to hear what happens next.' : 'Want to know what happens next?') + '</span><button class="btn ' + (on ? 'btn-ghost' : 'btn-primary') + ' btn-sm" data-action="remind" data-pid="' + esc(p.id) + '">' + (on ? '✓ We\'ll tell you' : 'Remind me') + '</button></div>';
+}
+async function toggleRemind(pid){
+  if (!me) { showAuth('signup'); return; }
+  const key = 'r' + pid; if (inflight.has(key)) return; inflight.add(key);
+  try {
+    const { data, error } = await sb.rpc('toggle_outcome_reminder', { p_post_id: pid });
+    if (error) throw error;
+    const p = POSTS.get(pid);
+    if (data && data.on) { X.remind.add(pid); S.follow.add(pid); toast('We\'ll tell you when the author shares what happened 📖', 'ok'); if (pushSupported() && Notification.permission === 'default') renderPushBanner(); }
+    else { X.remind.delete(pid); toast('Reminder removed', 'info'); }
+    if (p && data) p.remind_count = num(data.count);
+    patchFollowUI(pid);
+    if (S.detail.id === pid) { const b = $('#remindSlot'); if (b && p) b.innerHTML = remindBoxHTML(p); }
+  } catch(e) { toast(errMsg(e, 'Could not set the reminder'), 'err'); }
+  finally { inflight.delete(key); }
 }
 function checkViral(){ if (me && S.feed.ids.some(id => { const p = POSTS.get(id); return p && p.user_id === me.id && p.views >= 1000; })) award('viral_post'); }
 
@@ -2340,7 +2446,11 @@ function bindEvents(){
       case 'sw-next': swipeNext(); break;
       case 'sw-skip': swipeSkip(); break;
       case 'sw-reload': loadSwipe(true); break;
-      case 'answer-prompt': { const prompt = DAILY_PROMPTS[dayOfYear() % DAILY_PROMPTS.length]; go('confess'); setTimeout(() => { const t = $('#ptitle'), b = $('#pbody'); if (t && !t.value) { t.value = prompt.slice(0, LIM.title); updateCounters(); } if (b) b.focus(); }, 120); break; }
+      case 'answer-prompt': { const prompt = todayPrompt(); go('confess'); setTimeout(() => { const t = $('#ptitle'), b = $('#pbody'); if (t && !t.value) { t.value = prompt.slice(0, LIM.title); updateCounters(); } if (b) b.focus(); }, 120); break; }
+      case 'remind': toggleRemind(pid); break;
+      case 'dismiss-ann': ls.set('hc_ann_' + el.dataset.id, '1'); renderAnnouncement(); break;
+      case 'theme-post': { go('confess'); setTimeout(() => { const g = $('#ptags'), t = $('#ptitle'); if (g && X.theme && !g.value) g.value = X.theme.tag; if (t && X.theme && X.theme.prompt && !t.value) { t.value = String(X.theme.prompt).slice(0, LIM.title); updateCounters(); } }, 120); break; }
+      case 'theme-browse': { if (X.theme) { S.filter = 'theme'; renderFilters(); loadFeed(true); const wrap = $('#feedWrap'); if (wrap) wrap.scrollIntoView({ behavior: 'smooth' }); } break; }
       case 'dismiss-prompt': ls.set('hc_prompt_dismissed_' + new Date().toDateString(), '1'); renderPrompt(); break;
       case 'dismiss-aff': ls.set('hc_aff_until', String(Date.now() + 7 * 86400000)); renderAffiliate(); break;
       case 'quote-download': quoteBlob().then(b => { if (!b) return; const u = URL.createObjectURL(b), l = document.createElement('a'); l.href = u; l.download = 'heartconfia.png'; document.body.appendChild(l); l.click(); l.remove(); setTimeout(() => URL.revokeObjectURL(u), 2000); }); break;
@@ -2383,7 +2493,7 @@ function bindEvents(){
   window.addEventListener('offline', () => $('#offlineBar').classList.remove('hidden'));
   window.addEventListener('online', () => { $('#offlineBar').classList.add('hidden'); if (S.feed.error || !S.feed.ids.length) loadFeed(true); });
   if (!navigator.onLine) $('#offlineBar').classList.remove('hidden');
-  setInterval(tickVerdicts, 30000);
+  setInterval(tickVerdicts, 15000);
 
   // pull to refresh (home only, never while an overlay is open)
   let y0 = 0, pulling = false, lastPull = 0;
@@ -2430,7 +2540,7 @@ async function init(){
     const { data } = await sb.auth.getSession();
     if (data && data.session && data.session.user) await establishSession(data.session.user);
   } catch(e) { console.error('Session error:', e); }
-  setupRealtime(); setupPresence();
+  setupRealtime(); setupPresence(); loadExtras(true);
   handleUnsubscribeLink();
   await loadFeed(true);
   if (/^#post-/.test(location.hash)) handleHash();
