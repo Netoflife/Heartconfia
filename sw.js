@@ -5,7 +5,7 @@
  * - Web Push: shows notifications and opens the right story when tapped
  * Bump VERSION whenever you change this file or the shell, so old caches are removed.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const SHELL_CACHE = 'hc-shell-' + VERSION;
 const ASSET_CACHE = 'hc-assets-' + VERSION;
 
@@ -79,7 +79,7 @@ self.addEventListener('fetch', function (event) {
   if (req.mode === 'navigate') {
     event.respondWith(
       fetch(req).then(function (res) {
-        if (res && res.ok && url.origin === self.location.origin) {
+        if (res && res.ok && url.origin === self.location.origin && url.pathname === '/') {
           const copy = res.clone();
           caches.open(SHELL_CACHE).then(function (c) { c.put('/', copy); }).catch(function () {});
         }
