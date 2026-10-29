@@ -790,6 +790,7 @@ const MY = { rx: {}, vote: {}, cvote: {}, hearts: new Set() };
 const SW = { queue: [], i: 0, loading: false, voted: null, err: null };
 const inflight = new Set();
 let NOTIFS = [], unread = 0;
+let seenDay = '';
 let prefs = { topics: [] }, streak = 0, lastActive = null, ach = [], rxUsed = [], onboarded = false;
 let PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true };
 let chPosts = null, chComments = null, chUser = null, chPresence = null;
@@ -852,7 +853,8 @@ function loadUserData(){
     }
   } catch(e){}
 }
-function updateStreak(){
+function updateStreak(){ /* the server counts the streak (see syncSeen); this local count is only a fallback if the server call fails */ }
+function localStreakFallback(){
   const today = new Date().toDateString();
   if (lastActive === today) return;
   const y = new Date(Date.now() - 86400000).toDateString();
@@ -864,8 +866,9 @@ function updateStreak(){
 /* Server-side streak (source of truth when the retention SQL is installed) */
 async function syncSeen(){
   if (!me || !sb) return;
-  if (Date.now() - seenAt < 6 * 3600 * 1000) return;
-  seenAt = Date.now();
+  const dayKey = new Date().toDateString();
+  if (Date.now() - seenAt < 6 * 3600 * 1000 && seenDay === dayKey) return;
+  seenAt = Date.now(); seenDay = dayKey;
   try {
     let tz = 'UTC'; try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){}
     const { data, error } = await sb.rpc('touch_seen', { p_tz: tz });
@@ -875,7 +878,7 @@ async function syncSeen(){
       if (streak >= 3) award('streak_3');
       if (streak >= 7) award('streak_7');
     }
-  } catch(e) { console.warn('touch_seen', e); seenAt = 0; }
+  } catch(e) { console.warn('touch_seen', e); seenAt = 0; seenDay = ''; localStreakFallback(); renderStreak(); }
 }
 function award(id){
   if (!me) return;
@@ -2123,7 +2126,7 @@ async function loadRepCard(){
     if (error) throw error;
     if (page !== 'profile' || !data) return;
     const box = $('#pfRep'); if (box) box.innerHTML = repCardHTML(data);
-    if (typeof data.streak === 'number' && data.streak >= streak) { streak = data.streak; saveUserData(); }
+    if (typeof data.streak === 'number') { streak = data.streak; saveUserData(); renderStreak(); }
     LV[me.id] = { rep: num(data.rep), level: data.level };
   } catch(e) { console.warn('stats', e); }
 }
