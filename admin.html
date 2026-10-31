@@ -124,17 +124,23 @@ function showLogin(msg){
 /* ---------------- shell ---------------- */
 var TABS = [
   ['dash','Dashboard'],['reports','Reports'],['stories','Stories'],['comments','Comments'],['people','People'],
-  ['themes','Themes'],['prompts','Prompts'],['news','Announcements'],['settings','Settings'],['delivery','Delivery & jobs'],['audit','Audit log']
+  ['credits','Credits'],['themes','Themes'],['prompts','Prompts'],['news','Announcements'],['settings','Settings'],['delivery','Delivery & jobs'],['audit','Audit log']
 ];
-var cur = 'dash', me = null, openReports = 0;
+var ROLE_TABS = {
+  admin: null,
+  moderator: ['dash','reports','stories','comments','people','delivery','audit'],
+  finance: ['credits','audit']
+};
+var cur = 'dash', me = null, openReports = 0, myRole = 'admin';
+function visibleTabs(){ var allow = ROLE_TABS[myRole]; return allow ? TABS.filter(function(t){ return allow.indexOf(t[0]) >= 0; }) : TABS; }
 function shell(){
   APP.innerHTML = '<header><div class="top"><h1>🛠 HeartConfia Admin</h1><span class="who" id="who"></span><a class="b" style="text-decoration:none;padding:6px 10px;border:1px solid var(--line2);border-radius:10px;font-size:13px;color:var(--text)" href="/">Open app</a><button class="b" id="out">Sign out</button></div><nav id="nav"></nav></header><main id="view"></main>';
-  $('#who').textContent = me && me.email ? me.email : '';
+  $('#who').textContent = (me && me.email ? me.email : '') + ' · ' + myRole;
   $('#out').onclick = async function(){ await sb.auth.signOut(); showLogin(); };
   drawNav();
 }
 function drawNav(){
-  $('#nav').innerHTML = TABS.map(function(t){
+  $('#nav').innerHTML = visibleTabs().map(function(t){
     return '<button data-t="' + t[0] + '" class="' + (t[0] === cur ? 'on' : '') + '">' + esc(t[1]) + (t[0] === 'reports' && openReports ? '<span class="n">' + openReports + '</span>' : '') + '</button>';
   }).join('');
   Array.prototype.forEach.call(document.querySelectorAll('#nav button'), function(b){ b.onclick = function(){ cur = b.dataset.t; drawNav(); render(); }; });
@@ -274,16 +280,17 @@ async function loadPeople(reset){
   pplState.rows = reset ? rows : pplState.rows.concat(rows); pplState.more = rows.length === 30;
   var box = $('#plist'); if (!box) return;
   box.innerHTML = pplState.rows.length ? pplState.rows.map(function(u){
-    return '<div class="card" data-id="' + esc(u.id) + '"><div class="row">' + (u.is_admin ? '<span class="tag vio">admin</span>' : '') + (u.banned_at ? '<span class="tag red">restricted</span>' : '') + (u.devices ? '<span class="tag green">alerts on</span>' : '') + '</div>' +
+    return '<div class="card" data-id="' + esc(u.id) + '"><div class="row">' + (u.is_admin ? '<span class="tag vio">' + esc(u.role || 'admin') + '</span>' : '') + (u.banned_at ? '<span class="tag red">restricted</span>' : '') + (u.devices ? '<span class="tag green">alerts on</span>' : '') + '</div>' +
       '<div class="t" style="margin-top:6px">' + esc(u.username) + '</div><div class="m">' + esc(u.email || 'no email') + ' · joined ' + ago(u.created_at) + ' · seen ' + ago(u.last_seen_at) + ' · ' + u.posts + ' stories · ' + u.comments + ' comments · streak ' + (u.streak || 0) + (u.ban_reason ? ' · reason: ' + esc(u.ban_reason) : '') + '</div>' +
       '<div class="row">' + (u.banned_at ? '<button class="b g" data-a="unban">Restore</button>' : (u.is_admin ? '' : '<button class="b d" data-a="ban">Restrict</button>')) +
-      (u.is_admin ? '<button class="b" data-a="unadmin">Remove admin</button>' : '<button class="b" data-a="admin">Make admin</button>') + '</div></div>';
+      (myRole !== 'admin' ? '' : (u.is_admin ? '<button class="b" data-a="unadmin">Remove ' + esc(u.role || 'admin') + '</button>' : '<button class="b" data-a="admin">Make admin</button><button class="b" data-a="moderator">Make moderator</button><button class="b" data-a="finance">Make finance</button>')) + '</div></div>';
   }).join('') + (pplState.more ? '<button class="b" id="pmore" style="width:100%">Load more</button>' : '') : '<div class="empty">No one found.</div>';
   on(box, '[data-a]', function(b){
     var id = b.closest('.card').dataset.id, a = b.dataset.a;
     if (a === 'ban') banUser(id, true).then(function(){ loadPeople(true); });
     else if (a === 'unban') banUser(id, false).then(function(){ loadPeople(true); });
     else if (a === 'admin') { if (!confirm('Give this person full admin access?')) return; act(function(){ return rpc('admin_set_admin', { p_user_id: id, p_admin: true }); }, 'They are now an admin').then(function(){ loadPeople(true); }); }
+    else if (a === 'moderator' || a === 'finance') { if (!confirm('Make this person a ' + a + '?')) return; act(function(){ return rpc('admin_set_admin', { p_user_id: id, p_admin: true, p_role: a }); }, 'Role saved').then(function(){ loadPeople(true); }); }
     else if (a === 'unadmin') act(function(){ return rpc('admin_set_admin', { p_user_id: id, p_admin: false }); }, 'Admin removed').then(function(){ loadPeople(true); });
   });
   var m = $('#pmore'); if (m) m.onclick = function(){ pplState.off += 30; loadPeople(false); };
@@ -446,7 +453,75 @@ async function viewAudit(v){
   }).join('') : '<div class="empty">Nothing yet.</div>');
 }
 
-var VIEWS = { dash: viewDash, reports: viewReports, stories: viewStories, comments: viewComments, people: viewPeople, themes: viewThemes, prompts: viewPrompts, news: viewNews, settings: viewSettings, delivery: viewDelivery, audit: viewAudit };
+
+/* ---------------- credits ---------------- */
+var creditState = { q: '', adj: null };
+function newKey(){ return 'adm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
+function naira(k){ return '₦' + (k / 100).toLocaleString('en-NG'); }
+async function viewCredits(v){
+  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config');
+  var isAdmin = myRole === 'admin';
+  v.innerHTML = '<h2>Heart Credits</h2><p class="hint">1 HC = ₦10. Every change is saved in a ledger that can\'t be edited, and in the audit log.</p><div class="grid">' +
+    statCard(o.purchased, 'purchased (held by users)') + statCard(o.earned, 'earned (held by users)') + statCard(o.promo, 'promotional (held by users)') +
+    statCard(o.spent_7d, 'spent in 7 days') + statCard(o.granted_7d, 'added in 7 days', 'good') + statCard(o.wallets, 'wallets') + '</div>' +
+    '<h3>Find a person</h3><div class="card"><div class="two"><div><input id="cq" placeholder="Name or email" value="' + esc(creditState.q) + '"/></div><div><button class="b p" id="cgo">Search</button></div></div></div><div id="clist"></div>' +
+    '<h3>Prices</h3><p class="hint">What each feature costs, in Heart Credits. The app reads these live. A feature only appears when it is built.</p>' +
+    cfg.prices.map(function(f){
+      return '<div class="card" data-f="' + esc(f.feature) + '"><div class="t">' + esc(f.label) + ' <span class="tag">' + esc(f.feature) + '</span></div><div class="two"><div><label>Cost (HC)</label><input type="number" min="0" max="100000" class="pc" value="' + f.cost + '"/></div><div><label>On</label><select class="pa"><option value="1"' + (f.active ? ' selected' : '') + '>Yes</option><option value="0"' + (f.active ? '' : ' selected') + '>No</option></select></div></div><button class="b" data-a="saveprice">Save price</button></div>';
+    }).join('') +
+    '<h3>Credit packages</h3><p class="hint">The price is always credits × ₦10. You only choose the number of credits.</p>' +
+    cfg.packages.map(function(p){
+      return '<div class="card" data-p="' + esc(p.id) + '"><div class="t">' + esc(p.name) + ' <span class="tag">' + naira(p.price_kobo) + '</span></div><div class="two"><div><label>Name</label><input class="pn" value="' + esc(p.name) + '" maxlength="40"/></div><div><label>Credits</label><input type="number" min="1" max="100000" class="pcr" value="' + p.credits + '"/></div></div><div class="two"><div><label>Order</label><input type="number" class="ps" value="' + p.sort + '"/></div><div><label>Shown</label><select class="pa"><option value="1"' + (p.active ? ' selected' : '') + '>Yes</option><option value="0"' + (p.active ? '' : ' selected') + '>No</option></select></div></div><button class="b" data-a="savepkg">Save package</button></div>';
+    }).join('') +
+    '<div class="card"><div class="t">Add a package</div><div class="two"><div><label>Short id (letters)</label><input id="npid" placeholder="mega" maxlength="30"/></div><div><label>Name</label><input id="npn" placeholder="Mega" maxlength="40"/></div></div><div class="two"><div><label>Credits</label><input id="npc" type="number" min="1" placeholder="2000"/></div><div></div></div><button class="b p" id="npadd">Add package</button></div>' +
+    (isAdmin ? '<h3>Username rules</h3><div class="card"><div class="two"><div><label>Days between changes</label><input id="ur1" type="number" min="0" max="365" value="' + cfg.username.cooldown_days + '"/></div><div><label>Days an old name is held</label><input id="ur2" type="number" min="0" max="730" value="' + cfg.username.hold_days + '"/></div></div><div class="two"><div><label>Free changes per person</label><input id="ur3" type="number" min="0" max="10" value="' + cfg.username.free_changes + '"/></div><div></div></div><button class="b p" id="ursave">Save rules</button></div>' : '');
+
+  var q = $('#cq'); $('#cgo').onclick = function(){ creditState.q = q.value.trim(); loadWallets(); };
+  q.onkeydown = function(e){ if (e.key === 'Enter') $('#cgo').click(); };
+  on(v, '[data-a=saveprice]', function(b){
+    var c = b.closest('.card'), f = c.dataset.f;
+    act(function(){ return rpc('admin_set_price', { p_feature: f, p_cost: parseInt(c.querySelector('.pc').value, 10), p_active: c.querySelector('.pa').value === '1' }); }, 'Price saved');
+  });
+  on(v, '[data-a=savepkg]', function(b){
+    var c = b.closest('.card');
+    act(function(){ return rpc('admin_save_package', { p_id: c.dataset.p, p_name: c.querySelector('.pn').value.trim(), p_credits: parseInt(c.querySelector('.pcr').value, 10), p_active: c.querySelector('.pa').value === '1', p_sort: parseInt(c.querySelector('.ps').value, 10) || 0 }); }, 'Package saved').then(function(r){ if (r !== undefined) render(); });
+  });
+  $('#npadd').onclick = function(){
+    act(function(){ return rpc('admin_save_package', { p_id: $('#npid').value.trim(), p_name: $('#npn').value.trim(), p_credits: parseInt($('#npc').value, 10), p_active: true, p_sort: 99 }); }, 'Package added').then(function(r){ if (r !== undefined) render(); });
+  };
+  var us = $('#ursave'); if (us) us.onclick = function(){
+    act(function(){ return rpc('admin_set_username_rules', { p_cooldown: parseInt($('#ur1').value, 10), p_hold: parseInt($('#ur2').value, 10), p_free: parseInt($('#ur3').value, 10) }); }, 'Rules saved');
+  };
+  loadWallets();
+}
+async function loadWallets(){
+  var box = $('#clist'); if (!box) return;
+  var rows = await rpc('admin_list_wallets', { p_search: creditState.q, p_limit: 20, p_offset: 0 });
+  box.innerHTML = rows.length ? rows.map(function(u){
+    return '<div class="card" data-id="' + esc(u.id) + '"><div class="t">' + esc(u.username) + ' <span class="tag green">' + u.total + ' HC</span></div><div class="m">' + esc(u.email || 'no email') + ' · purchased ' + u.purchased + ' · earned ' + u.earned + ' · promotional ' + u.promo + '</div>' +
+      '<div class="row"><button class="b" data-a="adj">Add or remove credits</button><button class="b" data-a="hist">History</button></div><div class="slot"></div></div>';
+  }).join('') : '<div class="empty">No one found.</div>';
+  on(box, '[data-a=adj]', function(b){
+    var c = b.closest('.card'), slot = c.querySelector('.slot'), key = newKey();
+    slot.innerHTML = '<div class="two"><div><label>Amount (use − to remove)</label><input class="aa" type="number" placeholder="20"/></div><div><label>Type</label><select class="ac"><option value="promotional">Promotional</option><option value="earned">Earned</option></select></div></div><label>Reason (saved in the log)</label><input class="ar" maxlength="200" placeholder="e.g. welcome campaign"/><button class="b p" data-a="adjgo">Confirm</button>';
+    on(slot, '[data-a=adjgo]', function(g){
+      var amt = parseInt(slot.querySelector('.aa').value, 10); if (!amt) { toast('Enter an amount', 'bad'); return; }
+      if (!confirm((amt > 0 ? 'Add ' : 'Remove ') + Math.abs(amt) + ' HC ' + (amt > 0 ? 'to ' : 'from ') + c.querySelector('.t').firstChild.textContent.trim() + '?')) return;
+      g.disabled = true;
+      act(function(){ return rpc('admin_adjust_credits', { p_user: c.dataset.id, p_amount: amt, p_category: slot.querySelector('.ac').value, p_reason: slot.querySelector('.ar').value.trim(), p_key: key }); }, 'Done').then(function(r){ if (r !== undefined) loadWallets(); else g.disabled = false; });
+    });
+  });
+  on(box, '[data-a=hist]', async function(b){
+    var c = b.closest('.card'), slot = c.querySelector('.slot');
+    var rows = await act(function(){ return rpc('admin_user_ledger', { p_user: c.dataset.id, p_limit: 50 }); });
+    if (!rows) return;
+    slot.innerHTML = rows.length ? rows.map(function(r){
+      return '<div class="m" style="padding:6px 0;border-top:1px solid var(--line)">' + (r.amount > 0 ? '+' : '') + r.amount + ' HC · ' + esc(r.category) + ' · ' + esc(r.type) + ' · ' + esc(r.description) + ' · balance ' + r.balance_after + ' · ' + new Date(r.created_at).toLocaleString() + '</div>';
+    }).join('') : '<div class="m">No activity yet.</div>';
+  });
+}
+
+var VIEWS = { credits: viewCredits, dash: viewDash, reports: viewReports, stories: viewStories, comments: viewComments, people: viewPeople, themes: viewThemes, prompts: viewPrompts, news: viewNews, settings: viewSettings, delivery: viewDelivery, audit: viewAudit };
 
 /* ---------------- start ---------------- */
 async function start(){
@@ -460,6 +535,8 @@ async function start(){
     $('#so').onclick = async function(){ await sb.auth.signOut(); showLogin(); };
     return;
   }
+  myRole = st.role || 'admin';
+  var vt = visibleTabs(); if (!vt.some(function(t){ return t[0] === cur; })) cur = vt[0][0];
   shell(); render();
 }
 start();
