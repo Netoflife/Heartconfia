@@ -7,18 +7,18 @@
 <meta name="color-scheme" content="dark"/>
 <meta name="description" content="HeartConfia - Anonymous Relationship Confessions. Share your story. Judge. Debate. Relate."/>
 <meta name="robots" content="index, follow"/>
-<link rel="canonical" href="https://heartconfia.com/"/>
+<link rel="canonical" href="https://heartconfia.site/"/>
 <meta property="og:title" content="HeartConfia - Anonymous Relationship Confessions"/>
 <meta property="og:description" content="Where hearts break in public. Share your story anonymously."/>
 <meta property="og:type" content="website"/>
-<meta property="og:image" content="https://heartconfia.com/og-image.png"/>
+<meta property="og:image" content="https://heartconfia.site/og-image.png"/>
 <meta property="og:image:width" content="1200"/>
 <meta property="og:image:height" content="630"/>
-<meta property="og:url" content="https://heartconfia.com/"/>
+<meta property="og:url" content="https://heartconfia.site/"/>
 <meta name="twitter:card" content="summary_large_image"/>
 <meta name="twitter:title" content="HeartConfia - Anonymous Relationship Confessions"/>
 <meta name="twitter:description" content="Where hearts break in public. Share your story anonymously."/>
-<meta name="twitter:image" content="https://heartconfia.com/og-image.png"/>
+<meta name="twitter:image" content="https://heartconfia.site/og-image.png"/>
 <title>HeartConfia — Anonymous Relationship Confessions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -442,6 +442,32 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 #ibanner .ib-later{padding:12px 16px;border-radius:100px;background:transparent;color:var(--t2);font-size:14px;font-weight:600}
 #ibanner button{border:0;cursor:pointer;font-family:inherit}
 @media (prefers-reduced-motion:reduce){#ibanner{transition:none}}
+
+/* ---- Heart Credits ---- */
+.hc-chip{display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 12px;border-radius:100px;background:var(--s2);border:1px solid var(--line2);font-size:13px;font-weight:700;color:var(--gold);white-space:nowrap}
+.hc-chip:active{transform:scale(.97)}
+.hc-card{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:22px}
+.hc-card b{font-size:22px;color:var(--gold);font-family:var(--fd)}
+.hc-card small{display:block;color:var(--t3);font-size:12px;margin-top:2px}
+.hc-big{text-align:center;padding:6px 0 14px}
+.hc-big b{display:block;font-family:var(--fd);font-size:44px;color:var(--gold);line-height:1.1}
+.hc-big span{color:var(--t3);font-size:13px}
+.hc-split{background:var(--s2);border:1px solid var(--line);border-radius:var(--rs);margin-bottom:18px}
+.hc-split div{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);font-size:14px}
+.hc-split div:first-child{border-top:0}
+.hc-split small{display:block;color:var(--t3);font-size:12px}
+.hc-h{font-family:var(--fd);font-size:17px;margin:16px 0 8px}
+.hc-pk{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;background:var(--s2);border:1px solid var(--line);border-radius:var(--rs);margin-bottom:8px}
+.hc-pk small{display:block;color:var(--t3);font-size:12px}
+.hc-led{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-top:1px solid var(--line);font-size:13.5px}
+.hc-led small{display:block;color:var(--t3);font-size:11.5px}
+.hc-led .pos{color:var(--green);font-weight:700}.hc-led .neg{color:var(--t2);font-weight:700}
+.hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
+.hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
+.hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
+
+.site-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:28px 0 8px;font-size:12.5px;color:var(--t3)}
+.site-foot a{color:var(--t3);text-decoration:underline;text-underline-offset:3px}
 </style>
 </head>
 <body>
@@ -531,6 +557,7 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
       <div id="resourcesWrap"></div>
     </div>
   </section>
+  <footer class="site-foot"><a href="/privacy.html">Privacy Policy</a><span aria-hidden="true">·</span><a href="/terms.html">Terms</a><span aria-hidden="true">·</span><a href="mailto:hello@heartconfia.site">Contact</a></footer>
 </main>
 
 <nav id="bottomnav" aria-label="Main">
@@ -558,6 +585,22 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
       <button class="btn btn-primary btn-block" data-action="pw-signup">Create free account</button>
       <button class="btn btn-ghost btn-block" style="margin-top:8px" data-action="pw-login">I already have an account</button>
     </div>
+  </div>
+</div>
+
+<div id="ovWallet" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="wlTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovWallet" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">💎</div><h2 class="m-title" id="wlTitle">Heart Credits</h2></div>
+    <div class="m-body" id="wlBody"></div>
+  </div>
+</div>
+
+<div id="ovName" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="nmTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovName" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">✏️</div><h2 class="m-title" id="nmTitle">Change username</h2></div>
+    <div class="m-body" id="nmBody"></div>
   </div>
 </div>
 
@@ -604,8 +647,8 @@ const CFG = {
   // Sponsored slot. Leave empty to disable. Paste your real affiliate URL to enable.
   AFFILIATE_URL: '',
   // Set these to your real pages. When empty, the signup checkbox shows plain text.
-  TERMS_URL: '',
-  PRIVACY_URL: '',
+  TERMS_URL: '/terms.html',
+  PRIVACY_URL: '/privacy.html',
   // Web Push public key (VAPID). Leave empty to hide push prompts until the push backend is ready.
   VAPID_PUBLIC_KEY: 'BGYVsfHDzvHmxmVVbwKWdtqj_4bMdSh9Pq1t8EBXqUGbgn1WtZyvVrq3h2iFS8ZiE25-t9ldxAWPNhgcKFwcSs4'
 };
@@ -1123,6 +1166,7 @@ function resetSession(){
   PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true }; seenAt = 0;
   MY.rx = {}; MY.vote = {}; MY.cvote = {}; MY.hearts = new Set();
   S.saved.clear(); S.follow.clear(); NOTIFS = []; unread = 0; sessTask = null; sessUid = null;
+  W.wallet = null; W.ledger = []; W.more = false; W.st = null;
   SW.queue = []; SW.i = 0; SW.voted = null; SW.err = null;
   if (chUser && sb) { try { sb.removeChannel(chUser); } catch(e){} chUser = null; }
   updateNav(); updateNotifBadge();
@@ -1271,14 +1315,14 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
 function updateNav(){
   const r = $('#navRight'); if (!r) return;
   if (me && me.username) {
-    r.innerHTML = '<button class="ava-btn' + (unread > 0 ? ' has-notif' : '') + '" data-page="profile" aria-label="Profile">' + esc(me.username.slice(0,2).toUpperCase()) + '</button>';
+    r.innerHTML = (W.wallet ? '<button class="hc-chip" data-action="open-wallet" aria-label="Heart Credits: ' + hcTotal() + '">💎 ' + fmt(hcTotal()) + '</button>' : '') + '<button class="ava-btn' + (unread > 0 ? ' has-notif' : '') + '" data-page="profile" aria-label="Profile">' + esc(me.username.slice(0,2).toUpperCase()) + '</button>';
   } else {
     r.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="auth-login">Log in</button><button class="btn btn-primary btn-sm" data-action="auth-signup">Join free</button>';
   }
@@ -1933,7 +1977,7 @@ async function showQuoteCard(pid){
   y += 10; ctx.fillStyle = '#f2486f'; ctx.fillRect(80, y, 80, 5); y += 62;
   ctx.fillStyle = '#c4b3bb'; ctx.font = '32px "DM Sans", sans-serif';
   wrapText(ctx, previewText(p), W - 160).slice(0,8).forEach(l => { ctx.fillText(l, 80, y); y += 46; });
-  ctx.fillStyle = '#93808b'; ctx.font = '24px "DM Sans", sans-serif'; ctx.fillText('Read and give your verdict at heartconfia.com', 80, H - 96);
+  ctx.fillStyle = '#93808b'; ctx.font = '24px "DM Sans", sans-serif'; ctx.fillText('Read and give your verdict at heartconfia.site', 80, H - 96);
   ctx.fillStyle = '#a07bff'; ctx.font = '700 24px "DM Sans", sans-serif'; ctx.fillText('#HeartConfia', 80, H - 56);
   openOv('ovQuote');
 }
@@ -2137,6 +2181,7 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
     '<div id="pfRep"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
@@ -2248,13 +2293,174 @@ async function loadExtras(force){
     const [st, rem] = await Promise.all([rpc('get_my_status'), sb.from('outcome_reminders').select('post_id').limit(500).then(r => (r && r.data) || [], () => [])]);
     if (st) X.status = st;
     X.remind = new Set(rem.map(r => r.post_id));
-  } else { X.status = { banned: false, is_admin: false }; X.remind = new Set(); }
+    loadWallet();
+  } else { X.status = { banned: false, is_admin: false }; X.remind = new Set(); W.wallet = null; }
   if (X.hot && X.hot.post_id && !POSTS.has(X.hot.post_id)) {
     try { const { data } = await sb.from('posts').select('*').eq('id', X.hot.post_id).eq('hidden', false).maybeSingle(); if (data) upsertPost(data); } catch(e){}
   }
   if (page === 'home') renderHomeExtras();
   if (page === 'home' && S.feed.ids.length) renderFeed();
 }
+
+/* =====================================================================
+   HEART CREDITS (wallet) + CHANGE USERNAME
+   Balances come only from the server. The app never sends an amount or a price.
+   ===================================================================== */
+const W = { wallet: null, catalog: null, ledger: [], more: false, st: null };
+const HC_TYPES = { purchase:'Bought credits', referral_reward:'Referral reward', daily_reward:'Daily reward', achievement_reward:'Achievement reward', promo_bonus:'Bonus',
+  message_request:'Message request', username_change:'Username change', post_promotion:'Promotion', profile_custom:'Profile style', gift_sent:'Gift sent', gift_received:'Gift received',
+  admin_adjustment:'Adjustment', refund:'Refund', reversal:'Reversal', expiry:'Expired' };
+const HC_CATS = { purchased:'Purchased', earned:'Earned', promotional:'Promotional' };
+function hcTotal(){ return W.wallet ? num(W.wallet.total) : 0; }
+function walletFromRow(r){ const a = num(r.purchased), b = num(r.earned), c = num(r.promo); return { purchased: a, earned: b, promo: c, total: a + b + c }; }
+function nairaFromKobo(k){ return '₦' + (num(k) / 100).toLocaleString('en-NG'); }
+function newKey(p){ try { if (window.crypto && crypto.randomUUID) return p + '-' + crypto.randomUUID(); } catch(e){} return p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+async function loadWallet(){
+  if (!me || !sb) return;
+  try {
+    const [w, c] = await Promise.all([sb.rpc('get_my_wallet'), W.catalog ? Promise.resolve(null) : sb.rpc('get_credit_catalog')]);
+    if (w && !w.error && w.data) W.wallet = walletFromRow({ purchased: w.data.purchased, earned: w.data.earned, promo: w.data.promo });
+    if (c && !c.error && c.data) W.catalog = c.data;
+  } catch(e) { console.warn('wallet', e); }
+  updateNav(); refreshWalletUI();
+}
+function refreshWalletUI(){
+  if (!$('#ovWallet').classList.contains('hidden')) renderWallet();
+  const pc = $('#hcCardBal'); if (pc) pc.textContent = hcTotal().toLocaleString() + ' HC';
+}
+function openWallet(){
+  if (!me) { showAuth('signup'); return; }
+  openOv('ovWallet'); renderWallet(); loadWallet(); loadLedger(true);
+}
+function renderWallet(){
+  const b = $('#wlBody'); if (!b) return;
+  const w = W.wallet || { purchased: 0, earned: 0, promo: 0, total: 0 };
+  let h = '<div class="hc-big"><b>' + w.total.toLocaleString() + '</b><span>Heart Credits (HC)</span></div>' +
+    '<div class="hc-split">' +
+      '<div><span>Purchased<small>Bought with a payment</small></span><b>' + w.purchased.toLocaleString() + '</b></div>' +
+      '<div><span>Earned<small>Rewards for taking part</small></span><b>' + w.earned.toLocaleString() + '</b></div>' +
+      '<div><span>Promotional<small>Gifts and special offers</small></span><b>' + w.promo.toLocaleString() + '</b></div>' +
+    '</div>';
+  const pk = (W.catalog && W.catalog.packages) || [];
+  h += '<h3 class="hc-h">Buy credits</h3>';
+  if (pk.length) {
+    h += pk.map(p => '<div class="hc-pk"><div><b>' + esc(p.name) + '</b><small>' + num(p.credits).toLocaleString() + ' HC</small></div><button class="btn btn-ghost btn-sm" disabled aria-disabled="true">' + esc(nairaFromKobo(p.price_kobo)) + '</button></div>').join('') +
+      '<p class="hc-note">Paying for credits is almost ready. We\'ll tell you here when it opens.</p>';
+  } else h += '<p class="hc-note">Credit packages are not available right now.</p>';
+  const price = W.catalog && W.catalog.prices ? W.catalog.prices.username_change : null;
+  h += '<h3 class="hc-h">What credits can do</h3><div class="hc-split"><div><span>Change your username<small>Your first change is free</small></span><b>' + (price == null ? '–' : num(price) + ' HC') + '</b></div></div>' +
+    '<button class="btn btn-ghost btn-block" data-action="open-rename" style="margin-bottom:6px">Change username</button>' +
+    '<h3 class="hc-h">History</h3><div id="wlLedger">' + ledgerHTML() + '</div>' +
+    (W.more ? '<div style="text-align:center;padding:10px 0"><button class="btn btn-ghost btn-sm" data-action="wallet-more">Show more</button></div>' : '') +
+    '<p class="hc-note">Heart Credits are used inside HeartConfia and can\'t be exchanged for cash.</p>';
+  b.innerHTML = h;
+}
+function ledgerHTML(){
+  if (!W.ledger.length) return '<p class="hc-note">Nothing here yet. Credits you receive or spend will show up here.</p>';
+  return W.ledger.map(r => {
+    const a = num(r.amount);
+    return '<div class="hc-led"><div>' + esc(HC_TYPES[r.type] || 'Credits') + '<small>' + esc(r.description || '') + ' · ' + esc(HC_CATS[r.category] || '') + ' · ' + esc(tAgo(r.created_at)) + '</small></div><div class="' + (a > 0 ? 'pos' : 'neg') + '">' + (a > 0 ? '+' : '') + a.toLocaleString() + ' HC</div></div>';
+  }).join('');
+}
+async function loadLedger(reset){
+  if (!me || !sb) return;
+  try {
+    const before = !reset && W.ledger.length ? W.ledger[W.ledger.length - 1].id : null;
+    const { data, error } = await sb.rpc('get_my_ledger', { p_limit: 20, p_before: before });
+    if (error) throw error;
+    const rows = data || [];
+    W.ledger = reset ? rows : W.ledger.concat(rows);
+    W.more = rows.length >= 20;
+    if (!$('#ovWallet').classList.contains('hidden')) renderWallet();
+  } catch(e) { console.warn('ledger', e); }
+}
+
+const NM = { key: null, name: '', t: null, seq: 0, ok: false };
+async function openRename(){
+  if (!me) { showAuth('signup'); return; }
+  NM.key = null; NM.name = ''; NM.ok = false;
+  openOv('ovName');
+  const b = $('#nmBody'); b.innerHTML = '<p class="hc-note">Loading…</p>';
+  try {
+    const { data, error } = await sb.rpc('get_username_status');
+    if (error) throw error;
+    W.st = data; if (data && data.wallet) W.wallet = walletFromRow(data.wallet);
+    renderRename();
+  } catch(e) { b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load this right now.')) + '</p>'; }
+}
+function renameCostLine(){
+  const st = W.st || {};
+  if (st.next_change_at) return 'You can change your username again on <b>' + esc(new Date(st.next_change_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })) + '</b>.';
+  if (st.available === false) return 'Username changes are paused right now.';
+  if (num(st.free_left) > 0) return 'Your first change is <b>free</b>.';
+  return 'A change costs <b>' + num(st.cost) + ' HC</b>. You have <b>' + hcTotal().toLocaleString() + ' HC</b>.';
+}
+function renameBlocked(){
+  const st = W.st || {};
+  if (st.next_change_at || st.available === false) return true;
+  if (num(st.free_left) <= 0 && hcTotal() < num(st.cost)) return true;
+  return false;
+}
+function renderRename(){
+  const st = W.st || {}, b = $('#nmBody'); if (!b) return;
+  const blocked = renameBlocked(), poor = !st.next_change_at && st.available !== false && num(st.free_left) <= 0 && hcTotal() < num(st.cost);
+  const label = num(st.free_left) > 0 ? 'Change username' : 'Change for ' + num(st.cost) + ' HC';
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Now: <b style="color:var(--text)">' + esc(st.username || me.username) + '</b></p>' +
+    '<div class="fgrp"><label class="flabel" for="nmInput">New username</label><input class="finput" id="nmInput" maxlength="20" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="3 to 20 letters, numbers or _"' + (blocked ? ' disabled' : '') + '/></div>' +
+    '<div class="hc-msg" id="nmMsg" aria-live="polite"></div>' +
+    '<p class="hc-note">' + renameCostLine() + '</p>' +
+    (poor ? '<p class="hc-note">You don\'t have enough Heart Credits for this yet.</p>' : '') +
+    '<button class="btn btn-primary btn-block" id="nmGo" data-action="rename-confirm" disabled>' + esc(label) + '</button>' +
+    '<p class="hc-note">Your confessions, comments and replies will show the new name. Nobody else can take your old name for ' + num(st.hold_days || 90) + ' days.</p>';
+}
+function nmMsg(t, ok){ const m = $('#nmMsg'); if (m) { m.textContent = t || ''; m.className = 'hc-msg' + (t ? (ok ? ' ok' : ' bad') : ''); } }
+function nmCheckSoon(){
+  const inp = $('#nmInput'); if (!inp) return;
+  const v = inp.value.trim(), go = $('#nmGo');
+  NM.ok = false; if (go) go.disabled = true; NM.key = null;
+  clearTimeout(NM.t);
+  if (!v) { nmMsg(''); return; }
+  if (v.length < 3) { nmMsg('Use at least 3 characters.'); return; }
+  nmMsg('Checking…');
+  const seq = ++NM.seq;
+  NM.t = setTimeout(async () => {
+    try {
+      const { data, error } = await sb.rpc('check_username', { p_name: v });
+      if (seq !== NM.seq) return;
+      if (error) throw error;
+      NM.ok = !!(data && data.ok); NM.name = v;
+      nmMsg(NM.ok ? 'Available ✓' : ((data && data.reason) || 'Not available.'), NM.ok);
+      if (go) go.disabled = !NM.ok || renameBlocked();
+    } catch(e) { if (seq === NM.seq) nmMsg(errMsg(e, 'Could not check that name.')); }
+  }, 350);
+}
+async function doRename(){
+  const inp = $('#nmInput'), go = $('#nmGo'); if (!inp || !go || !NM.ok) return;
+  const v = inp.value.trim(); if (v !== NM.name) return;
+  if (!NM.key) NM.key = newKey('rn');
+  go.disabled = true; const old = go.textContent; go.textContent = 'Saving…';
+  try {
+    const { data, error } = await sb.rpc('change_username', { p_new: v, p_key: NM.key });
+    if (error) throw error;
+    const was = me.username;
+    me.username = data.username;
+    if (data.wallet) W.wallet = walletFromRow(data.wallet);
+    POSTS.forEach(p => { if (p.user_id === me.id) p.author = me.username; });
+    Object.keys(COMMENTS).forEach(k => (COMMENTS[k] || []).forEach(c => {
+      if (c.user_id === me.id) c.author = me.username;
+      (c.replies || []).forEach(r => { if (r.author === was) r.author = me.username; });
+    }));
+    NM.key = null; closeOv('ovName');
+    toast('Username changed to ' + me.username, 'ok');
+    updateNav(); refreshWalletUI(); loadLedger(true);
+    if (page === 'profile') renderProfile(); else rerenderCurrent();
+  } catch(e) {
+    nmMsg(errMsg(e, 'Could not change your username. Nothing was charged.'));
+    go.textContent = old; go.disabled = false;
+  }
+}
+document.addEventListener('input', e => { if (e.target && e.target.id === 'nmInput') nmCheckSoon(); });
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'nmInput') { e.preventDefault(); doRename(); } });
 function renderBan(){
   const c = $('#banBar'); if (!c) return;
   c.innerHTML = me && X.status.banned ? '<div class="banner banner-ban"><h3>⛔ Your account is restricted</h3><p>You can read stories, but you can\'t post, comment or vote.' + (X.status.reason ? ' Reason: ' + esc(X.status.reason) : '') + '</p></div>' : '';
@@ -2396,6 +2602,9 @@ function subscribeUserChannel(){
       NOTIFS.unshift(n); unread++; updateNotifBadge(); updateNav();
       if (page === 'notifications') { renderNotifs(); markNotifsRead(); }
       else { const el = document.createElement('div'); el.className = 'reply-toast'; el.textContent = (n.icon || '💬') + ' ' + (n.text || 'New notification'); document.body.appendChild(el); setTimeout(() => el.remove(), 4600); }
+    })
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_wallets', filter: 'user_id=eq.' + me.id }, pl => {
+      if (pl.new && pl.new.user_id) { W.wallet = walletFromRow(pl.new); updateNav(); refreshWalletUI(); loadLedger(true); }
     }).subscribe();
 }
 function setupPresence(){
@@ -2479,6 +2688,10 @@ function bindEvents(){
       case 'onb-skip': finishOnb(); break;
       case 'delete-post': deletePost(pid); break;
       case 'logout': doLogout(); break;
+      case 'open-wallet': openWallet(); break;
+      case 'open-rename': openRename(); break;
+      case 'rename-confirm': doRename(); break;
+      case 'wallet-more': loadLedger(false); break;
       case 'go-resources': go('resources'); break;
       case 'go-swipe': if (!me) showAuth('signup'); else go('swipe'); break;
       case 'sw-vote': swipeVote(el.dataset.v); break;
