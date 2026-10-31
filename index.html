@@ -827,9 +827,12 @@ const S = {
 const POSTS = new Map();
 const X = { theme: null, hot: null, ann: null, prompt: null, settings: {}, status: { banned: false, is_admin: false }, remind: new Set(), at: 0 };
 const COMMENTS = {};
+const POST_COLS = 'id,author,type,title,content,preview,tags,votes,rx,cmt,views,trending,sensitive,hidden,created_at,verdict_closed,verdict_result,updates_count,closes_at,theme_label,remind_count';
+const COMMENT_COLS = 'id,post_id,author,text,up,dn,hearts,pin,hidden,replies,created_at';
 const UPDATES = {};
 const LV = {};
-const MY = { rx: {}, vote: {}, cvote: {}, hearts: new Set() };
+const MY = { rx: {}, vote: {}, cvote: {}, hearts: new Set(), posts: new Set() };
+function isMine(pid){ return !!(me && MY.posts.has(pid)); }
 const SW = { queue: [], i: 0, loading: false, voted: null, err: null };
 const inflight = new Set();
 let NOTIFS = [], unread = 0;
@@ -869,9 +872,9 @@ async function loadLevels(ids){
   if (!need.length) return;
   try {
     for (const part of chunk(need, 200)) {
-      const { data, error } = await sb.rpc('get_user_levels', { p_user_ids: part });
+      const { data, error } = await sb.rpc('get_levels_by_name', { p_names: part });
       if (error) throw error;
-      (data || []).forEach(r => { LV[r.user_id] = { rep: num(r.rep), level: r.level }; });
+      (data || []).forEach(r => { LV[r.author] = { rep: num(r.rep), level: r.level }; });
       part.forEach(i => { if (!LV[i]) LV[i] = { rep: 0, level: 'Newcomer' }; });
     }
   } catch(e) { console.warn('levels', e); }
@@ -1166,7 +1169,7 @@ function resetSession(){
   PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true }; seenAt = 0;
   MY.rx = {}; MY.vote = {}; MY.cvote = {}; MY.hearts = new Set();
   S.saved.clear(); S.follow.clear(); NOTIFS = []; unread = 0; sessTask = null; sessUid = null;
-  W.wallet = null; W.ledger = []; W.more = false; W.st = null;
+  W.wallet = null; W.ledger = []; W.more = false; W.st = null; MY.posts = new Set();
   SW.queue = []; SW.i = 0; SW.voted = null; SW.err = null;
   if (chUser && sb) { try { sb.removeChannel(chUser); } catch(e){} chUser = null; }
   updateNav(); updateNotifBadge();
@@ -1378,7 +1381,7 @@ async function loadFeed(reset){
   if (reset) { f.ids = []; f.hasMore = false; f.rendered = 0; S.newPosts = 0; updateNewPill(); }
   renderFeed();
   try {
-    let q = sb.from('posts').select('*').eq('hidden', false);
+    let q = sb.from('posts').select(POST_COLS).eq('hidden', false);
     const flt = S.filter;
     if (flt === 'saved' || flt === 'following') {
       const ids = Array.from(flt === 'saved' ? S.saved : S.follow).slice(-100);
@@ -1590,7 +1593,7 @@ async function showDetail(id, silent){
   if (!p || typeof p.content !== 'string') {
     w.innerHTML = '<button class="back-btn" data-action="back">' + ico('back') + ' Back</button>' + skeletonHTML(1);
     try {
-      const { data, error } = await sb.from('posts').select('*').eq('id', id).eq('hidden', false).maybeSingle();
+      const { data, error } = await sb.from('posts').select(POST_COLS).eq('id', id).eq('hidden', false).maybeSingle();
       if (token !== S.detail.token) return;
       if (error) throw error;
       p = data ? upsertPost(data) : null;
@@ -1608,11 +1611,11 @@ async function showDetail(id, silent){
   subscribeComments(id);
   hydrateMine([id]).then(() => { if (token === S.detail.token) patchPostUI(p); });
   loadUpdates(id).then(() => { if (token === S.detail.token) renderUpdates(); }).catch(e => console.warn('updates', e));
-  loadLevels([p.user_id]).then(() => { if (token === S.detail.token) { const dn = $('#dtWrap .d-name'); if (dn) dn.innerHTML = esc(p.author || 'Anon') + lvlBadge(p.user_id); } });
+  loadLevels([p.author]).then(() => { if (token === S.detail.token) { const dn = $('#dtWrap .d-name'); if (dn) dn.innerHTML = esc(p.author || 'Anon') + lvlBadge(p.author); } });
   loadComments(id).then(() => {
     if (token !== S.detail.token) return;
     renderComments();
-    loadLevels((COMMENTS[id] || []).map(c => c.user_id)).then(() => { if (token === S.detail.token) renderComments(); });
+    loadLevels((COMMENTS[id] || []).map(c => c.author)).then(() => { if (token === S.detail.token) renderComments(); });
   }).catch(e => { if (token === S.detail.token) { const l = $('#cmList'); if (l) l.innerHTML = '<div class="empty"><p>' + esc(errMsg(e, 'Could not load comments.')) + '</p><button class="btn btn-ghost btn-sm" data-action="retry-detail">Retry</button></div>'; } });
   if (!silent && !p._local && markViewedOnce(id)) { sb.rpc('increment_post_views', { p_post_id: id }).then(() => {}, () => {}); }
 }
@@ -1621,7 +1624,7 @@ function renderDetail(p){
   const w = $('#dtWrap'); if (!w) return;
   const author = p.author || 'Anon';
   const content = typeof p.content === 'string' ? p.content : '';
-  const own = me && p.user_id === me.id;
+  const own = isMine(p.id);
   const closed = verdictClosed(p);
   const body = p.sensitive
     ? '<div class="sensitive-wrap"><div class="sensitive-blur d-body" id="sensContent" aria-hidden="true">' + esc(content) + '</div><button class="sensitive-overlay" data-action="reveal"><span style="font-size:30px">⚠️</span>This story covers a sensitive topic.<br>Tap to reveal</button></div>'
@@ -1631,7 +1634,7 @@ function renderDetail(p){
   w.innerHTML =
     '<button class="back-btn" data-action="back">' + ico('back') + ' Back</button>' +
     '<div data-card="' + esc(p.id) + '">' +
-      '<div class="d-author"><div class="d-ava" aria-hidden="true">' + esc(author.slice(0,2).toUpperCase()) + '</div><div class="d-info"><div class="d-name">' + esc(author) + lvlBadge(p.user_id) + '</div><div class="d-meta">' + esc(tAgo(p.created_at)) + ' · <span class="js-views">' + fmt(p.views) + '</span> views</div></div>' +
+      '<div class="d-author"><div class="d-ava" aria-hidden="true">' + esc(author.slice(0,2).toUpperCase()) + '</div><div class="d-info"><div class="d-name">' + esc(author) + lvlBadge(p.author) + '</div><div class="d-meta">' + esc(tAgo(p.created_at)) + ' · <span class="js-views">' + fmt(p.views) + '</span> views</div></div>' +
       '<button class="foot-btn' + (following ? ' is-following' : '') + '" data-action="follow" data-pid="' + esc(p.id) + '" aria-pressed="' + following + '" aria-label="' + (following ? 'Following. Tap to unfollow' : 'Follow for updates') + '">' + ico('bell') + '</button>' +
       '<button class="foot-btn' + (saved ? ' is-saved' : '') + '" data-action="save" data-pid="' + esc(p.id) + '" aria-pressed="' + saved + '" aria-label="Save">' + ico('bookmark') + '</button>' +
       '<button class="foot-btn" data-action="share" data-pid="' + esc(p.id) + '" aria-label="Share link">' + ico('share') + '</button>' +
@@ -1649,14 +1652,14 @@ function renderDetail(p){
 
 /* author updates: "what happened next" */
 async function loadUpdates(pid){
-  const { data, error } = await sb.from('post_updates').select('*').eq('post_id', pid).order('created_at', { ascending: true }).limit(10);
+  const { data, error } = await sb.from('post_updates').select('id,post_id,text,created_at').eq('post_id', pid).order('created_at', { ascending: true }).limit(10);
   if (error) throw error;
   UPDATES[pid] = data || [];
 }
 function renderUpdates(){
   const box = $('#updBlock'), pid = S.detail.id; if (!box || !pid) return;
   const p = POSTS.get(pid); if (!p) return;
-  const list = UPDATES[pid] || [], own = me && p.user_id === me.id;
+  const list = UPDATES[pid] || [], own = isMine(p.id);
   const openForm = !!($('#updForm') && !$('#updForm').classList.contains('hidden'));
   const draft = ($('#updIn') || {}).value || '';
   let h = '';
@@ -1706,7 +1709,7 @@ async function toggleFollow(pid){
 }
 
 async function loadComments(pid){
-  const { data, error } = await sb.from('comments').select('*').eq('post_id', pid).eq('hidden', false).order('created_at', { ascending: false }).limit(200);
+  const { data, error } = await sb.from('comments').select(COMMENT_COLS).eq('post_id', pid).eq('hidden', false).order('created_at', { ascending: false }).limit(200);
   if (error) throw error;
   const list = (data || []).map(c => { c.replies = parseReplies(c.replies); return c; });
   const pend = (COMMENTS[pid] || []).filter(c => c._pending);
@@ -1748,7 +1751,7 @@ function cmtHTML(c, isReply){
   const box = isReply ? '' : '<div class="rbox hidden" id="rb-' + id + '"><textarea class="rbox-ta" aria-label="Reply" placeholder="Reply to ' + esc(c.author || 'Anon') + '…" maxlength="' + LIM.comment + '"></textarea><div class="rbox-foot"><button class="btn btn-ghost btn-sm" data-action="reply-cancel" data-cid="' + id + '">Cancel</button><button class="btn btn-primary btn-sm" data-action="reply-post" data-cid="' + id + '">Reply</button></div></div>';
   const dis = pending ? ' disabled' : '';
   return '<div class="' + (isReply ? 'reply' : 'cm') + (pending ? ' pending' : '') + '" id="cmt-' + id + '"><div class="' + (isReply ? 'reply-bubble' : 'cm-bubble') + '">' +
-    '<div class="cm-head"><span class="cm-auth">' + esc(c.author || 'Anon') + (isReply ? '' : lvlBadge(c.user_id)) + (c.pin ? '<span class="pin">📌 Pinned</span>' : '') + '</span><span class="cm-time">' + esc(tAgo(c.time || c.created_at)) + '</span></div>' +
+    '<div class="cm-head"><span class="cm-auth">' + esc(c.author || 'Anon') + (isReply ? '' : lvlBadge(c.author)) + (c.pin ? '<span class="pin">📌 Pinned</span>' : '') + '</span><span class="cm-time">' + esc(tAgo(c.time || c.created_at)) + '</span></div>' +
     '<div class="cm-text">' + esc(c.text || '') + '</div>' +
     '<div class="cm-acts"><button class="cm-act up' + (mv === 'up' ? ' on' : '') + '" data-action="cmt-up" data-cid="' + id + '" aria-label="Upvote"' + dis + '>▲ ' + num(c.up) + '</button>' +
     '<button class="cm-act dn' + (mv === 'dn' ? ' on' : '') + '" data-action="cmt-dn" data-cid="' + id + '" aria-label="Downvote"' + dis + '>▼ ' + num(c.dn) + '</button>' +
@@ -1772,7 +1775,7 @@ async function postCmt(pid){
   if (SENSITIVE_RE.test(text)) { showCrisis(null); }
   S.lastCmtAt = Date.now();
   const p = POSTS.get(pid);
-  const opt = { id: 'tmp_' + Date.now(), post_id: pid, author: me.username, user_id: me.id, text, up: 0, dn: 0, pin: false, hearts: 0, created_at: new Date().toISOString(), replies: [], _pending: true };
+  const opt = { id: 'tmp_' + Date.now(), post_id: pid, author: me.username, text, up: 0, dn: 0, pin: false, hearts: 0, created_at: new Date().toISOString(), replies: [], _pending: true };
   (COMMENTS[pid] = COMMENTS[pid] || []).unshift(opt);
   if (p) { p.cmt++; patchPostUI(p); }
   renderComments();
@@ -1864,7 +1867,7 @@ function spawnHeart(src){
 async function doVote(pid, type){
   if (!me) { showAuth('signup'); return false; }
   const p = POSTS.get(pid); if (!p) return false;
-  if (p.user_id === me.id) { toast("You can't give a verdict on your own confession 😅", 'warn'); return false; }
+  if (isMine(p.id)) { toast("You can't give a verdict on your own confession 😅", 'warn'); return false; }
   if (verdictClosed(p)) { toast('Voting has closed on this confession.', 'warn'); patchPostUI(p); return false; }
   const key = 'v' + pid; if (inflight.has(key)) return false; inflight.add(key);
   let ok = false;
@@ -2094,7 +2097,7 @@ async function submitPost(force){
     const { data, error } = await sb.rpc('create_post', { p_type: type, p_title: title, p_content: body, p_tags: tags });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
-    if (row) { upsertPost(row); S.follow.add(row.id); }
+    if (row) { upsertPost(row); S.follow.add(row.id); MY.posts.add(row.id); }
     S.lastPostAt = Date.now(); ls.remove(draftKey());
     toast('Story posted anonymously 💔', 'ok'); award('first_post');
     S.filter = 'all'; renderFilters(); go('home'); loadFeed(true);
@@ -2109,7 +2112,7 @@ async function loadTrending(force){
   if (!force && Date.now() - S.trendAt < 60000 && w.dataset.ready) return;
   if (!w.dataset.ready) w.innerHTML = skeletonHTML(2);
   try {
-    const base = () => sb.from('posts').select('*').eq('hidden', false);
+    const base = () => sb.from('posts').select(POST_COLS).eq('hidden', false);
     const [a, b, c] = await Promise.all([
       base().eq('trending', true).order('created_at', { ascending: false }).limit(6),
       base().order('cmt', { ascending: false }).limit(6),
@@ -2171,7 +2174,7 @@ async function loadRepCard(){
     if (page !== 'profile' || !data) return;
     const box = $('#pfRep'); if (box) box.innerHTML = repCardHTML(data);
     if (typeof data.streak === 'number') { streak = data.streak; saveUserData(); renderStreak(); }
-    LV[me.id] = { rep: num(data.rep), level: data.level };
+    LV[me.username] = { rep: num(data.rep), level: data.level };
   } catch(e) { console.warn('stats', e); }
 }
 async function renderProfile(){
@@ -2190,10 +2193,11 @@ async function renderProfile(){
   w.innerHTML = shell;
   renderPrefs(); loadRepCard(); fetchPrefs().then(() => { if (page === 'profile') renderPrefs(); });
   try {
-    const { data, error } = await sb.from('posts').select('*').eq('user_id', me.id).eq('hidden', false).order('created_at', { ascending: false }).limit(20);
+    const { data, error } = await sb.rpc('get_my_posts', { p_limit: 20 });
     if (error) throw error;
     if (page !== 'profile') return;
     const mine = (data || []).map(upsertPost).filter(Boolean);
+    mine.forEach(p => MY.posts.add(p.id));
     await hydrateMine(mine.map(p => p.id));
     const rxTotal = mine.reduce((s, p) => s + Object.values(safeRx(p.rx)).reduce((a, n) => a + num(n), 0), 0);
     const vTotal = mine.reduce((s, p) => s + p.votes.he + p.votes.she + p.votes.both, 0);
@@ -2208,10 +2212,10 @@ async function deletePost(pid){
   if (!me) return;
   if (!confirm('Delete this confession permanently? This can\'t be undone.')) return;
   try {
-    const { data, error } = await sb.from('posts').delete().eq('id', pid).eq('user_id', me.id).select('id');
+    const { data, error } = await sb.rpc('delete_my_post', { p_post_id: pid });
     if (error) throw error;
-    if (!data || !data.length) { toast('Could not delete. Please contact support.', 'err'); return; }
-    removePostLocal(pid); toast('Deleted', 'ok'); renderProfile();
+    if (!data) { toast('Could not delete. Please contact support.', 'err'); return; }
+    MY.posts.delete(pid); removePostLocal(pid); toast('Deleted', 'ok'); renderProfile();
   } catch(e) { toast(errMsg(e, 'Could not delete'), 'err'); }
 }
 
@@ -2293,10 +2297,10 @@ async function loadExtras(force){
     const [st, rem] = await Promise.all([rpc('get_my_status'), sb.from('outcome_reminders').select('post_id').limit(500).then(r => (r && r.data) || [], () => [])]);
     if (st) X.status = st;
     X.remind = new Set(rem.map(r => r.post_id));
-    loadWallet();
+    loadWallet(); loadMyPostIds();
   } else { X.status = { banned: false, is_admin: false }; X.remind = new Set(); W.wallet = null; }
   if (X.hot && X.hot.post_id && !POSTS.has(X.hot.post_id)) {
-    try { const { data } = await sb.from('posts').select('*').eq('id', X.hot.post_id).eq('hidden', false).maybeSingle(); if (data) upsertPost(data); } catch(e){}
+    try { const { data } = await sb.from('posts').select(POST_COLS).eq('id', X.hot.post_id).eq('hidden', false).maybeSingle(); if (data) upsertPost(data); } catch(e){}
   }
   if (page === 'home') renderHomeExtras();
   if (page === 'home' && S.feed.ids.length) renderFeed();
@@ -2315,6 +2319,14 @@ function hcTotal(){ return W.wallet ? num(W.wallet.total) : 0; }
 function walletFromRow(r){ const a = num(r.purchased), b = num(r.earned), c = num(r.promo); return { purchased: a, earned: b, promo: c, total: a + b + c }; }
 function nairaFromKobo(k){ return '₦' + (num(k) / 100).toLocaleString('en-NG'); }
 function newKey(p){ try { if (window.crypto && crypto.randomUUID) return p + '-' + crypto.randomUUID(); } catch(e){} return p + '-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+async function loadMyPostIds(){
+  if (!me || !sb) return;
+  try {
+    const { data, error } = await sb.rpc('get_my_post_ids');
+    if (error) throw error;
+    MY.posts = new Set(Array.isArray(data) ? data : []);
+  } catch(e) { console.warn('my posts', e); }
+}
 async function loadWallet(){
   if (!me || !sb) return;
   try {
@@ -2445,9 +2457,10 @@ async function doRename(){
     const was = me.username;
     me.username = data.username;
     if (data.wallet) W.wallet = walletFromRow(data.wallet);
-    POSTS.forEach(p => { if (p.user_id === me.id) p.author = me.username; });
+    POSTS.forEach(p => { if (isMine(p.id)) p.author = me.username; });
+    if (LV[was]) { LV[me.username] = LV[was]; delete LV[was]; }
     Object.keys(COMMENTS).forEach(k => (COMMENTS[k] || []).forEach(c => {
-      if (c.user_id === me.id) c.author = me.username;
+      if (c.author === was) c.author = me.username;
       (c.replies || []).forEach(r => { if (r.author === was) r.author = me.username; });
     }));
     NM.key = null; closeOv('ovName');
@@ -2497,7 +2510,7 @@ function renderTheme(){
 }
 function remindBoxHTML(p){
   if (!me) return '';
-  const own = p.user_id === me.id, n = num(p.remind_count);
+  const own = isMine(p.id), n = num(p.remind_count);
   if (own) return n > 0 ? '<div class="remind-box"><span>🔔 <strong>' + fmt(n) + '</strong> ' + (n === 1 ? 'person wants' : 'people want') + ' to hear what happened next. Share an update when you are ready.</span></div>' : '';
   const on = X.remind.has(p.id);
   return '<div class="remind-box"><span>📖 ' + (n > 0 ? fmt(n) + ' waiting to hear what happens next.' : 'Want to know what happens next?') + '</span><button class="btn ' + (on ? 'btn-ghost' : 'btn-primary') + ' btn-sm" data-action="remind" data-pid="' + esc(p.id) + '">' + (on ? '✓ We\'ll tell you' : 'Remind me') + '</button></div>';
@@ -2517,7 +2530,7 @@ async function toggleRemind(pid){
   } catch(e) { toast(errMsg(e, 'Could not set the reminder'), 'err'); }
   finally { inflight.delete(key); }
 }
-function checkViral(){ if (me && S.feed.ids.some(id => { const p = POSTS.get(id); return p && p.user_id === me.id && p.views >= 1000; })) award('viral_post'); }
+function checkViral(){ if (me && S.feed.ids.some(id => { const p = POSTS.get(id); return p && isMine(id) && p.views >= 1000; })) award('viral_post'); }
 
 /* =====================================================================
    ONBOARDING
@@ -2561,35 +2574,43 @@ function queuePatch(row){
   }, 500);
 }
 function setupRealtime(){
+  // The stream only says "post X changed". We fetch the post ourselves, so no private fields ever travel here.
+  const touched = new Set(); let tt = null;
+  const refetch = id => {
+    touched.add(id);
+    if (tt) return;
+    tt = setTimeout(async () => {
+      tt = null; const ids = Array.from(touched).filter(i => POSTS.has(i)); touched.clear();
+      if (!ids.length) return;
+      try {
+        const { data, error } = await sb.from('posts').select(POST_COLS).in('id', ids).eq('hidden', false);
+        if (error) throw error;
+        const seen = new Set();
+        (data || []).forEach(row => { seen.add(row.id); queuePatch(row); });
+        ids.forEach(i => { if (!seen.has(i)) removePostLocal(i); });
+      } catch(e) { console.warn('live patch', e); }
+    }, 400);
+  };
   chPosts = sb.channel('hc-posts')
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, pl => {
-      const r = pl.new; if (!r || r.hidden || (me && r.user_id === me.id) || S.feed.ids.includes(r.id)) return;
-      S.newPosts++; updateNewPill();
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'feed_events' }, pl => {
+      const r = pl.new; if (!r) return;
+      if (r.kind === 'post_new') { if (isMine(r.post_id) || S.feed.ids.includes(r.post_id)) return; S.newPosts++; updateNewPill(); }
+      else if (r.kind === 'post_upd') refetch(r.post_id);
+      else if (r.kind === 'post_del') removePostLocal(r.post_id);
     })
-    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'posts' }, pl => { if (pl.new && pl.new.id) queuePatch(pl.new); })
-    .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'posts' }, pl => { if (pl.old && pl.old.id) removePostLocal(pl.old.id); })
     .subscribe();
 }
+let cmtTimer = null;
 function subscribeComments(pid){
   unsubComments();
   chComments = sb.channel('hc-cmt-' + pid)
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'comments', filter: 'post_id=eq.' + pid }, pl => {
-      if (S.detail.id !== pid) return;
-      const list = COMMENTS[pid] = COMMENTS[pid] || [];
-      if (pl.eventType === 'INSERT' && pl.new) {
-        const nc = pl.new; nc.replies = parseReplies(nc.replies);
-        if (nc.hidden || list.some(c => c.id === nc.id)) return;
-        const ti = me ? list.findIndex(c => c._pending && c.text === nc.text && c.user_id === me.id) : -1;
-        if (ti !== -1) list[ti] = nc; else list.unshift(nc);
-        loadLevels([nc.user_id]).then(() => { if (S.detail.id === pid) renderComments(); });
-      } else if (pl.eventType === 'UPDATE' && pl.new) {
-        const u = pl.new; u.replies = parseReplies(u.replies);
-        const i = list.findIndex(c => c.id === u.id);
-        if (u.hidden) { if (i !== -1) list.splice(i, 1); } else if (i !== -1) list[i] = u;
-      } else if (pl.eventType === 'DELETE' && pl.old && pl.old.id) {
-        const i = list.findIndex(c => c.id === pl.old.id); if (i !== -1) list.splice(i, 1);
-      } else return;
-      renderComments();
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'feed_events', filter: 'post_id=eq.' + pid }, pl => {
+      if (!pl.new || pl.new.kind !== 'cmt' || S.detail.id !== pid) return;
+      clearTimeout(cmtTimer);
+      cmtTimer = setTimeout(async () => {
+        if (S.detail.id !== pid) return;
+        try { await loadComments(pid); await loadLevels((COMMENTS[pid] || []).map(c => c.author)); if (S.detail.id === pid) renderComments(); } catch(e) { console.warn('live comments', e); }
+      }, 700);
     }).subscribe();
 }
 function unsubComments(){ if (chComments && sb) { try { sb.removeChannel(chComments); } catch(e){} } chComments = null; }
