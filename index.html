@@ -2297,7 +2297,7 @@ async function loadExtras(force){
     const [st, rem] = await Promise.all([rpc('get_my_status'), sb.from('outcome_reminders').select('post_id').limit(500).then(r => (r && r.data) || [], () => [])]);
     if (st) X.status = st;
     X.remind = new Set(rem.map(r => r.post_id));
-    loadWallet(); loadMyPostIds();
+    loadWallet().then(() => { if (PAY_RET) handlePayReturn(); }); loadMyPostIds();
   } else { X.status = { banned: false, is_admin: false }; X.remind = new Set(); W.wallet = null; }
   if (X.hot && X.hot.post_id && !POSTS.has(X.hot.post_id)) {
     try { const { data } = await sb.from('posts').select(POST_COLS).eq('id', X.hot.post_id).eq('hidden', false).maybeSingle(); if (data) upsertPost(data); } catch(e){}
@@ -2311,6 +2311,51 @@ async function loadExtras(force){
    Balances come only from the server. The app never sends an amount or a price.
    ===================================================================== */
 const W = { wallet: null, catalog: null, ledger: [], more: false, st: null };
+// Flutterwave sends people back to /?status=...&tx_ref=...&transaction_id=...
+let PAY_RET = null;
+try {
+  const q = new URLSearchParams(location.search), tx = q.get('tx_ref');
+  if (tx && /^hc_[a-z0-9]{20,}$/i.test(tx)) {
+    PAY_RET = { tx, status: (q.get('status') || '').toLowerCase(), id: (q.get('transaction_id') || '').replace(/[^0-9]/g, '') };
+    history.replaceState(null, '', location.pathname + location.hash);
+  }
+} catch(e) {}
+const BUY = { busy: false };
+async function fnError(error){
+  try { const j = await error.context.json(); return j && (j.error || j.reason) ? j : null; } catch(e) { return null; }
+}
+async function buyPack(id, btn){
+  if (!me || BUY.busy) return;
+  BUY.busy = true; const old = btn ? btn.textContent : ''; if (btn) { btn.disabled = true; btn.textContent = 'Opening…'; }
+  try {
+    const { data, error } = await sb.functions.invoke('pay-start', { body: { package_id: id } });
+    if (error) { const j = await fnError(error); throw new Error((j && j.error) || 'Could not start the payment. Nothing was charged.'); }
+    if (!data || !data.link || !/^https:\/\//.test(data.link)) throw new Error('Could not start the payment. Nothing was charged.');
+    location.href = data.link;
+  } catch(e) {
+    toast(e.message || 'Could not start the payment.', 'err');
+    BUY.busy = false; if (btn) { btn.disabled = false; btn.textContent = old; }
+  }
+}
+async function handlePayReturn(){
+  const r = PAY_RET; PAY_RET = null; if (!r || !me) return;
+  if (r.status === 'cancelled') { toast('Payment cancelled. Nothing was charged.', 'info'); return; }
+  toast('Checking your payment…', 'info');
+  for (let i = 0; i < 6; i++) {
+    try {
+      const { data, error } = await sb.functions.invoke('pay-verify', { body: { tx_ref: r.tx, transaction_id: r.id || undefined } });
+      const res = error ? await fnError(error) : data;
+      if (res && res.ok) {
+        toast('💎 ' + (res.credits ? num(res.credits) + ' ' : '') + 'Heart Credits added', 'ok');
+        await loadWallet(); loadLedger(true); openWallet(); return;
+      }
+      if (res && res.reason === 'unknown_reference') break;
+    } catch(e) {}
+    await new Promise(ok => setTimeout(ok, 4000));
+  }
+  toast('We have not received confirmation yet. If you were charged, your credits will appear here shortly.', 'warn');
+  loadWallet();
+}
 const HC_TYPES = { purchase:'Bought credits', referral_reward:'Referral reward', daily_reward:'Daily reward', achievement_reward:'Achievement reward', promo_bonus:'Bonus',
   message_request:'Message request', username_change:'Username change', post_promotion:'Promotion', profile_custom:'Profile style', gift_sent:'Gift sent', gift_received:'Gift received',
   admin_adjustment:'Adjustment', refund:'Refund', reversal:'Reversal', expiry:'Expired' };
@@ -2356,8 +2401,12 @@ function renderWallet(){
   const pk = (W.catalog && W.catalog.packages) || [];
   h += '<h3 class="hc-h">Buy credits</h3>';
   if (pk.length) {
-    h += pk.map(p => '<div class="hc-pk"><div><b>' + esc(p.name) + '</b><small>' + num(p.credits).toLocaleString() + ' HC</small></div><button class="btn btn-ghost btn-sm" disabled aria-disabled="true">' + esc(nairaFromKobo(p.price_kobo)) + '</button></div>').join('') +
-      '<p class="hc-note">Paying for credits is almost ready. We\'ll tell you here when it opens.</p>';
+    const on = !!(W.catalog && W.catalog.payments_enabled);
+    h += pk.map(p => '<div class="hc-pk"><div><b>' + esc(p.name) + '</b><small>' + num(p.credits).toLocaleString() + ' HC</small></div>' +
+      (on ? '<button class="btn btn-primary btn-sm" data-action="buy-pack" data-id="' + esc(p.id) + '">' + esc(nairaFromKobo(p.price_kobo)) + '</button>'
+          : '<button class="btn btn-ghost btn-sm" disabled aria-disabled="true">' + esc(nairaFromKobo(p.price_kobo)) + '</button>') + '</div>').join('') +
+      (on ? '<p class="hc-note">You pay on Flutterwave\'s secure page (card, bank transfer or USSD) and come straight back here. Your credits are added once the payment is confirmed. Credits you buy never expire.</p>'
+          : '<p class="hc-note">Paying for credits is almost ready. We\'ll tell you here when it opens.</p>');
   } else h += '<p class="hc-note">Credit packages are not available right now.</p>';
   const price = W.catalog && W.catalog.prices ? W.catalog.prices.username_change : null;
   h += '<h3 class="hc-h">What credits can do</h3><div class="hc-split"><div><span>Change your username<small>Your first change is free</small></span><b>' + (price == null ? '–' : num(price) + ' HC') + '</b></div></div>' +
@@ -2710,6 +2759,7 @@ function bindEvents(){
       case 'delete-post': deletePost(pid); break;
       case 'logout': doLogout(); break;
       case 'open-wallet': openWallet(); break;
+      case 'buy-pack': buyPack(el.dataset.id, el); break;
       case 'open-rename': openRename(); break;
       case 'rename-confirm': doRename(); break;
       case 'wallet-more': loadLedger(false); break;
