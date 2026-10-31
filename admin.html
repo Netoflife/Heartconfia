@@ -459,11 +459,18 @@ var creditState = { q: '', adj: null };
 function newKey(){ return 'adm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
 function naira(k){ return '₦' + (k / 100).toLocaleString('en-NG'); }
 async function viewCredits(v){
-  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config');
+  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 });
   var isAdmin = myRole === 'admin';
   v.innerHTML = '<h2>Heart Credits</h2><p class="hint">1 HC = ₦10. Every change is saved in a ledger that can\'t be edited, and in the audit log.</p><div class="grid">' +
     statCard(o.purchased, 'purchased (held by users)') + statCard(o.earned, 'earned (held by users)') + statCard(o.promo, 'promotional (held by users)') +
     statCard(o.spent_7d, 'spent in 7 days') + statCard(o.granted_7d, 'added in 7 days', 'good') + statCard(o.wallets, 'wallets') + '</div>' +
+    '<h3>Payments (Flutterwave)</h3><div class="card"><div class="row"><span class="tag ' + (pay.enabled ? 'green' : 'red') + '">' + (pay.enabled ? 'Buying credits is ON' : 'Buying credits is OFF') + '</span></div>' +
+    '<div class="m">' + pay.summary.successful + ' paid · ' + naira(pay.summary.revenue_kobo) + ' total · ' + naira(pay.summary.revenue_7d_kobo) + ' in 7 days · ' + pay.summary.pending + ' waiting · ' + pay.summary.failed + ' failed</div>' +
+    (isAdmin ? '<button class="b ' + (pay.enabled ? 'd' : 'p') + '" id="paytoggle">' + (pay.enabled ? 'Turn buying OFF' : 'Turn buying ON') + '</button>' : '<div class="m">Only a full admin can switch this.</div>') + '</div>' +
+    (pay.rows.length ? pay.rows.map(function(r){
+      return '<div class="card"><div class="row"><span class="tag ' + (r.status === 'successful' ? 'green' : (r.status === 'failed' ? 'red' : '')) + '">' + esc(r.status) + '</span><span class="tag">' + esc(r.package_name) + ' · ' + naira(r.amount_kobo) + '</span></div>' +
+        '<div class="m">' + esc(r.username || 'deleted user') + ' · ' + esc(r.email || '') + ' · ' + new Date(r.created_at).toLocaleString() + (r.failure_reason ? ' · ' + esc(r.failure_reason) : '') + '</div><div class="m">ref ' + esc(r.tx_ref) + '</div></div>';
+    }).join('') : '<div class="empty">No payments yet.</div>') +
     '<h3>Find a person</h3><div class="card"><div class="two"><div><input id="cq" placeholder="Name or email" value="' + esc(creditState.q) + '"/></div><div><button class="b p" id="cgo">Search</button></div></div></div><div id="clist"></div>' +
     '<h3>Prices</h3><p class="hint">What each feature costs, in Heart Credits. The app reads these live. A feature only appears when it is built.</p>' +
     cfg.prices.map(function(f){
@@ -476,6 +483,11 @@ async function viewCredits(v){
     '<div class="card"><div class="t">Add a package</div><div class="two"><div><label>Short id (letters)</label><input id="npid" placeholder="mega" maxlength="30"/></div><div><label>Name</label><input id="npn" placeholder="Mega" maxlength="40"/></div></div><div class="two"><div><label>Credits</label><input id="npc" type="number" min="1" placeholder="2000"/></div><div></div></div><button class="b p" id="npadd">Add package</button></div>' +
     (isAdmin ? '<h3>Username rules</h3><div class="card"><div class="two"><div><label>Days between changes</label><input id="ur1" type="number" min="0" max="365" value="' + cfg.username.cooldown_days + '"/></div><div><label>Days an old name is held</label><input id="ur2" type="number" min="0" max="730" value="' + cfg.username.hold_days + '"/></div></div><div class="two"><div><label>Free changes per person</label><input id="ur3" type="number" min="0" max="10" value="' + cfg.username.free_changes + '"/></div><div></div></div><button class="b p" id="ursave">Save rules</button></div>' : '');
 
+  var pt = $('#paytoggle'); if (pt) pt.onclick = function(){
+    var turnOn = !pay.enabled;
+    if (turnOn && !confirm('Turn ON buying? Only do this after the Flutterwave keys are added and a small test payment worked.')) return;
+    act(function(){ return rpc('admin_set_payments', { p_enabled: turnOn }); }, turnOn ? 'Buying is ON' : 'Buying is OFF').then(function(r){ if (r !== undefined) render(); });
+  };
   var q = $('#cq'); $('#cgo').onclick = function(){ creditState.q = q.value.trim(); loadWallets(); };
   q.onkeydown = function(e){ if (e.key === 'Enter') $('#cgo').click(); };
   on(v, '[data-a=saveprice]', function(b){
