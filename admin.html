@@ -472,7 +472,7 @@ var creditState = { q: '', adj: null };
 function newKey(){ return 'adm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
 function naira(k){ return '₦' + (k / 100).toLocaleString('en-NG'); }
 async function viewCredits(v){
-  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 }), rw = await rpc('admin_rewards_config');
+  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 }), rw = await rpc('admin_rewards_config'), gf = await rpc('admin_gifts_config');
   var isAdmin = myRole === 'admin';
   v.innerHTML = '<h2>Heart Credits</h2><p class="hint">1 HC = ₦10. Every change is saved in a ledger that can\'t be edited, and in the audit log.</p><div class="grid">' +
     statCard(o.purchased, 'purchased (held by users)') + statCard(o.earned, 'earned (held by users)') + statCard(o.promo, 'promotional (held by users)') +
@@ -504,6 +504,11 @@ async function viewCredits(v){
       return '<div class="card" data-ach="' + esc(a.id) + '"><div class="t">' + esc(a.icon) + ' ' + esc(a.title) + ' <span class="tag">' + esc(a.descr) + '</span></div><div class="two"><div><label>Reward (HC)</label><input type="number" min="0" max="10000" class="ac" value="' + a.credits + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Active</label><select class="aa"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (a.active ? ' selected' : '') + '>Yes</option><option value="0"' + (a.active ? '' : ' selected') + '>No</option></select></div></div>' + (isAdmin ? '<button class="b" data-a="saveach">Save</button>' : '') + '</div>';
     }).join('') +
     (rw.top_referrers.length ? '<div class="card"><div class="t">Top inviters</div>' + rw.top_referrers.map(function(r){ return '<div class="m">' + esc(r.username) + ' · ' + r.qualified + ' joined of ' + r.invited + ' invited</div>'; }).join('') + '</div>' : '') +
+    '<h3>Gifts and boosts</h3><p class="hint">Last 7 days: ' + gf.stats.gifts_7d + ' gifts (' + gf.stats.gift_spent_7d + ' HC spent, ' + gf.stats.gift_fee_7d + ' HC kept as fee). Now: ' + gf.stats.pins_active + ' pinned, ' + gf.stats.highlights_active + ' highlighted, ' + gf.stats.flairs + ' people with flair. Boost and flair prices are in the Prices list above (highlight_post, pin_post, profile_custom).</p>' +
+    gf.gifts.map(function(g){
+      return '<div class="card" data-gid="' + esc(g.id) + '"><div class="t">' + esc(g.icon) + ' ' + esc(g.label) + ' <span class="tag">' + esc(g.id) + '</span></div><div class="two"><div><label>Price (HC)</label><input class="gc" type="number" min="1" value="' + g.cost + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Receiver gets (HC)</label><input class="gr" type="number" min="0" value="' + g.receive + '"' + (isAdmin ? '' : ' disabled') + '/></div></div><div class="two"><div><label>Active</label><select class="ga"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (g.active ? ' selected' : '') + '>Yes</option><option value="0"' + (g.active ? '' : ' selected') + '>No</option></select></div><div><label>Order</label><input class="gs" type="number" value="' + g.sort + '"' + (isAdmin ? '' : ' disabled') + '/></div></div><input class="gl" type="hidden" value="' + esc(g.label) + '"/><input class="gi" type="hidden" value="' + esc(g.icon) + '"/>' + (isAdmin ? '<button class="b" data-a="savegift">Save</button>' : '') + '</div>';
+    }).join('') +
+    (isAdmin ? '<div class="card"><div class="two"><div><label>Highlight lasts (hours)</label><input id="bh1" type="number" min="1" max="168" value="' + gf.highlight_hours + '"/></div><div><label>Pin lasts (hours)</label><input id="bh2" type="number" min="1" max="168" value="' + gf.pin_hours + '"/></div></div><div class="two"><div><label>Pin spots at once</label><input id="bh3" type="number" min="0" max="20" value="' + gf.pin_slots + '"/></div><div><label>Gifts per person per day</label><input id="bh4" type="number" min="0" max="500" value="' + gf.gifts_per_day + '"/></div></div><button class="b p" id="bhsave">Save boost settings</button></div>' : '') +
     (isAdmin ? '<h3>Username rules</h3><div class="card"><div class="two"><div><label>Days between changes</label><input id="ur1" type="number" min="0" max="365" value="' + cfg.username.cooldown_days + '"/></div><div><label>Days an old name is held</label><input id="ur2" type="number" min="0" max="730" value="' + cfg.username.hold_days + '"/></div></div><div class="two"><div><label>Free changes per person</label><input id="ur3" type="number" min="0" max="10" value="' + cfg.username.free_changes + '"/></div><div></div></div><button class="b p" id="ursave">Save rules</button></div>' : '');
 
   var pt = $('#paytoggle'); if (pt) pt.onclick = function(){
@@ -531,6 +536,13 @@ async function viewCredits(v){
     var c = b.closest('.card');
     act(function(){ return rpc('admin_set_achievement', { p_id: c.dataset.ach, p_credits: parseInt(c.querySelector('.ac').value, 10), p_active: c.querySelector('.aa').value === '1' }); }, 'Saved');
   });
+  on(v, '[data-a=savegift]', function(b){
+    var c = b.closest('.card');
+    act(function(){ return rpc('admin_save_gift_type', { p_id: c.dataset.gid, p_label: c.querySelector('.gl').value, p_icon: c.querySelector('.gi').value, p_cost: parseInt(c.querySelector('.gc').value, 10), p_receive: parseInt(c.querySelector('.gr').value, 10), p_active: c.querySelector('.ga').value === '1', p_sort: parseInt(c.querySelector('.gs').value, 10) }); }, 'Gift saved');
+  });
+  var bhs = $('#bhsave'); if (bhs) bhs.onclick = function(){
+    act(function(){ return rpc('admin_set_boost_settings', { p_highlight_hours: parseInt($('#bh1').value, 10), p_pin_hours: parseInt($('#bh2').value, 10), p_pin_slots: parseInt($('#bh3').value, 10), p_gifts_per_day: parseInt($('#bh4').value, 10) }); }, 'Saved');
+  };
   var us = $('#ursave'); if (us) us.onclick = function(){
     act(function(){ return rpc('admin_set_username_rules', { p_cooldown: parseInt($('#ur1').value, 10), p_hold: parseInt($('#ur2').value, 10), p_free: parseInt($('#ur3').value, 10) }); }, 'Rules saved');
   };
