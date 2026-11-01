@@ -472,7 +472,7 @@ var creditState = { q: '', adj: null };
 function newKey(){ return 'adm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
 function naira(k){ return '₦' + (k / 100).toLocaleString('en-NG'); }
 async function viewCredits(v){
-  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 });
+  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 }), rw = await rpc('admin_rewards_config');
   var isAdmin = myRole === 'admin';
   v.innerHTML = '<h2>Heart Credits</h2><p class="hint">1 HC = ₦10. Every change is saved in a ledger that can\'t be edited, and in the audit log.</p><div class="grid">' +
     statCard(o.purchased, 'purchased (held by users)') + statCard(o.earned, 'earned (held by users)') + statCard(o.promo, 'promotional (held by users)') +
@@ -494,6 +494,16 @@ async function viewCredits(v){
       return '<div class="card" data-p="' + esc(p.id) + '"><div class="t">' + esc(p.name) + ' <span class="tag">' + naira(p.price_kobo) + '</span></div><div class="two"><div><label>Name</label><input class="pn" value="' + esc(p.name) + '" maxlength="40"/></div><div><label>Credits</label><input type="number" min="1" max="100000" class="pcr" value="' + p.credits + '"/></div></div><div class="two"><div><label>Order</label><input type="number" class="ps" value="' + p.sort + '"/></div><div><label>Shown</label><select class="pa"><option value="1"' + (p.active ? ' selected' : '') + '>Yes</option><option value="0"' + (p.active ? '' : ' selected') + '>No</option></select></div></div><button class="b" data-a="savepkg">Save package</button></div>';
     }).join('') +
     '<div class="card"><div class="t">Add a package</div><div class="two"><div><label>Short id (letters)</label><input id="npid" placeholder="mega" maxlength="30"/></div><div><label>Name</label><input id="npn" placeholder="Mega" maxlength="40"/></div></div><div class="two"><div><label>Credits</label><input id="npc" type="number" min="1" placeholder="2000"/></div><div></div></div><button class="b p" id="npadd">Add package</button></div>' +
+    '<h3>Rewards and invites</h3><p class="hint">Free credits given for taking part. They are always "earned" credits. Last 7 days: ' + rw.stats.daily_claims_7d + ' daily rewards (' + rw.stats.daily_hc_7d + ' HC). All time: ' + rw.stats.ach_unlocked + ' achievements (' + rw.stats.ach_hc + ' HC), ' + rw.stats.ref_qualified + ' of ' + rw.stats.ref_total + ' invited friends joined (' + rw.stats.ref_hc + ' HC paid).</p>' +
+    '<div class="card"><div class="two"><div><label>Daily reward (HC)</label><input id="rw1" type="number" min="0" max="50" value="' + rw.daily_base + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Extra on every 7th day</label><input id="rw2" type="number" min="0" max="500" value="' + rw.daily_7 + '"' + (isAdmin ? '' : ' disabled') + '/></div></div>' +
+    '<div class="two"><div><label>Extra on every 30th day</label><input id="rw3" type="number" min="0" max="2000" value="' + rw.daily_30 + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Rewards on?</label><select id="rw0"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (rw.rewards_enabled ? ' selected' : '') + '>On</option><option value="0"' + (rw.rewards_enabled ? '' : ' selected') + '>Off</option></select></div></div>' +
+    '<div class="two"><div><label>Inviter gets (HC)</label><input id="rw4" type="number" min="0" max="1000" value="' + rw.referrer_hc + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>New friend gets (HC)</label><input id="rw5" type="number" min="0" max="1000" value="' + rw.friend_hc + '"' + (isAdmin ? '' : ' disabled') + '/></div></div>' +
+    '<div class="two"><div><label>Most friends rewarded per person</label><input id="rw6" type="number" min="0" max="10000" value="' + rw.referral_max + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Invites on?</label><select id="rw7"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (rw.referrals_enabled ? ' selected' : '') + '>On</option><option value="0"' + (rw.referrals_enabled ? '' : ' selected') + '>Off</option></select></div></div>' +
+    (isAdmin ? '<button class="b p" id="rwsave">Save rewards</button>' : '<div class="m">Only a full admin can change these.</div>') + '</div>' +
+    rw.achievements.map(function(a){
+      return '<div class="card" data-ach="' + esc(a.id) + '"><div class="t">' + esc(a.icon) + ' ' + esc(a.title) + ' <span class="tag">' + esc(a.descr) + '</span></div><div class="two"><div><label>Reward (HC)</label><input type="number" min="0" max="10000" class="ac" value="' + a.credits + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Active</label><select class="aa"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (a.active ? ' selected' : '') + '>Yes</option><option value="0"' + (a.active ? '' : ' selected') + '>No</option></select></div></div>' + (isAdmin ? '<button class="b" data-a="saveach">Save</button>' : '') + '</div>';
+    }).join('') +
+    (rw.top_referrers.length ? '<div class="card"><div class="t">Top inviters</div>' + rw.top_referrers.map(function(r){ return '<div class="m">' + esc(r.username) + ' · ' + r.qualified + ' joined of ' + r.invited + ' invited</div>'; }).join('') + '</div>' : '') +
     (isAdmin ? '<h3>Username rules</h3><div class="card"><div class="two"><div><label>Days between changes</label><input id="ur1" type="number" min="0" max="365" value="' + cfg.username.cooldown_days + '"/></div><div><label>Days an old name is held</label><input id="ur2" type="number" min="0" max="730" value="' + cfg.username.hold_days + '"/></div></div><div class="two"><div><label>Free changes per person</label><input id="ur3" type="number" min="0" max="10" value="' + cfg.username.free_changes + '"/></div><div></div></div><button class="b p" id="ursave">Save rules</button></div>' : '');
 
   var pt = $('#paytoggle'); if (pt) pt.onclick = function(){
@@ -514,6 +524,13 @@ async function viewCredits(v){
   $('#npadd').onclick = function(){
     act(function(){ return rpc('admin_save_package', { p_id: $('#npid').value.trim(), p_name: $('#npn').value.trim(), p_credits: parseInt($('#npc').value, 10), p_active: true, p_sort: 99 }); }, 'Package added').then(function(r){ if (r !== undefined) render(); });
   };
+  var rs = $('#rwsave'); if (rs) rs.onclick = function(){
+    act(function(){ return rpc('admin_set_rewards', { p_enabled: $('#rw0').value === '1', p_daily_base: parseInt($('#rw1').value, 10), p_daily_7: parseInt($('#rw2').value, 10), p_daily_30: parseInt($('#rw3').value, 10), p_ref_enabled: $('#rw7').value === '1', p_referrer_hc: parseInt($('#rw4').value, 10), p_friend_hc: parseInt($('#rw5').value, 10), p_ref_max: parseInt($('#rw6').value, 10) }); }, 'Rewards saved');
+  };
+  on(v, '[data-a=saveach]', function(b){
+    var c = b.closest('.card');
+    act(function(){ return rpc('admin_set_achievement', { p_id: c.dataset.ach, p_credits: parseInt(c.querySelector('.ac').value, 10), p_active: c.querySelector('.aa').value === '1' }); }, 'Saved');
+  });
   var us = $('#ursave'); if (us) us.onclick = function(){
     act(function(){ return rpc('admin_set_username_rules', { p_cooldown: parseInt($('#ur1').value, 10), p_hold: parseInt($('#ur2').value, 10), p_free: parseInt($('#ur3').value, 10) }); }, 'Rules saved');
   };
