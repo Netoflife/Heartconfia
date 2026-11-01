@@ -462,6 +462,19 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .hc-led{display:flex;justify-content:space-between;gap:10px;padding:10px 2px;border-top:1px solid var(--line);font-size:13.5px}
 .hc-led small{display:block;color:var(--t3);font-size:11.5px}
 .hc-led .pos{color:var(--green);font-weight:700}.hc-led .neg{color:var(--t2);font-weight:700}
+.msg-chip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:100px;background:var(--s2);border:1px solid var(--line2);font-size:16px}
+.msg-chip .mbadge{position:absolute;top:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:100px;background:var(--rose,#e11d63);color:#fff;font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.mtabs{display:flex;gap:6px;margin-bottom:12px}.mtab{flex:1;padding:9px 6px;border-radius:12px;background:var(--s2);border:1px solid var(--line2);font-size:13px;font-weight:700;color:var(--t2)}.mtab.on{background:var(--s3,var(--s2));color:var(--text);border-color:var(--gold)}
+.mrow{display:flex;gap:10px;align-items:center;width:100%;text-align:left;padding:11px 10px;border-radius:14px;background:var(--s2);border:1px solid var(--line2);margin-bottom:8px}
+.mrow b{display:block;font-size:14px;color:var(--text)}.mrow small{display:block;font-size:12.5px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}
+.mrow .mdot{margin-left:auto;min-width:20px;height:20px;border-radius:100px;background:var(--rose,#e11d63);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 5px}
+.mreq{padding:12px;border-radius:14px;background:var(--s2);border:1px solid var(--line2);margin-bottom:10px}.mreq p{margin:6px 0;font-size:14px;line-height:1.5;color:var(--text);white-space:pre-wrap;word-break:break-word}.mreq small{color:var(--t3);font-size:12px}
+.mreq .macts{display:flex;gap:8px;margin-top:8px}.mreq .macts .btn{flex:1}
+.mlist{display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow-y:auto;padding:4px 2px;margin-bottom:10px}
+.mb{max-width:82%;padding:8px 11px;border-radius:16px;font-size:14px;line-height:1.45;white-space:pre-wrap;word-break:break-word;background:var(--s2);border:1px solid var(--line2);align-self:flex-start}
+.mb.me{align-self:flex-end;background:var(--gold);color:#1a1010;border-color:transparent}.mb small{display:block;font-size:10.5px;opacity:.65;margin-top:2px}
+.mbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.mbar .btn{flex:0 0 auto}
+.msgbox{width:100%;min-height:44px;max-height:120px;resize:none;padding:10px 12px;border-radius:12px;background:var(--s2);border:1px solid var(--line2);color:var(--text);font:inherit;font-size:14px}
 .hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
@@ -601,6 +614,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovName" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">✏️</div><h2 class="m-title" id="nmTitle">Change username</h2></div>
     <div class="m-body" id="nmBody"></div>
+  </div>
+</div>
+
+<div id="ovMsg" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="msTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovMsg" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">✉️</div><h2 class="m-title" id="msTitle">Private messages</h2></div>
+    <div class="m-body" id="msBody"></div>
   </div>
 </div>
 
@@ -1090,6 +1111,13 @@ function openPost(id){
   location.hash = '#post-' + id;
 }
 function handleHash(){
+  const mh = location.hash.match(/^#(requests|chat-([0-9a-f-]{36}))$/i);
+  if (mh) {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+    if (!me) { showAuth('login'); return; }
+    if (mh[2]) openChat(mh[2]); else openMsg('requests');
+    return;
+  }
   const m = location.hash.match(/^#post-([A-Za-z0-9-]{8,64})$/);
   if (m) {
     if (!me) { showPaywall(m[1]); if (page === 'detail') go('home'); return; }
@@ -1169,7 +1197,7 @@ function resetSession(){
   PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true }; seenAt = 0;
   MY.rx = {}; MY.vote = {}; MY.cvote = {}; MY.hearts = new Set();
   S.saved.clear(); S.follow.clear(); NOTIFS = []; unread = 0; sessTask = null; sessUid = null;
-  W.wallet = null; W.ledger = []; W.more = false; W.st = null; MY.posts = new Set();
+  W.wallet = null; W.ledger = []; W.more = false; W.st = null; MY.posts = new Set(); MSG.counts = { requests: 0, unread: 0 }; MSG.conv = null; stopMsgPoll();
   SW.queue = []; SW.i = 0; SW.voted = null; SW.err = null;
   if (chUser && sb) { try { sb.removeChannel(chUser); } catch(e){} chUser = null; }
   updateNav(); updateNotifBadge();
@@ -1318,14 +1346,14 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
 function updateNav(){
   const r = $('#navRight'); if (!r) return;
   if (me && me.username) {
-    r.innerHTML = (W.wallet ? '<button class="hc-chip" data-action="open-wallet" aria-label="Heart Credits: ' + hcTotal() + '">💎 ' + fmt(hcTotal()) + '</button>' : '') + '<button class="ava-btn' + (unread > 0 ? ' has-notif' : '') + '" data-page="profile" aria-label="Profile">' + esc(me.username.slice(0,2).toUpperCase()) + '</button>';
+    r.innerHTML = '<button class="msg-chip" data-action="msg-open" aria-label="Private messages' + (msgBadge() ? ', ' + msgBadge() + ' new' : '') + '">✉' + (msgBadge() ? '<span class="mbadge">' + (msgBadge() > 9 ? '9+' : msgBadge()) + '</span>' : '') + '</button>' + (W.wallet ? '<button class="hc-chip" data-action="open-wallet" aria-label="Heart Credits: ' + hcTotal() + '">💎 ' + fmt(hcTotal()) + '</button>' : '') + '<button class="ava-btn' + (unread > 0 ? ' has-notif' : '') + '" data-page="profile" aria-label="Profile">' + esc(me.username.slice(0,2).toUpperCase()) + '</button>';
   } else {
     r.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="auth-login">Log in</button><button class="btn btn-primary btn-sm" data-action="auth-signup">Join free</button>';
   }
@@ -1638,6 +1666,7 @@ function renderDetail(p){
       '<button class="foot-btn' + (following ? ' is-following' : '') + '" data-action="follow" data-pid="' + esc(p.id) + '" aria-pressed="' + following + '" aria-label="' + (following ? 'Following. Tap to unfollow' : 'Follow for updates') + '">' + ico('bell') + '</button>' +
       '<button class="foot-btn' + (saved ? ' is-saved' : '') + '" data-action="save" data-pid="' + esc(p.id) + '" aria-pressed="' + saved + '" aria-label="Save">' + ico('bookmark') + '</button>' +
       '<button class="foot-btn" data-action="share" data-pid="' + esc(p.id) + '" aria-label="Share link">' + ico('share') + '</button>' +
+      (own ? '' : '<button class="foot-btn" data-action="msg-compose" data-pid="' + esc(p.id) + '" aria-label="Send a private message request">✉</button>') +
       '<button class="foot-btn" data-action="report-post" data-pid="' + esc(p.id) + '" aria-label="Report">' + ico('flag') + '</button></div>' +
       (p.tags.length ? '<div class="c-tags">' + p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
       '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + '<div id="updBlock"></div>' + rxRowHTML(p) +
@@ -1757,6 +1786,7 @@ function cmtHTML(c, isReply){
     '<button class="cm-act dn' + (mv === 'dn' ? ' on' : '') + '" data-action="cmt-dn" data-cid="' + id + '" aria-label="Downvote"' + dis + '>▼ ' + num(c.dn) + '</button>' +
     '<button class="cm-act heart' + (hearted ? ' on' : '') + '" data-action="cmt-heart" data-cid="' + id + '"' + dis + '>💜 Heard' + (hearts ? ' · ' + hearts : '') + '</button>' +
     (isReply ? '' : '<button class="cm-act" data-action="reply-toggle" data-cid="' + id + '"' + dis + '>↩ Reply</button>') +
+    ((isReply || (me && c.author === me.username)) ? '' : '<button class="cm-act" data-action="msg-compose" data-cid="' + id + '" aria-label="Send a private message request"' + dis + '>✉</button>') +
     '<button class="cm-act" data-action="report-cmt" data-cid="' + id + '" aria-label="Report comment"' + dis + '>' + ico('flag') + '</button></div></div>' + replies + box + '</div>';
 }
 
@@ -2379,7 +2409,7 @@ async function loadWallet(){
     if (w && !w.error && w.data) W.wallet = walletFromRow({ purchased: w.data.purchased, earned: w.data.earned, promo: w.data.promo });
     if (c && !c.error && c.data) W.catalog = c.data;
   } catch(e) { console.warn('wallet', e); }
-  updateNav(); refreshWalletUI();
+  loadMsgCounts(); updateNav(); refreshWalletUI();
 }
 function refreshWalletUI(){
   if (!$('#ovWallet').classList.contains('hidden')) renderWallet();
@@ -2523,6 +2553,212 @@ async function doRename(){
 }
 document.addEventListener('input', e => { if (e.target && e.target.id === 'nmInput') nmCheckSoon(); });
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target && e.target.id === 'nmInput') { e.preventDefault(); doRename(); } });
+
+/* =====================================================================
+   PRIVATE ANONYMOUS MESSAGING  (Phase 2)
+   Everyone is only ever shown a username. The server never sends anyone's account id.
+   ===================================================================== */
+const MSG = { view: 'inbox', tab: 'chats', chats: [], reqs: { incoming: [], outgoing: [] }, counts: { requests: 0, unread: 0 },
+              conv: null, lastId: 0, comp: null, prefs: null, busy: false, poll: null, sendKey: null };
+function msgBadge(){ return num(MSG.counts.requests) + num(MSG.counts.unread); }
+async function loadMsgCounts(){
+  if (!me || !sb) return;
+  try { const { data, error } = await sb.rpc('get_message_counts'); if (!error && data) { MSG.counts = data; updateNav(); } } catch(e){}
+}
+function stopMsgPoll(){ if (MSG.poll) { clearInterval(MSG.poll); MSG.poll = null; } }
+function startMsgPoll(){
+  stopMsgPoll();
+  MSG.poll = setInterval(() => {
+    if ($('#ovMsg').classList.contains('hidden')) { stopMsgPoll(); return; }
+    if (document.hidden) return;
+    if (MSG.view === 'chat' && MSG.conv) fetchNew(); else if (MSG.view === 'inbox') refreshInbox(true);
+  }, 20000);
+}
+function onChatEvent(ev){
+  if (!ev) return;
+  loadMsgCounts();
+  const open = !$('#ovMsg').classList.contains('hidden');
+  if (!open) return;
+  if (MSG.view === 'chat' && MSG.conv && ev.conv_id === MSG.conv.id) fetchNew();
+  else if (MSG.view === 'inbox') refreshInbox(true);
+}
+async function openMsg(tab){
+  if (!me) { showAuth('signup'); return; }
+  MSG.view = 'inbox'; MSG.conv = null; if (tab) MSG.tab = tab;
+  openOv('ovMsg'); renderMsg(); refreshInbox(); startMsgPoll();
+}
+async function refreshInbox(quiet){
+  try {
+    const [c, r, pf] = await Promise.all([sb.rpc('get_my_chats'), sb.rpc('get_my_requests'), MSG.prefs ? Promise.resolve(null) : sb.rpc('get_message_prefs')]);
+    if (c.error) throw c.error; if (r.error) throw r.error;
+    MSG.chats = c.data || []; MSG.reqs = r.data || { incoming: [], outgoing: [] };
+    if (pf && !pf.error) MSG.prefs = pf.data;
+    MSG.err = null;
+  } catch(e) { if (!quiet) MSG.err = errMsg(e, 'Could not load your messages right now.'); }
+  loadMsgCounts();
+  if (MSG.view === 'inbox') renderMsg();
+}
+function msgTime(t){ try { return tAgo(t); } catch(e){ return ''; } }
+function renderMsg(){
+  const b = $('#msBody'); if (!b) return;
+  if (MSG.view === 'compose') return renderCompose();
+  if (MSG.view === 'chat') return renderChat();
+  $('#msTitle').textContent = 'Private messages';
+  const inc = (MSG.reqs.incoming || []).length;
+  let h = '<div class="mtabs"><button class="mtab' + (MSG.tab === 'chats' ? ' on' : '') + '" data-action="msg-tab" data-tab="chats">Chats' + (num(MSG.counts.unread) ? ' (' + num(MSG.counts.unread) + ')' : '') + '</button>' +
+          '<button class="mtab' + (MSG.tab === 'requests' ? ' on' : '') + '" data-action="msg-tab" data-tab="requests">Requests' + (inc ? ' (' + inc + ')' : '') + '</button></div>';
+  if (MSG.err) h += '<p class="hc-note">' + esc(MSG.err) + '</p>';
+  if (MSG.tab === 'chats') {
+    h += MSG.chats.length ? MSG.chats.map(c => '<button class="mrow" data-action="msg-chat" data-id="' + esc(c.id) + '"><span class="d-ava" aria-hidden="true">' + esc(String(c.other_name || '?').slice(0, 2).toUpperCase()) + '</span><span style="min-width:0"><b>' + esc(c.other_name || 'Someone') + (c.closed ? ' · closed' : '') + '</b><small>' + esc(c.last_preview || '') + '</small></span>' + (num(c.unread) ? '<span class="mdot">' + num(c.unread) + '</span>' : '') + '</button>').join('')
+      : '<p class="hc-note">No chats yet. Tap ✉ on a story or comment to ask someone if they would like to talk privately.</p>';
+  } else {
+    h += '<p class="hc-note" style="margin-top:0">People who want to talk to you. You choose. Nobody sees who you are.</p>';
+    h += inc ? MSG.reqs.incoming.map(r => '<div class="mreq"><b>' + esc(r.from_name || 'Someone') + '</b> <small>· ' + esc(msgTime(r.created_at)) + (r.story ? ' · about “' + esc(r.story) + '”' : '') + '</small><p>' + esc(r.body) + '</p><div class="macts"><button class="btn btn-ghost btn-sm" data-action="msg-decline" data-id="' + esc(r.id) + '">Decline</button><button class="btn btn-primary btn-sm" data-action="msg-accept" data-id="' + esc(r.id) + '">Accept</button></div></div>').join('')
+      : '<p class="hc-note">No requests waiting.</p>';
+    const out = MSG.reqs.outgoing || [];
+    if (out.length) {
+      h += '<h3 style="font-size:13px;color:var(--t2);margin:16px 0 8px">Requests you sent</h3>' + out.map(r => {
+        const st = r.status === 'accepted' ? 'Accepted ✓' : r.status === 'expired' ? 'No answer' + (r.refunded ? ' · credits returned' : '') : 'Waiting for an answer';
+        return '<div class="mreq"><b>' + esc(r.to_name || 'Someone') + '</b> <small>· ' + esc(msgTime(r.created_at)) + ' · ' + esc(st) + '</small><p>' + esc(r.body) + '</p>' + (r.status === 'accepted' && r.conversation_id ? '<div class="macts"><button class="btn btn-ghost btn-sm" data-action="msg-chat" data-id="' + esc(r.conversation_id) + '">Open chat</button></div>' : '') + '</div>';
+      }).join('');
+    }
+  }
+  const acc = !MSG.prefs || MSG.prefs.accepting !== false;
+  h += '<label class="hc-note" style="display:flex;gap:8px;align-items:center;margin-top:16px"><input type="checkbox" data-action="msg-pref" ' + (acc ? 'checked' : '') + '> Allow people to send me message requests</label>';
+  if (MSG.prefs && num(MSG.prefs.blocked) > 0) h += '<button class="btn btn-ghost btn-sm" data-action="msg-unblock-all">Unblock everyone (' + num(MSG.prefs.blocked) + ')</button>';
+  b.innerHTML = h;
+}
+async function togglePref(){
+  const acc = !(!MSG.prefs || MSG.prefs.accepting !== false);
+  try {
+    const { data, error } = await sb.rpc('set_message_prefs', { p_accepting: acc });
+    if (error) throw error;
+    MSG.prefs = Object.assign({}, MSG.prefs || {}, { accepting: data.accepting });
+    toast(acc ? 'You can receive message requests again' : 'Message requests are off', 'ok');
+  } catch(e) { toast(errMsg(e, 'Could not save that.'), 'err'); }
+  renderMsg();
+}
+async function clearBlocks(){
+  try { const { error } = await sb.rpc('clear_my_blocks'); if (error) throw error; MSG.prefs = null; toast('Everyone unblocked', 'ok'); refreshInbox(); }
+  catch(e) { toast(errMsg(e, 'Could not do that.'), 'err'); }
+}
+/* ---- new request ---- */
+async function openCompose(pid, cid){
+  if (!me) { showAuth('signup'); return; }
+  MSG.view = 'compose'; MSG.comp = { pid: pid || null, cid: cid || null, key: newKey('mq') };
+  openOv('ovMsg'); renderCompose(); stopMsgPoll();
+  try { const { data, error } = await sb.rpc('get_message_prefs'); if (!error && data) { MSG.prefs = data; renderCompose(); } } catch(e){}
+  loadWallet();
+}
+function renderCompose(){
+  const b = $('#msBody'); if (!b) return;
+  $('#msTitle').textContent = 'Ask to talk privately';
+  const cost = MSG.prefs ? num(MSG.prefs.cost) : 5, have = hcTotal();
+  const ta = $('#mqText'), keep = ta ? ta.value : '';
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Write a short, kind note. The person decides whether to accept. They will only see your username, never who you are.</p>' +
+    '<textarea class="msgbox" id="mqText" maxlength="300" rows="4" placeholder="Hi, I read your story and…"></textarea>' +
+    '<div class="hc-msg" id="mqMsg" aria-live="polite"></div>' +
+    '<p class="hc-note">Sending costs <b>' + cost + ' HC</b> (you have <b>' + have.toLocaleString() + ' HC</b>). If it is not accepted within 7 days, the credits are returned to you automatically. You can send up to 5 requests a day.</p>' +
+    (have < cost ? '<button class="btn btn-ghost btn-block" data-action="open-wallet">Get Heart Credits</button>' : '<button class="btn btn-primary btn-block" id="mqGo" data-action="msg-send-request">Send request · ' + cost + ' HC</button>');
+  const t2 = $('#mqText'); if (t2 && keep) t2.value = keep;
+}
+async function sendRequest(){
+  const ta = $('#mqText'), go = $('#mqGo'), msg = $('#mqMsg'); if (!ta || !go || !MSG.comp || MSG.busy) return;
+  const v = ta.value.trim();
+  if (v.length < 5) { msg.textContent = 'Please write at least a few words.'; msg.className = 'hc-msg bad'; return; }
+  MSG.busy = true; go.disabled = true; const old = go.textContent; go.textContent = 'Sending…';
+  try {
+    const { data, error } = await sb.rpc('send_message_request', { p_post: MSG.comp.cid ? null : MSG.comp.pid, p_comment: MSG.comp.cid || null, p_message: v, p_key: MSG.comp.key });
+    if (error) throw error;
+    if (data && data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); }
+    MSG.comp = null; toast('Request sent. You will be told if it is accepted.', 'ok');
+    MSG.tab = 'requests'; MSG.prefs = null; openMsg('requests');
+  } catch(e) {
+    msg.textContent = errMsg(e, 'Could not send that. Nothing was charged.'); msg.className = 'hc-msg bad';
+    go.textContent = old; go.disabled = false;
+  }
+  MSG.busy = false;
+}
+async function respondReq(id, accept){
+  if (MSG.busy) return; MSG.busy = true;
+  try {
+    const { data, error } = await sb.rpc('respond_request', { p_request: id, p_accept: !!accept });
+    if (error) throw error;
+    MSG.busy = false;
+    if (accept && data && data.conversation_id) { toast('Chat opened', 'ok'); await openChat(data.conversation_id); loadMsgCounts(); return; }
+    toast('Request declined', 'info');
+  } catch(e) { toast(errMsg(e, 'Could not do that.'), 'err'); }
+  MSG.busy = false; refreshInbox();
+}
+/* ---- chat ---- */
+async function openChat(id){
+  if (!me) { showAuth('login'); return; }
+  MSG.view = 'chat'; MSG.conv = { id: id, name: '', messages: [], closed: false, blocked: false, loading: true }; MSG.lastId = 0; MSG.sendKey = null;
+  openOv('ovMsg'); renderChat(); startMsgPoll();
+  try {
+    const { data, error } = await sb.rpc('get_messages', { p_conv: id, p_after: 0 });
+    if (error) throw error;
+    MSG.conv = { id: id, name: data.other_name, messages: data.messages || [], closed: !!data.closed, blocked: !!data.blocked_by_me };
+    MSG.lastId = MSG.conv.messages.length ? MSG.conv.messages[MSG.conv.messages.length - 1].id : 0;
+    renderChat(true);
+    sb.rpc('mark_conversation_read', { p_conv: id }).then(() => loadMsgCounts());
+  } catch(e) { if (MSG.conv && MSG.conv.id === id) { MSG.conv.loading = false; MSG.conv.err = errMsg(e, 'Could not open this chat.'); renderChat(); } }
+}
+async function fetchNew(){
+  const c = MSG.conv; if (!c || c.loading) return;
+  try {
+    const { data, error } = await sb.rpc('get_messages', { p_conv: c.id, p_after: MSG.lastId });
+    if (error) throw error; if (!MSG.conv || MSG.conv.id !== c.id) return;
+    const add = (data.messages || []).filter(m => !c.messages.some(x => x.id === m.id));
+    c.closed = !!data.closed;
+    if (add.length) { c.messages = c.messages.concat(add); MSG.lastId = c.messages[c.messages.length - 1].id; renderChat(true); sb.rpc('mark_conversation_read', { p_conv: c.id }).then(() => loadMsgCounts()); }
+    else if (c.closed !== !!data.closed) renderChat();
+  } catch(e){}
+}
+function renderChat(scroll){
+  const b = $('#msBody'), c = MSG.conv; if (!b || !c) return;
+  $('#msTitle').textContent = c.name || 'Chat';
+  const draft = $('#chText') ? $('#chText').value : '';
+  if (c.loading) { b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="msg-back">← Back</button><p class="hc-note">Loading…</p>'; return; }
+  if (c.err) { b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="msg-back">← Back</button><p class="hc-note">' + esc(c.err) + '</p>'; return; }
+  b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="msg-back">← Back</button>' +
+    '<p class="hc-note">You are chatting with <b style="color:var(--text)">' + esc(c.name || 'someone') + '</b>. Neither of you can see who the other is. Never share personal details you wish to keep private.</p>' +
+    '<div class="mlist" id="chList" role="log" aria-live="polite">' + c.messages.map(m => '<div class="mb' + (m.mine ? ' me' : '') + '">' + esc(m.body) + '<small>' + esc(msgTime(m.at)) + '</small></div>').join('') + '</div>' +
+    (c.closed ? '<p class="hc-note">This chat is closed.</p>' :
+      '<textarea class="msgbox" id="chText" maxlength="1000" rows="2" placeholder="Write a message…"></textarea><div class="hc-msg" id="chMsg" aria-live="polite"></div>' +
+      '<button class="btn btn-primary btn-block" id="chGo" data-action="msg-send">Send</button>' +
+      '<div class="mbar"><button class="btn btn-ghost btn-sm" data-action="msg-block">Block</button><button class="btn btn-ghost btn-sm" data-action="msg-report">Report</button></div>');
+  const t = $('#chText'); if (t && draft) t.value = draft;
+  const l = $('#chList'); if (l && scroll !== false) l.scrollTop = l.scrollHeight;
+}
+async function sendChat(){
+  const t = $('#chText'), go = $('#chGo'), c = MSG.conv; if (!t || !go || !c || MSG.busy) return;
+  const v = t.value.trim(); if (!v) return;
+  if (!MSG.sendKey) MSG.sendKey = newKey('mm');
+  MSG.busy = true; go.disabled = true;
+  try {
+    const { data, error } = await sb.rpc('send_message', { p_conv: c.id, p_body: v, p_key: MSG.sendKey });
+    if (error) throw error;
+    MSG.sendKey = null; t.value = '';
+    c.messages.push({ id: data.id, mine: true, body: v, at: new Date().toISOString() });
+    MSG.lastId = Math.max(MSG.lastId, data.id); renderChat(true);
+  } catch(e) { const m = $('#chMsg'); if (m) { m.textContent = errMsg(e, 'Could not send that.'); m.className = 'hc-msg bad'; } }
+  MSG.busy = false; const g = $('#chGo'); if (g) g.disabled = false;
+}
+async function blockChat(){
+  const c = MSG.conv; if (!c || !confirm('Block ' + (c.name || 'this person') + '? The chat will close and they cannot send you new requests.')) return;
+  try { const { error } = await sb.rpc('block_in_chat', { p_conv: c.id, p_block: true }); if (error) throw error; toast('Blocked', 'ok'); MSG.prefs = null; openMsg('chats'); }
+  catch(e) { toast(errMsg(e, 'Could not block.'), 'err'); }
+}
+async function reportChat(){
+  const c = MSG.conv; if (!c) return;
+  const why = prompt('What happened? (a few words, our team will read the recent messages and may restrict this person)');
+  if (why === null) return;
+  if (why.trim().length < 3) { toast('Please say a little more.', 'info'); return; }
+  try { const { error } = await sb.rpc('report_conversation', { p_conv: c.id, p_reason: why.trim(), p_block: true }); if (error) throw error; toast('Reported and blocked. Thank you.', 'ok'); MSG.prefs = null; openMsg('chats'); }
+  catch(e) { toast(errMsg(e, 'Could not send that report.'), 'err'); }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && e.target && e.target.id === 'chText') { e.preventDefault(); sendChat(); } });
 function renderBan(){
   const c = $('#banBar'); if (!c) return;
   c.innerHTML = me && X.status.banned ? '<div class="banner banner-ban"><h3>⛔ Your account is restricted</h3><p>You can read stories, but you can\'t post, comment or vote.' + (X.status.reason ? ' Reason: ' + esc(X.status.reason) : '') + '</p></div>' : '';
@@ -2673,6 +2909,7 @@ function subscribeUserChannel(){
       if (page === 'notifications') { renderNotifs(); markNotifsRead(); }
       else { const el = document.createElement('div'); el.className = 'reply-toast'; el.textContent = (n.icon || '💬') + ' ' + (n.text || 'New notification'); document.body.appendChild(el); setTimeout(() => el.remove(), 4600); }
     })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_events', filter: 'user_id=eq.' + me.id }, pl => { onChatEvent(pl.new); })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_wallets', filter: 'user_id=eq.' + me.id }, pl => {
       if (pl.new && pl.new.user_id) { W.wallet = walletFromRow(pl.new); updateNav(); refreshWalletUI(); loadLedger(true); }
     }).subscribe();
@@ -2701,7 +2938,20 @@ function bindEvents(){
     if (el.tagName === 'A' && a === 'open') e.preventDefault();
     switch (a) {
       case 'open': openPost(pid); break;
-      case 'open-notif': { const m = (el.dataset.link || '').match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); break; }
+      case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
+      case 'msg-open': openMsg(); break;
+      case 'msg-tab': MSG.tab = el.dataset.tab; renderMsg(); break;
+      case 'msg-compose': openCompose(pid, cid); break;
+      case 'msg-send-request': sendRequest(); break;
+      case 'msg-accept': respondReq(el.dataset.id, true); break;
+      case 'msg-decline': respondReq(el.dataset.id, false); break;
+      case 'msg-chat': openChat(el.dataset.id); break;
+      case 'msg-back': openMsg(); break;
+      case 'msg-send': sendChat(); break;
+      case 'msg-block': blockChat(true); break;
+      case 'msg-unblock-all': clearBlocks(); break;
+      case 'msg-report': reportChat(); break;
+      case 'msg-pref': togglePref(); break;
       case 'vote': doVote(pid, el.dataset.v); break;
       case 'react': doRx(pid, el.dataset.e); break;
       case 'save': toggleSave(pid); break;
