@@ -176,14 +176,27 @@ async function viewDash(v){
 /* ---------------- reports ---------------- */
 async function viewReports(v){
   var rows = await rpc('admin_list_reports', { p_limit: 100 }); openReports = rows.length; drawNav();
-  if (!rows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>'; return; }
-  v.innerHTML = '<h2>Reports waiting (' + rows.length + ')</h2>' + rows.map(function(r){
+  var crows = []; try { crows = await rpc('admin_list_msg_reports', { p_status: 'open' }); } catch(e){ crows = []; }
+  var chatHtml = crows.length ? '<h2 style="margin-top:22px">Private chat reports (' + crows.length + ')</h2>' + crows.map(function(r){
+    return '<div class="card"><div class="row"><span class="tag red">chat report</span>' + (r.already_restricted ? '<span class="tag">already restricted</span>' : '') + '</div>' +
+      '<div class="m" style="margin-top:6px"><b>' + esc(r.reporter_name || '?') + '</b> reported <b>' + esc(r.reported_name || '?') + '</b> · ' + ago(r.created_at) + '</div>' +
+      '<div class="t" style="margin-top:6px">Reason: ' + esc(r.reason) + '</div>' +
+      '<div style="margin:8px 0;max-height:220px;overflow:auto;padding:8px;border-radius:10px;background:var(--bg2,#0003)">' + (r.snapshot || []).map(function(m){
+        return '<div class="m" style="margin:4px 0"><b>' + (m.from === 'reporter' ? esc(r.reporter_name) : esc(r.reported_name)) + ':</b> ' + esc(m.body) + '</div>'; }).join('') + '</div>' +
+      '<div class="row"><button class="b g" data-cr="dismiss" data-id="' + esc(r.id) + '">Looks fine</button><button class="b d" data-cr="restrict" data-id="' + esc(r.id) + '">Switch off their messaging</button></div></div>';
+  }).join('') : '';
+  if (!rows.length && !crows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>'; return; }
+  v.innerHTML = (rows.length ? '<h2>Reports waiting (' + rows.length + ')</h2>' : '') + rows.map(function(r){
     return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span><span class="tag">' + esc(r.type) + '</span>' + (r.hidden ? '<span class="tag red">hidden</span>' : '') + '</div>' +
       '<div class="t" style="margin-top:8px">' + esc(r.preview || '(content already removed)') + '</div><div class="m">Reasons: ' + esc((r.reasons || []).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
       '<div class="row"><button class="b g" data-a="dismiss" data-id="' + esc(r.content_id) + '">Looks fine</button><button class="b" data-a="hide" data-id="' + esc(r.content_id) + '">Hide</button><button class="b d" data-a="delete" data-id="' + esc(r.content_id) + '">Delete</button>' +
       (r.author_id ? '<button class="b d" data-ban="' + esc(r.author_id) + '">Restrict author</button>' : '') +
       (r.post_id ? '<a class="b" style="text-decoration:none;color:var(--text)" target="_blank" rel="noopener" href="/#post-' + esc(r.post_id) + '">View</a>' : '') + '</div></div>';
-  }).join('');
+  }).join('') + chatHtml;
+  on(v, '[data-cr]', function(b){
+    if (b.dataset.cr === 'restrict' && !confirm('Switch off private messaging for this person?')) return;
+    act(function(){ return rpc('admin_review_msg_report', { p_id: b.dataset.id, p_action: b.dataset.cr }); }, 'Done').then(render);
+  });
   on(v, '[data-a]', function(b){
     if (b.dataset.a === 'delete' && !confirm('Delete this permanently?')) return;
     act(function(){ return rpc('admin_resolve_report', { p_content_id: b.dataset.id, p_action: b.dataset.a }); }, 'Done').then(render);
