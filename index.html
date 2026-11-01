@@ -475,6 +475,12 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .mb.me{align-self:flex-end;background:var(--gold);color:#1a1010;border-color:transparent}.mb small{display:block;font-size:10.5px;opacity:.65;margin-top:2px}
 .mbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.mbar .btn{flex:0 0 auto}
 .msgbox{width:100%;min-height:44px;max-height:120px;resize:none;padding:10px 12px;border-radius:12px;background:var(--s2);border:1px solid var(--line2);color:var(--text);font:inherit;font-size:14px}
+.rw-card{padding:14px;border-radius:16px;background:var(--s2);border:1px solid var(--line2);margin-bottom:12px}
+.rw-card h3{font-size:15px;margin:0 0 6px;color:var(--text)}
+.rw-big{font-size:26px;font-weight:800;color:var(--gold)}
+.rw-ach{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line2);opacity:.55}.rw-ach.on{opacity:1}
+.rw-ach b{display:block;font-size:13.5px;color:var(--text)}.rw-ach small{color:var(--t3);font-size:12px}.rw-ach .rw-hc{margin-left:auto;font-weight:800;font-size:12.5px;color:var(--gold);white-space:nowrap}
+.rw-link{display:flex;gap:6px;margin:8px 0}.rw-link input{flex:1;min-width:0;padding:9px 10px;border-radius:10px;background:var(--s1);border:1px solid var(--line2);color:var(--text);font-size:12.5px}
 .hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
@@ -622,6 +628,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovMsg" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">✉️</div><h2 class="m-title" id="msTitle">Private messages</h2></div>
     <div class="m-body" id="msBody"></div>
+  </div>
+</div>
+
+<div id="ovRew" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="rwTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovRew" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">🎁</div><h2 class="m-title" id="rwTitle">Rewards</h2></div>
+    <div class="m-body" id="rwBody"></div>
   </div>
 </div>
 
@@ -1197,7 +1211,7 @@ function resetSession(){
   PREFS = { push: false, email_digest: true, email_replies: true, daily_prompt: true }; seenAt = 0;
   MY.rx = {}; MY.vote = {}; MY.cvote = {}; MY.hearts = new Set();
   S.saved.clear(); S.follow.clear(); NOTIFS = []; unread = 0; sessTask = null; sessUid = null;
-  W.wallet = null; W.ledger = []; W.more = false; W.st = null; MY.posts = new Set(); MSG.counts = { requests: 0, unread: 0 }; MSG.conv = null; stopMsgPoll();
+  W.wallet = null; W.ledger = []; W.more = false; W.st = null; MY.posts = new Set(); MSG.counts = { requests: 0, unread: 0 }; MSG.conv = null; stopMsgPoll(); REW.booted = false; REW.st = null;
   SW.queue = []; SW.i = 0; SW.voted = null; SW.err = null;
   if (chUser && sb) { try { sb.removeChannel(chUser); } catch(e){} chUser = null; }
   updateNav(); updateNotifBadge();
@@ -1346,7 +1360,7 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
@@ -2214,7 +2228,7 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
-    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
     '<div id="pfRep"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
@@ -2350,6 +2364,12 @@ try {
     history.replaceState(null, '', location.pathname + location.hash);
   }
 } catch(e) {}
+// Invite links look like /?ref=ABCD2345. Remember the code until the person has an account.
+try {
+  const q2 = new URLSearchParams(location.search), rc = (q2.get('ref') || '').toUpperCase();
+  if (/^[A-Z0-9]{8}$/.test(rc)) { ls.set('hc_ref', rc); }
+  if (q2.has('ref')) { q2.delete('ref'); const rest = q2.toString(); history.replaceState(null, '', location.pathname + (rest ? '?' + rest : '') + location.hash); }
+} catch(e) {}
 const BUY = { busy: false };
 async function fnError(error){
   try { const j = await error.context.json(); return j && (j.error || j.reason) ? j : null; } catch(e) { return null; }
@@ -2409,7 +2429,7 @@ async function loadWallet(){
     if (w && !w.error && w.data) W.wallet = walletFromRow({ purchased: w.data.purchased, earned: w.data.earned, promo: w.data.promo });
     if (c && !c.error && c.data) W.catalog = c.data;
   } catch(e) { console.warn('wallet', e); }
-  loadMsgCounts(); updateNav(); refreshWalletUI();
+  loadMsgCounts(); updateNav(); refreshWalletUI(); rewardsBoot();
 }
 function refreshWalletUI(){
   if (!$('#ovWallet').classList.contains('hidden')) renderWallet();
@@ -2759,6 +2779,79 @@ async function reportChat(){
   catch(e) { toast(errMsg(e, 'Could not send that report.'), 'err'); }
 }
 document.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && e.target && e.target.id === 'chText') { e.preventDefault(); sendChat(); } });
+
+/* =====================================================================
+   REWARDS  (Phase 3): daily reward, achievements, invites. The server decides everything.
+   ===================================================================== */
+const REW = { st: null, booted: false, busy: false };
+function tzName(){ try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'; } catch(e){ return 'UTC'; } }
+async function rewardsBoot(){
+  if (!me || !sb || REW.booted) return; REW.booted = true;
+  try {
+    const rc = ls.get('hc_ref');
+    if (rc) { try { await sb.rpc('apply_referral', { p_code: rc }); } catch(e){} ls.remove('hc_ref'); }
+    const a = await sb.rpc('claim_achievements');
+    if (!a.error && a.data) {
+      (a.data.new || []).forEach((x, i) => setTimeout(() => toast((x.icon || '🏅') + ' ' + x.title + (x.credits ? ' · +' + x.credits + ' HC' : ''), 'ok'), 600 + i * 1800));
+      if (a.data.wallet) { W.wallet = walletFromRow(a.data.wallet); updateNav(); refreshWalletUI(); }
+    }
+    const { data } = await sb.rpc('get_rewards_status', { p_tz: tzName() });
+    if (data) { REW.st = data; if (data.daily && data.daily.claimable) setTimeout(() => toast('🎁 Your daily reward is ready. Open Rewards on your profile.', 'info'), 2500); }
+  } catch(e) { console.warn('rewards', e); }
+}
+async function openRewards(){
+  if (!me) { showAuth('signup'); return; }
+  openOv('ovRew'); renderRewards();
+  try {
+    const { data, error } = await sb.rpc('get_rewards_status', { p_tz: tzName() });
+    if (error) throw error; REW.st = data; renderRewards();
+  } catch(e) { const b = $('#rwBody'); if (b && !REW.st) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load rewards right now.')) + '</p>'; }
+}
+function inviteUrl(){ const c = REW.st && REW.st.referral && REW.st.referral.code; return c ? location.origin + '/?ref=' + c : ''; }
+function renderRewards(){
+  const b = $('#rwBody'); if (!b) return;
+  const st = REW.st; if (!st) { b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  const d = st.daily || {}, r = st.referral || {};
+  let h = '<div class="rw-card"><h3>Daily reward</h3>';
+  if (!st.enabled) h += '<p class="hc-note" style="margin-top:0">Rewards are paused right now.</p>';
+  else if (d.claimable) h += '<div class="rw-big">+' + num(d.amount) + ' HC</div><p class="hc-note">Day ' + num(d.streak) + ' of your streak. Tap to collect.</p><button class="btn btn-primary btn-block" id="rwGo" data-action="rew-claim">Collect ' + num(d.amount) + ' HC</button>';
+  else h += '<p class="hc-note" style="margin-top:0">✓ Collected for today. Come back tomorrow for <b>' + num(d.tomorrow_amount) + ' HC</b>.</p>';
+  h += '<p class="hc-note">Visit every day: +' + num(d.week_bonus) + ' HC extra on every 7th day in a row and +' + num(d.month_bonus) + ' HC extra on every 30th. Missing a day restarts the streak.</p></div>';
+  if (r.enabled) {
+    h += '<div class="rw-card"><h3>Invite a friend</h3><p class="hc-note" style="margin-top:0">When a friend joins with your link and becomes a real member (posts or comments), you get <b>' + num(r.referrer_hc) + ' HC</b> and they get <b>' + num(r.friend_hc) + ' HC</b>.</p>' +
+      '<div class="rw-link"><input readonly value="' + esc(inviteUrl()) + '" aria-label="Your invite link" onfocus="this.select()"><button class="btn btn-ghost btn-sm" data-action="rew-copy">Copy</button></div>' +
+      '<button class="btn btn-primary btn-block" data-action="rew-share">Share my invite</button>' +
+      '<p class="hc-note">Invited: <b>' + num(r.invited) + '</b> · Joined: <b>' + num(r.qualified) + '</b> · Earned: <b>' + num(r.earned) + ' HC</b>' + (r.was_invited ? ' · You joined through an invite 💜' : '') + '</p></div>';
+  }
+  const ach = st.achievements || [];
+  h += '<div class="rw-card"><h3>Achievements</h3>' + ach.map(a => '<div class="rw-ach' + (a.unlocked ? ' on' : '') + '"><span style="font-size:24px">' + esc(a.icon) + '</span><span><b>' + esc(a.title) + '</b><small>' + esc(a.descr) + '</small></span><span class="rw-hc">' + (a.unlocked ? '✓' : (num(a.credits) ? '+' + num(a.credits) + ' HC' : '')) + '</span></div>').join('') + '</div>';
+  b.innerHTML = h;
+}
+async function claimDaily(){
+  const go = $('#rwGo'); if (REW.busy) return; REW.busy = true; if (go) { go.disabled = true; go.textContent = 'Collecting…'; }
+  try {
+    const { data, error } = await sb.rpc('claim_daily_reward', { p_tz: tzName() });
+    if (error) throw error;
+    if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
+    if (data.ok) toast('🎁 +' + data.amount + ' HC collected. Day ' + data.streak + '!', 'ok');
+    else toast('Already collected for today. Come back tomorrow.', 'info');
+    syncSeen();
+    const a = await sb.rpc('claim_achievements');
+    if (!a.error && a.data) { (a.data.new || []).forEach((x, i) => setTimeout(() => toast((x.icon || '🏅') + ' ' + x.title + (x.credits ? ' · +' + x.credits + ' HC' : ''), 'ok'), 1500 + i * 1800)); if (a.data.wallet) { W.wallet = walletFromRow(a.data.wallet); updateNav(); refreshWalletUI(); } }
+    const st = await sb.rpc('get_rewards_status', { p_tz: tzName() }); if (!st.error) REW.st = st.data;
+  } catch(e) { toast(errMsg(e, 'Could not collect that right now.'), 'err'); }
+  REW.busy = false; renderRewards();
+}
+async function copyInvite(){
+  const u = inviteUrl(); if (!u) return;
+  try { await navigator.clipboard.writeText(u); toast('Invite link copied', 'ok'); } catch(e) { toast('Press and hold the link to copy it.', 'info'); }
+}
+async function shareInvite(){
+  const u = inviteUrl(); if (!u) return;
+  const data = { title: 'HeartConfia', text: 'Join me on HeartConfia, the anonymous place for relationship confessions.', url: u };
+  try { if (navigator.share) await navigator.share(data); else await copyInvite(); }
+  catch(e) { if (!e || e.name !== 'AbortError') copyInvite(); }
+}
 function renderBan(){
   const c = $('#banBar'); if (!c) return;
   c.innerHTML = me && X.status.banned ? '<div class="banner banner-ban"><h3>⛔ Your account is restricted</h3><p>You can read stories, but you can\'t post, comment or vote.' + (X.status.reason ? ' Reason: ' + esc(X.status.reason) : '') + '</p></div>' : '';
@@ -2939,6 +3032,10 @@ function bindEvents(){
     switch (a) {
       case 'open': openPost(pid); break;
       case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
+      case 'rew-open': openRewards(); break;
+      case 'rew-claim': claimDaily(); break;
+      case 'rew-share': shareInvite(); break;
+      case 'rew-copy': copyInvite(); break;
       case 'msg-open': openMsg(); break;
       case 'msg-tab': MSG.tab = el.dataset.tab; renderMsg(); break;
       case 'msg-compose': openCompose(pid, cid); break;
