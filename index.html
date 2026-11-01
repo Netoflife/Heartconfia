@@ -481,6 +481,11 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .rw-ach{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--line2);opacity:.55}.rw-ach.on{opacity:1}
 .rw-ach b{display:block;font-size:13.5px;color:var(--text)}.rw-ach small{color:var(--t3);font-size:12px}.rw-ach .rw-hc{margin-left:auto;font-weight:800;font-size:12.5px;color:var(--gold);white-space:nowrap}
 .rw-link{display:flex;gap:6px;margin:8px 0}.rw-link input{flex:1;min-width:0;padding:9px 10px;border-radius:10px;background:var(--s1);border:1px solid var(--line2);color:var(--text);font-size:12.5px}
+.card.hl{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 0 22px rgba(255,200,87,.18)}
+.pin-strip{margin-bottom:14px;padding:10px;border-radius:18px;background:var(--s2);border:1px dashed var(--gold)}.pin-label{font-size:12px;font-weight:800;color:var(--gold);margin:0 0 8px 4px;letter-spacing:.04em}
+.gf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.gf-it{padding:12px 6px;border-radius:14px;background:var(--s2);border:1px solid var(--line2);text-align:center;font-size:12.5px;color:var(--t2)}.gf-it span{display:block;font-size:30px;margin-bottom:4px}.gf-it b{display:block;color:var(--gold)}.gf-it.on{border-color:var(--gold);background:var(--s3,var(--s2))}
+.fl-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0}.fl-it{padding:8px 0;border-radius:12px;background:var(--s2);border:1px solid var(--line2);font-size:22px}.fl-it.on{border-color:var(--gold)}
+.bs-opt{padding:12px;border-radius:14px;background:var(--s2);border:1px solid var(--line2);margin-bottom:10px}.bs-opt b{color:var(--text)}
 .hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
@@ -636,6 +641,30 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovRew" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">🎁</div><h2 class="m-title" id="rwTitle">Rewards</h2></div>
     <div class="m-body" id="rwBody"></div>
+  </div>
+</div>
+
+<div id="ovGift" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="gfTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovGift" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">🎁</div><h2 class="m-title" id="gfTitle">Send a gift</h2></div>
+    <div class="m-body" id="gfBody"></div>
+  </div>
+</div>
+
+<div id="ovBoost" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="bsTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovBoost" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">🚀</div><h2 class="m-title" id="bsTitle">Boost your story</h2></div>
+    <div class="m-body" id="bsBody"></div>
+  </div>
+</div>
+
+<div id="ovStyle" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="stTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovStyle" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">✨</div><h2 class="m-title" id="stTitle">Your flair</h2></div>
+    <div class="m-body" id="stBody"></div>
   </div>
 </div>
 
@@ -862,7 +891,7 @@ const S = {
 const POSTS = new Map();
 const X = { theme: null, hot: null, ann: null, prompt: null, settings: {}, status: { banned: false, is_admin: false }, remind: new Set(), at: 0 };
 const COMMENTS = {};
-const POST_COLS = 'id,author,type,title,content,preview,tags,votes,rx,cmt,views,trending,sensitive,hidden,created_at,verdict_closed,verdict_result,updates_count,closes_at,theme_label,remind_count';
+const POST_COLS = 'id,author,type,title,content,preview,tags,votes,rx,cmt,views,trending,sensitive,hidden,created_at,verdict_closed,verdict_result,updates_count,closes_at,theme_label,remind_count,highlighted_until';
 const COMMENT_COLS = 'id,post_id,author,text,up,dn,hearts,pin,hidden,replies,created_at';
 const UPDATES = {};
 const LV = {};
@@ -898,8 +927,10 @@ function previewText(p){
 }
 function lvlBadge(userId){
   const l = userId && LV[userId];
-  if (!l || !l.level || l.level === 'Newcomer') return '';
-  return '<span class="lvl lvl-' + esc(String(l.level).toLowerCase()) + '">' + esc(l.level) + '</span>';
+  if (!l) return '';
+  const fl = l.flair ? '<span class="flair" aria-hidden="true"> ' + esc(l.flair) + '</span>' : '';
+  if (!l.level || l.level === 'Newcomer') return fl;
+  return fl + '<span class="lvl lvl-' + esc(String(l.level).toLowerCase()) + '">' + esc(l.level) + '</span>';
 }
 async function loadLevels(ids){
   if (!me || !sb) return;
@@ -909,7 +940,7 @@ async function loadLevels(ids){
     for (const part of chunk(need, 200)) {
       const { data, error } = await sb.rpc('get_levels_by_name', { p_names: part });
       if (error) throw error;
-      (data || []).forEach(r => { LV[r.author] = { rep: num(r.rep), level: r.level }; });
+      (data || []).forEach(r => { LV[r.author] = { rep: num(r.rep), level: r.level, flair: r.flair || '' }; });
       part.forEach(i => { if (!LV[i]) LV[i] = { rep: 0, level: 'Newcomer' }; });
     }
   } catch(e) { console.warn('levels', e); }
@@ -1360,7 +1391,7 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovStyle'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
@@ -1453,6 +1484,7 @@ async function loadFeed(reset){
     f.ids.push(...fresh);
     f.loading = false;
     renderFeed(!reset);
+    if (reset) loadPinned();
     if (me) checkViral();
   } catch(e) {
     if (token !== f.token) return;
@@ -1489,10 +1521,11 @@ function renderFeed(append){
     else w.innerHTML = emptyHTML();
     f.rendered = 0; more.innerHTML = ''; return;
   }
+  const pinH = (!append && S.filter === 'all' && PIN.ids.length) ? '<div class="pin-strip"><div class="pin-label">📌 PINNED</div>' + PIN.ids.map(id => cardHTML(POSTS.get(id), 0)).filter(Boolean).join('') + '</div>' : '';
   if (append && f.rendered > 0 && f.rendered <= f.ids.length) {
     w.insertAdjacentHTML('beforeend', f.ids.slice(f.rendered).map((id, i) => cardHTML(POSTS.get(id), i)).join(''));
   } else {
-    w.innerHTML = f.ids.map((id, i) => cardHTML(POSTS.get(id), i)).join('');
+    w.innerHTML = pinH + f.ids.map((id, i) => cardHTML(POSTS.get(id), i)).join('');
   }
   f.rendered = f.ids.length;
   if (f.loading) more.innerHTML = '<span class="spin" role="status" aria-label="Loading"></span>';
@@ -1544,7 +1577,9 @@ function cardHTML(p, idx){
   if (p.sensitive) preview = '<div class="sens-note">⚠️ This story covers a sensitive topic. Open it to read.</div>';
   else if (!me) preview = '<div class="c-preview fade">' + esc(previewText(p)) + '</div><div class="c-lock">' + ico('lock') + ' Join free to read the full story</div>';
   else preview = '<div class="c-preview">' + esc(previewText(p)) + '</div>';
-  return '<article class="card" data-card="' + esc(p.id) + '" style="animation:pgIn .3s ease ' + Math.min(idx * 40, 240) + 'ms both"><div class="card-body">' +
+  if (p.highlighted_until && new Date(p.highlighted_until).getTime() > Date.now()) badges = '<span class="badge badge-hot">✨ Highlighted</span>' + badges;
+  const hl = p.highlighted_until && new Date(p.highlighted_until).getTime() > Date.now() ? ' hl' : '';
+  return '<article class="card' + hl + '" data-card="' + esc(p.id) + '" style="animation:pgIn .3s ease ' + Math.min(idx * 40, 240) + 'ms both"><div class="card-body">' +
     '<div class="card-meta"><div class="card-author"><div class="c-ava" aria-hidden="true">' + esc(ini) + '</div><div style="min-width:0"><div class="c-name">' + esc(author) + '</div><div class="c-time">' + esc(tAgo(p.created_at)) + '</div></div></div><div class="badges">' + badges + '</div></div>' +
     '<h2 class="c-title"><a href="#post-' + esc(p.id) + '" data-action="open" data-pid="' + esc(p.id) + '">' + esc(p.title || '') + '</a></h2>' + preview +
     (tags ? '<div class="c-tags">' + tags + '</div>' : '') + verdictHTML(p) + rxRowHTML(p) + footHTML(p) + '</div></article>';
@@ -1680,7 +1715,7 @@ function renderDetail(p){
       '<button class="foot-btn' + (following ? ' is-following' : '') + '" data-action="follow" data-pid="' + esc(p.id) + '" aria-pressed="' + following + '" aria-label="' + (following ? 'Following. Tap to unfollow' : 'Follow for updates') + '">' + ico('bell') + '</button>' +
       '<button class="foot-btn' + (saved ? ' is-saved' : '') + '" data-action="save" data-pid="' + esc(p.id) + '" aria-pressed="' + saved + '" aria-label="Save">' + ico('bookmark') + '</button>' +
       '<button class="foot-btn" data-action="share" data-pid="' + esc(p.id) + '" aria-label="Share link">' + ico('share') + '</button>' +
-      (own ? '' : '<button class="foot-btn" data-action="msg-compose" data-pid="' + esc(p.id) + '" aria-label="Send a private message request">✉</button>') +
+      (own ? '<button class="foot-btn" data-action="boost-open" data-pid="' + esc(p.id) + '" aria-label="Boost this story">🚀</button>' : '<button class="foot-btn" data-action="gift-open" data-pid="' + esc(p.id) + '" aria-label="Send a gift">🎁</button><button class="foot-btn" data-action="msg-compose" data-pid="' + esc(p.id) + '" aria-label="Send a private message request">✉</button>') +
       '<button class="foot-btn" data-action="report-post" data-pid="' + esc(p.id) + '" aria-label="Report">' + ico('flag') + '</button></div>' +
       (p.tags.length ? '<div class="c-tags">' + p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
       '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + '<div id="updBlock"></div>' + rxRowHTML(p) +
@@ -1800,7 +1835,7 @@ function cmtHTML(c, isReply){
     '<button class="cm-act dn' + (mv === 'dn' ? ' on' : '') + '" data-action="cmt-dn" data-cid="' + id + '" aria-label="Downvote"' + dis + '>▼ ' + num(c.dn) + '</button>' +
     '<button class="cm-act heart' + (hearted ? ' on' : '') + '" data-action="cmt-heart" data-cid="' + id + '"' + dis + '>💜 Heard' + (hearts ? ' · ' + hearts : '') + '</button>' +
     (isReply ? '' : '<button class="cm-act" data-action="reply-toggle" data-cid="' + id + '"' + dis + '>↩ Reply</button>') +
-    ((isReply || (me && c.author === me.username)) ? '' : '<button class="cm-act" data-action="msg-compose" data-cid="' + id + '" aria-label="Send a private message request"' + dis + '>✉</button>') +
+    ((isReply || (me && c.author === me.username)) ? '' : '<button class="cm-act" data-action="gift-open" data-cid="' + id + '" aria-label="Send a gift"' + dis + '>🎁</button><button class="cm-act" data-action="msg-compose" data-cid="' + id + '" aria-label="Send a private message request"' + dis + '>✉</button>') +
     '<button class="cm-act" data-action="report-cmt" data-cid="' + id + '" aria-label="Report comment"' + dis + '>' + ico('flag') + '</button></div></div>' + replies + box + '</div>';
 }
 
@@ -2228,7 +2263,7 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
-    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Flair</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
     '<div id="pfRep"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
@@ -2852,6 +2887,127 @@ async function shareInvite(){
   try { if (navigator.share) await navigator.share(data); else await copyInvite(); }
   catch(e) { if (!e || e.name !== 'AbortError') copyInvite(); }
 }
+
+/* =====================================================================
+   GIFTS, BOOSTS, FLAIR  (Phase 4)
+   ===================================================================== */
+const PIN = { ids: [] };
+async function loadPinned(){
+  if (!sb) return;
+  try {
+    const { data, error } = await sb.rpc('get_pinned_posts');
+    if (error) throw error;
+    const ids = Array.isArray(data) ? data.filter(i => /^[A-Za-z0-9-]{8,64}$/.test(i)) : [];
+    const need = ids.filter(i => !POSTS.has(i));
+    if (need.length) {
+      const r = await sb.from('posts').select(POST_COLS).in('id', need).eq('hidden', false);
+      if (!r.error) (r.data || []).forEach(upsertPost);
+    }
+    const next = ids.filter(i => POSTS.has(i));
+    const changed = next.join() !== PIN.ids.join();
+    PIN.ids = next;
+    if (changed && S.filter === 'all' && page === 'home') renderFeed();
+  } catch(e) { console.warn('pinned', e); }
+}
+const GF = { types: null, pid: null, cid: null, pick: null, key: null, busy: false };
+async function openGift(pid, cid){
+  if (!me) { showAuth('signup'); return; }
+  GF.pid = pid || null; GF.cid = cid || null; GF.pick = null; GF.key = newKey('gf'); GF.busy = false;
+  openOv('ovGift'); renderGift(); loadWallet();
+  if (!GF.types) {
+    try { const { data, error } = await sb.rpc('get_gift_types'); if (error) throw error; GF.types = data || []; renderGift(); }
+    catch(e) { const b = $('#gfBody'); if (b) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load gifts.')) + '</p>'; }
+  }
+}
+function renderGift(){
+  const b = $('#gfBody'); if (!b) return;
+  if (!GF.types) { b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  const sel = GF.types.find(t => t.id === GF.pick), have = hcTotal();
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Say thank you. Your gift is anonymous and the person receives Heart Credits they can spend in the app.</p>' +
+    '<div class="gf-grid">' + GF.types.map(t => '<button class="gf-it' + (t.id === GF.pick ? ' on' : '') + '" data-action="gift-pick" data-id="' + esc(t.id) + '"><span>' + esc(t.icon) + '</span>' + esc(t.label) + '<b>' + num(t.cost) + ' HC</b></button>').join('') + '</div>' +
+    '<div class="hc-msg" id="gfMsg" aria-live="polite"></div>' +
+    '<p class="hc-note">You have <b>' + have.toLocaleString() + ' HC</b>.</p>' +
+    (sel && have < num(sel.cost) ? '<button class="btn btn-ghost btn-block" data-action="open-wallet">Get Heart Credits</button>'
+      : '<button class="btn btn-primary btn-block" id="gfGo" data-action="gift-send"' + (sel ? '' : ' disabled') + '>' + (sel ? 'Send ' + esc(sel.icon) + ' · ' + num(sel.cost) + ' HC' : 'Choose a gift') + '</button>');
+}
+async function sendGiftNow(){
+  if (GF.busy || !GF.pick) return; GF.busy = true;
+  const go = $('#gfGo'); if (go) { go.disabled = true; go.textContent = 'Sending…'; }
+  try {
+    const { data, error } = await sb.rpc('send_gift', { p_post: GF.cid ? null : GF.pid, p_comment: GF.cid || null, p_gift: GF.pick, p_key: GF.key });
+    if (error) throw error;
+    if (data && data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
+    closeOv('ovGift'); toast('Gift sent 🎁 Thank you for being kind.', 'ok');
+  } catch(e) {
+    const m = $('#gfMsg'); if (m) { m.textContent = errMsg(e, 'Could not send that. Nothing was charged.'); m.className = 'hc-msg bad'; }
+    if (go) { go.disabled = false; go.textContent = 'Try again'; }
+  }
+  GF.busy = false;
+}
+const BS = { pid: null, o: null, busy: false };
+async function openBoost(pid){
+  if (!me) { showAuth('signup'); return; }
+  BS.pid = pid; BS.o = null; BS.busy = false; openOv('ovBoost'); renderBoost();
+  try { const { data, error } = await sb.rpc('get_boost_options', { p_post: pid }); if (error) throw error; BS.o = data; if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); } renderBoost(); }
+  catch(e) { const b = $('#bsBody'); if (b) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load this right now.')) + '</p>'; }
+}
+function untilTxt(t){ try { return new Date(t).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' }); } catch(e){ return ''; } }
+function renderBoost(){
+  const b = $('#bsBody'); if (!b) return; const o = BS.o;
+  if (!o) { b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  const have = hcTotal();
+  const hl = o.highlighted_until ? '<p class="hc-note" style="margin:6px 0 0">Highlighted until ' + esc(untilTxt(o.highlighted_until)) + '. Buying again adds more time.</p>' : '';
+  const pn = o.pinned_until ? '<p class="hc-note" style="margin:6px 0 0">Pinned until ' + esc(untilTxt(o.pinned_until)) + '.</p>' : (num(o.pin_slots_free) <= 0 ? '<p class="hc-note" style="margin:6px 0 0">All pin spots are taken right now.</p>' : '');
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">More people see your story. You have <b>' + have.toLocaleString() + ' HC</b>.</p>' +
+    (o.highlight_on ? '<div class="bs-opt"><b>✨ Highlight · ' + num(o.highlight_cost) + ' HC</b><p class="hc-note" style="margin:4px 0">A glowing look in the feed for ' + num(o.highlight_hours) + ' hours.</p>' + hl + '<button class="btn btn-primary btn-block" style="margin-top:8px" data-action="boost-go" data-kind="highlight"' + (have < num(o.highlight_cost) ? ' disabled' : '') + '>Highlight for ' + num(o.highlight_cost) + ' HC</button></div>' : '') +
+    (o.pin_on ? '<div class="bs-opt"><b>📌 Pin to top · ' + num(o.pin_cost) + ' HC</b><p class="hc-note" style="margin:4px 0">Sits at the top of the home page for ' + num(o.pin_hours) + ' hours.</p>' + pn + '<button class="btn btn-primary btn-block" style="margin-top:8px" data-action="boost-go" data-kind="pin"' + (have < num(o.pin_cost) || o.pinned_until || num(o.pin_slots_free) <= 0 ? ' disabled' : '') + '>Pin for ' + num(o.pin_cost) + ' HC</button></div>' : '') +
+    (have < Math.min(num(o.highlight_cost), num(o.pin_cost)) ? '<button class="btn btn-ghost btn-block" data-action="open-wallet">Get Heart Credits</button>' : '') +
+    '<div class="hc-msg" id="bsMsg" aria-live="polite"></div>';
+}
+async function doBoost(kind){
+  if (BS.busy) return; BS.busy = true;
+  try {
+    const { data, error } = await sb.rpc('boost_post', { p_post: BS.pid, p_kind: kind, p_key: newKey('bs') });
+    if (error) throw error;
+    if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
+    const p = POSTS.get(BS.pid); if (p && kind === 'highlight') p.highlighted_until = data.until;
+    toast(kind === 'pin' ? '📌 Your story is pinned' : '✨ Your story is highlighted', 'ok');
+    if (kind === 'pin') loadPinned();
+    const r = await sb.rpc('get_boost_options', { p_post: BS.pid }); if (!r.error) BS.o = r.data;
+    renderBoost();
+  } catch(e) { const m = $('#bsMsg'); if (m) { m.textContent = errMsg(e, 'Could not do that. Nothing was charged.'); m.className = 'hc-msg bad'; } }
+  BS.busy = false;
+}
+const FL = { st: null, key: null, busy: false };
+async function openStyle(){
+  if (!me) { showAuth('signup'); return; }
+  FL.key = newKey('fl'); FL.busy = false; openOv('ovStyle'); renderStyle();
+  try { const { data, error } = await sb.rpc('get_flair_status'); if (error) throw error; FL.st = data; renderStyle(); }
+  catch(e) { const b = $('#stBody'); if (b) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load this right now.')) + '</p>'; }
+}
+function renderStyle(){
+  const b = $('#stBody'); if (!b) return; const st = FL.st;
+  if (!st) { b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  const have = hcTotal();
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">A small emoji shown next to your name on your stories and comments. ' + (st.unlocked ? 'You have unlocked flair, so you can change it any time for free.' : 'Unlock it once for <b>' + num(st.cost) + ' HC</b>, then change it as often as you like.') + '</p>' +
+    '<div class="fl-grid">' + (st.options || []).map(f => '<button class="fl-it' + (f === st.flair ? ' on' : '') + '" data-action="style-pick" data-f="' + esc(f) + '" aria-label="Choose ' + esc(f) + '"' + (!st.unlocked && have < num(st.cost) ? ' disabled' : '') + '>' + esc(f) + '</button>').join('') + '</div>' +
+    (st.flair ? '<button class="btn btn-ghost btn-sm" data-action="style-pick" data-f="">Remove my flair</button>' : '') +
+    '<div class="hc-msg" id="stMsg" aria-live="polite"></div>' +
+    (!st.unlocked && have < num(st.cost) ? '<p class="hc-note">You need ' + num(st.cost) + ' HC. You have ' + have.toLocaleString() + ' HC.</p><button class="btn btn-ghost btn-block" data-action="open-wallet">Get Heart Credits</button>' : '');
+}
+async function pickFlair(f){
+  if (FL.busy) return; FL.busy = true;
+  try {
+    const { data, error } = await sb.rpc('set_flair', { p_flair: f || '', p_key: FL.key });
+    if (error) throw error;
+    if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
+    FL.st = Object.assign({}, FL.st, { flair: data.flair || null, unlocked: true });
+    LV[me.username] = Object.assign(LV[me.username] || { rep: 0, level: 'Newcomer' }, { flair: data.flair || '' });
+    toast(data.flair ? 'Flair saved ' + data.flair : 'Flair removed', 'ok');
+    FL.key = newKey('fl'); rerenderCurrent();
+  } catch(e) { const m = $('#stMsg'); if (m) { m.textContent = errMsg(e, 'Could not save that. Nothing was charged.'); m.className = 'hc-msg bad'; } }
+  FL.busy = false; renderStyle();
+}
 function renderBan(){
   const c = $('#banBar'); if (!c) return;
   c.innerHTML = me && X.status.banned ? '<div class="banner banner-ban"><h3>⛔ Your account is restricted</h3><p>You can read stories, but you can\'t post, comment or vote.' + (X.status.reason ? ' Reason: ' + esc(X.status.reason) : '') + '</p></div>' : '';
@@ -3032,6 +3188,13 @@ function bindEvents(){
     switch (a) {
       case 'open': openPost(pid); break;
       case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
+      case 'gift-open': openGift(pid, cid); break;
+      case 'gift-pick': GF.pick = el.dataset.id; renderGift(); break;
+      case 'gift-send': sendGiftNow(); break;
+      case 'boost-open': openBoost(pid); break;
+      case 'boost-go': doBoost(el.dataset.kind); break;
+      case 'style-open': openStyle(); break;
+      case 'style-pick': pickFlair(el.dataset.f); break;
       case 'rew-open': openRewards(); break;
       case 'rew-claim': claimDaily(); break;
       case 'rew-share': shareInvite(); break;
