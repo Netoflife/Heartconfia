@@ -486,6 +486,11 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .gf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}.gf-it{padding:12px 6px;border-radius:14px;background:var(--s2);border:1px solid var(--line2);text-align:center;font-size:12.5px;color:var(--t2)}.gf-it span{display:block;font-size:30px;margin-bottom:4px}.gf-it b{display:block;color:var(--gold)}.gf-it.on{border-color:var(--gold);background:var(--s3,var(--s2))}
 .fl-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:10px 0}.fl-it{padding:8px 0;border-radius:12px;background:var(--s2);border:1px solid var(--line2);font-size:22px}.fl-it.on{border-color:var(--gold)}
 .bs-opt{padding:12px;border-radius:14px;background:var(--s2);border:1px solid var(--line2);margin-bottom:10px}.bs-opt b{color:var(--text)}
+.c-ava[data-fr],.d-ava[data-fr]{box-shadow:0 0 0 2px var(--s1),0 0 0 4px var(--fr)}
+.c-ava[data-fr=flame],.d-ava[data-fr=flame]{box-shadow:0 0 0 2px var(--s1),0 0 0 4px #ff7a3c,0 0 12px #ff3c6e}
+.ubadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:100px;font-size:10.5px;font-weight:700;border:1px solid var(--line2);color:var(--t2);vertical-align:middle}
+.st-sec{margin:12px 0 4px;font-size:12.5px;font-weight:800;color:var(--t2)}
+.st-row{display:flex;flex-wrap:wrap;gap:6px}.st-chip{padding:7px 11px;border-radius:100px;background:var(--s2);border:1px solid var(--line2);font-size:13px;color:var(--text)}.st-chip.on{border-color:var(--gold);background:var(--s3,var(--s2))}.st-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);padding:0}.st-dot.on{border-color:var(--text)}
 .hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
@@ -663,7 +668,7 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 <div id="ovStyle" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="stTitle">
   <div class="modal">
     <button class="m-close" data-action="close-ov" data-ov="ovStyle" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
-    <div class="m-head"><div class="m-icon" aria-hidden="true">✨</div><h2 class="m-title" id="stTitle">Your flair</h2></div>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">✨</div><h2 class="m-title" id="stTitle">Your style</h2></div>
     <div class="m-body" id="stBody"></div>
   </div>
 </div>
@@ -940,7 +945,7 @@ async function loadLevels(ids){
     for (const part of chunk(need, 200)) {
       const { data, error } = await sb.rpc('get_levels_by_name', { p_names: part });
       if (error) throw error;
-      (data || []).forEach(r => { LV[r.author] = { rep: num(r.rep), level: r.level, flair: r.flair || '' }; });
+      (data || []).forEach(r => { LV[r.author] = { rep: num(r.rep), level: r.level, flair: r.flair || '', accent: r.accent || '', frame: r.frame || '', badge: r.badge || '' }; });
       part.forEach(i => { if (!LV[i]) LV[i] = { rep: 0, level: 'Newcomer' }; });
     }
   } catch(e) { console.warn('levels', e); }
@@ -1485,6 +1490,7 @@ async function loadFeed(reset){
     f.loading = false;
     renderFeed(!reset);
     if (reset) loadPinned();
+    if (me) loadLevels(posts.map(x => x.author)).then(styleAvatars);
     if (me) checkViral();
   } catch(e) {
     if (token !== f.token) return;
@@ -1580,7 +1586,7 @@ function cardHTML(p, idx){
   if (p.highlighted_until && new Date(p.highlighted_until).getTime() > Date.now()) badges = '<span class="badge badge-hot">✨ Highlighted</span>' + badges;
   const hl = p.highlighted_until && new Date(p.highlighted_until).getTime() > Date.now() ? ' hl' : '';
   return '<article class="card' + hl + '" data-card="' + esc(p.id) + '" style="animation:pgIn .3s ease ' + Math.min(idx * 40, 240) + 'ms both"><div class="card-body">' +
-    '<div class="card-meta"><div class="card-author"><div class="c-ava" aria-hidden="true">' + esc(ini) + '</div><div style="min-width:0"><div class="c-name">' + esc(author) + '</div><div class="c-time">' + esc(tAgo(p.created_at)) + '</div></div></div><div class="badges">' + badges + '</div></div>' +
+    '<div class="card-meta"><div class="card-author"><div class="c-ava" data-au="' + esc(author) + '" aria-hidden="true">' + esc(ini) + '</div><div style="min-width:0"><div class="c-name" data-au="' + esc(author) + '">' + esc(author) + '</div><div class="c-time">' + esc(tAgo(p.created_at)) + '</div></div></div><div class="badges">' + badges + '</div></div>' +
     '<h2 class="c-title"><a href="#post-' + esc(p.id) + '" data-action="open" data-pid="' + esc(p.id) + '">' + esc(p.title || '') + '</a></h2>' + preview +
     (tags ? '<div class="c-tags">' + tags + '</div>' : '') + verdictHTML(p) + rxRowHTML(p) + footHTML(p) + '</div></article>';
 }
@@ -1688,11 +1694,11 @@ async function showDetail(id, silent){
   subscribeComments(id);
   hydrateMine([id]).then(() => { if (token === S.detail.token) patchPostUI(p); });
   loadUpdates(id).then(() => { if (token === S.detail.token) renderUpdates(); }).catch(e => console.warn('updates', e));
-  loadLevels([p.author]).then(() => { if (token === S.detail.token) { const dn = $('#dtWrap .d-name'); if (dn) dn.innerHTML = esc(p.author || 'Anon') + lvlBadge(p.author); } });
+  loadLevels([p.author]).then(() => { if (token === S.detail.token) { const dn = $('#dtWrap .d-name'); if (dn) { dn.innerHTML = esc(p.author || 'Anon') + lvlBadge(p.author); dn.removeAttribute('data-bd'); } styleAvatars(); } });
   loadComments(id).then(() => {
     if (token !== S.detail.token) return;
     renderComments();
-    loadLevels((COMMENTS[id] || []).map(c => c.author)).then(() => { if (token === S.detail.token) renderComments(); });
+    loadLevels((COMMENTS[id] || []).map(c => c.author)).then(() => { if (token === S.detail.token) renderComments(); styleAvatars(); });
   }).catch(e => { if (token === S.detail.token) { const l = $('#cmList'); if (l) l.innerHTML = '<div class="empty"><p>' + esc(errMsg(e, 'Could not load comments.')) + '</p><button class="btn btn-ghost btn-sm" data-action="retry-detail">Retry</button></div>'; } });
   if (!silent && !p._local && markViewedOnce(id)) { sb.rpc('increment_post_views', { p_post_id: id }).then(() => {}, () => {}); }
 }
@@ -1711,7 +1717,7 @@ function renderDetail(p){
   w.innerHTML =
     '<button class="back-btn" data-action="back">' + ico('back') + ' Back</button>' +
     '<div data-card="' + esc(p.id) + '">' +
-      '<div class="d-author"><div class="d-ava" aria-hidden="true">' + esc(author.slice(0,2).toUpperCase()) + '</div><div class="d-info"><div class="d-name">' + esc(author) + lvlBadge(p.author) + '</div><div class="d-meta">' + esc(tAgo(p.created_at)) + ' · <span class="js-views">' + fmt(p.views) + '</span> views</div></div>' +
+      '<div class="d-author"><div class="d-ava" data-au="' + esc(author) + '" aria-hidden="true">' + esc(author.slice(0,2).toUpperCase()) + '</div><div class="d-info"><div class="d-name" data-au="' + esc(author) + '">' + esc(author) + lvlBadge(p.author) + '</div><div class="d-meta">' + esc(tAgo(p.created_at)) + ' · <span class="js-views">' + fmt(p.views) + '</span> views</div></div>' +
       '<button class="foot-btn' + (following ? ' is-following' : '') + '" data-action="follow" data-pid="' + esc(p.id) + '" aria-pressed="' + following + '" aria-label="' + (following ? 'Following. Tap to unfollow' : 'Follow for updates') + '">' + ico('bell') + '</button>' +
       '<button class="foot-btn' + (saved ? ' is-saved' : '') + '" data-action="save" data-pid="' + esc(p.id) + '" aria-pressed="' + saved + '" aria-label="Save">' + ico('bookmark') + '</button>' +
       '<button class="foot-btn" data-action="share" data-pid="' + esc(p.id) + '" aria-label="Share link">' + ico('share') + '</button>' +
@@ -1829,7 +1835,7 @@ function cmtHTML(c, isReply){
   const box = isReply ? '' : '<div class="rbox hidden" id="rb-' + id + '"><textarea class="rbox-ta" aria-label="Reply" placeholder="Reply to ' + esc(c.author || 'Anon') + '…" maxlength="' + LIM.comment + '"></textarea><div class="rbox-foot"><button class="btn btn-ghost btn-sm" data-action="reply-cancel" data-cid="' + id + '">Cancel</button><button class="btn btn-primary btn-sm" data-action="reply-post" data-cid="' + id + '">Reply</button></div></div>';
   const dis = pending ? ' disabled' : '';
   return '<div class="' + (isReply ? 'reply' : 'cm') + (pending ? ' pending' : '') + '" id="cmt-' + id + '"><div class="' + (isReply ? 'reply-bubble' : 'cm-bubble') + '">' +
-    '<div class="cm-head"><span class="cm-auth">' + esc(c.author || 'Anon') + (isReply ? '' : lvlBadge(c.author)) + (c.pin ? '<span class="pin">📌 Pinned</span>' : '') + '</span><span class="cm-time">' + esc(tAgo(c.time || c.created_at)) + '</span></div>' +
+    '<div class="cm-head"><span class="cm-auth" data-au="' + esc(c.author || 'Anon') + '">' + esc(c.author || 'Anon') + (isReply ? '' : lvlBadge(c.author)) + (c.pin ? '<span class="pin">📌 Pinned</span>' : '') + '</span><span class="cm-time">' + esc(tAgo(c.time || c.created_at)) + '</span></div>' +
     '<div class="cm-text">' + esc(c.text || '') + '</div>' +
     '<div class="cm-acts"><button class="cm-act up' + (mv === 'up' ? ' on' : '') + '" data-action="cmt-up" data-cid="' + id + '" aria-label="Upvote"' + dis + '>▲ ' + num(c.up) + '</button>' +
     '<button class="cm-act dn' + (mv === 'dn' ? ' on' : '') + '" data-action="cmt-dn" data-cid="' + id + '" aria-label="Downvote"' + dis + '>▼ ' + num(c.dn) + '</button>' +
@@ -2263,7 +2269,7 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
-    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Flair</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Style</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
     '<div id="pfRep"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
@@ -2710,7 +2716,7 @@ function renderCompose(){
   $('#msTitle').textContent = 'Ask to talk privately';
   const cost = MSG.prefs ? num(MSG.prefs.cost) : 5, have = hcTotal();
   const ta = $('#mqText'), keep = ta ? ta.value : '';
-  b.innerHTML = '<p class="hc-note" style="margin-top:0">Write a short, kind note. The person decides whether to accept. They will only see your username, never who you are.</p>' +
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Write a short, kind note. The person decides whether to accept. They will only see your username, never who you are. For safety, a first note cannot contain links, emails or phone numbers.</p>' +
     '<textarea class="msgbox" id="mqText" maxlength="300" rows="4" placeholder="Hi, I read your story and…"></textarea>' +
     '<div class="hc-msg" id="mqMsg" aria-live="polite"></div>' +
     '<p class="hc-note">Sending costs <b>' + cost + ' HC</b> (you have <b>' + have.toLocaleString() + ' HC</b>). If it is not accepted within 7 days, the credits are returned to you automatically. You can send up to 5 requests a day.</p>' +
@@ -2830,6 +2836,8 @@ async function rewardsBoot(){
       (a.data.new || []).forEach((x, i) => setTimeout(() => toast((x.icon || '🏅') + ' ' + x.title + (x.credits ? ' · +' + x.credits + ' HC' : ''), 'ok'), 600 + i * 1800));
       if (a.data.wallet) { W.wallet = walletFromRow(a.data.wallet); updateNav(); refreshWalletUI(); }
     }
+    const ar = await sb.rpc('claim_activity_reward', { p_tz: tzName() });
+    if (!ar.error && ar.data && ar.data.ok) { toast('✨ +' + ar.data.amount + ' HC for your activity', 'ok'); if (ar.data.wallet) { W.wallet = walletFromRow(ar.data.wallet); updateNav(); refreshWalletUI(); } }
     const { data } = await sb.rpc('get_rewards_status', { p_tz: tzName() });
     if (data) { REW.st = data; if (data.daily && data.daily.claimable) setTimeout(() => toast('🎁 Your daily reward is ready. Open Rewards on your profile.', 'info'), 2500); }
   } catch(e) { console.warn('rewards', e); }
@@ -2851,12 +2859,14 @@ function renderRewards(){
   if (!st.enabled) h += '<p class="hc-note" style="margin-top:0">Rewards are paused right now.</p>';
   else if (d.claimable) h += '<div class="rw-big">+' + num(d.amount) + ' HC</div><p class="hc-note">Day ' + num(d.streak) + ' of your streak. Tap to collect.</p><button class="btn btn-primary btn-block" id="rwGo" data-action="rew-claim">Collect ' + num(d.amount) + ' HC</button>';
   else h += '<p class="hc-note" style="margin-top:0">✓ Collected for today. Come back tomorrow for <b>' + num(d.tomorrow_amount) + ' HC</b>.</p>';
-  h += '<p class="hc-note">Visit every day: +' + num(d.week_bonus) + ' HC extra on every 7th day in a row and +' + num(d.month_bonus) + ' HC extra on every 30th. Missing a day restarts the streak.</p></div>';
+  h += '<p class="hc-note">Visit every day: +' + num(d.week_bonus) + ' HC extra on every 7th day in a row' + (num(d.month_bonus) ? ' and +' + num(d.month_bonus) + ' HC extra on every 30th' : '') + '. Missing a day restarts the streak.</p></div>';
+  const ac = st.activity || {};
+  if (st.enabled && num(ac.amount) > 0) h += '<div class="rw-card"><h3>Activity reward</h3><p class="hc-note" style="margin-top:0">Earn <b>+' + num(ac.amount) + ' HC</b> once a day when a comment or verdict you made stays visible and unreported for 24 hours. ' + (ac.done_today ? '✓ Collected today.' : (ac.claimable ? 'You have one ready, it is added automatically when you open the app.' : 'Comment or give a verdict today and check back tomorrow.')) + '</p></div>';
   if (r.enabled) {
-    h += '<div class="rw-card"><h3>Invite a friend</h3><p class="hc-note" style="margin-top:0">When a friend joins with your link and becomes a real member (posts or comments), you get <b>' + num(r.referrer_hc) + ' HC</b> and they get <b>' + num(r.friend_hc) + ' HC</b>.</p>' +
+    h += '<div class="rw-card"><h3>Invite a friend</h3><p class="hc-note" style="margin-top:0">When a friend joins with your link, confirms their email, visits on ' + num(r.active_days) + ' different days and gives ' + num(r.min_verdicts) + ' verdict, you get <b>' + num(r.referrer_hc) + ' HC</b> and they get <b>' + num(r.friend_hc) + ' HC</b>.</p>' +
       '<div class="rw-link"><input readonly value="' + esc(inviteUrl()) + '" aria-label="Your invite link" onfocus="this.select()"><button class="btn btn-ghost btn-sm" data-action="rew-copy">Copy</button></div>' +
       '<button class="btn btn-primary btn-block" data-action="rew-share">Share my invite</button>' +
-      '<p class="hc-note">Invited: <b>' + num(r.invited) + '</b> · Joined: <b>' + num(r.qualified) + '</b> · Earned: <b>' + num(r.earned) + ' HC</b>' + (r.was_invited ? ' · You joined through an invite 💜' : '') + '</p></div>';
+      '<p class="hc-note">Invited: <b>' + num(r.invited) + '</b> · Joined: <b>' + num(r.qualified) + '</b> · Earned: <b>' + num(r.earned) + ' HC</b>' + (num(r.waiting) ? ' · Waiting for review: <b>' + num(r.waiting) + '</b>' : '') + (r.was_invited ? ' · You joined through an invite 💜' : '') + '</p></div>';
   }
   const ach = st.achievements || [];
   h += '<div class="rw-card"><h3>Achievements</h3>' + ach.map(a => '<div class="rw-ach' + (a.unlocked ? ' on' : '') + '"><span style="font-size:24px">' + esc(a.icon) + '</span><span><b>' + esc(a.title) + '</b><small>' + esc(a.descr) + '</small></span><span class="rw-hc">' + (a.unlocked ? '✓' : (num(a.credits) ? '+' + num(a.credits) + ' HC' : '')) + '</span></div>').join('') + '</div>';
@@ -2978,35 +2988,67 @@ async function doBoost(kind){
   } catch(e) { const m = $('#bsMsg'); if (m) { m.textContent = errMsg(e, 'Could not do that. Nothing was charged.'); m.className = 'hc-msg bad'; } }
   BS.busy = false;
 }
-const FL = { st: null, key: null, busy: false };
+const ACCENTS = { rose:'#ff5c8a', gold:'#ffc857', violet:'#a78bfa', aqua:'#38e1d0', mint:'#6ee7b7', coral:'#ff7a59', sky:'#60a5fa', lilac:'#d6b4fc' };
+const FRAMES = { gold:'#ffc857', rose:'#ff5c8a', violet:'#a78bfa', aqua:'#38e1d0', flame:'#ff7a3c' };
+function styleAvatars(){
+  try {
+    $$('[data-au]').forEach(el => {
+      const l = LV[el.getAttribute('data-au')]; if (!l) return;
+      if (el.classList.contains('c-ava') || el.classList.contains('d-ava')) {
+        if (l.frame && FRAMES[l.frame]) { el.setAttribute('data-fr', l.frame); el.style.setProperty('--fr', FRAMES[l.frame]); } else { el.removeAttribute('data-fr'); }
+        if (l.accent && ACCENTS[l.accent]) { el.style.background = ACCENTS[l.accent]; el.style.color = '#1a1010'; }
+        return;
+      }
+      if (l.accent && ACCENTS[l.accent]) el.style.color = ACCENTS[l.accent];
+      if (el.getAttribute('data-bd') === '1') return;
+      el.setAttribute('data-bd', '1');
+      if (l.flair && !el.querySelector('.flair')) el.insertAdjacentHTML('beforeend', '<span class="flair" aria-hidden="true"> ' + esc(l.flair) + '</span>');
+      if (l.badge && !el.querySelector('.ubadge')) el.insertAdjacentHTML('beforeend', '<span class="ubadge">' + esc(l.badge) + '</span>');
+    });
+  } catch(e) {}
+}
+const FL = { st: null, d: null, key: null, busy: false };
 async function openStyle(){
   if (!me) { showAuth('signup'); return; }
   FL.key = newKey('fl'); FL.busy = false; openOv('ovStyle'); renderStyle();
-  try { const { data, error } = await sb.rpc('get_flair_status'); if (error) throw error; FL.st = data; renderStyle(); }
-  catch(e) { const b = $('#stBody'); if (b) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load this right now.')) + '</p>'; }
+  try {
+    const { data, error } = await sb.rpc('get_style_status'); if (error) throw error;
+    FL.st = data; FL.d = { flair: data.flair || '', accent: data.accent || '', frame: data.frame || '', badge: data.badge || '' };
+    if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); }
+    renderStyle();
+  } catch(e) { const b = $('#stBody'); if (b) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load this right now.')) + '</p>'; }
 }
 function renderStyle(){
-  const b = $('#stBody'); if (!b) return; const st = FL.st;
-  if (!st) { b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
-  const have = hcTotal();
-  b.innerHTML = '<p class="hc-note" style="margin-top:0">A small emoji shown next to your name on your stories and comments. ' + (st.unlocked ? 'You have unlocked flair, so you can change it any time for free.' : 'Unlock it once for <b>' + num(st.cost) + ' HC</b>, then change it as often as you like.') + '</p>' +
-    '<div class="fl-grid">' + (st.options || []).map(f => '<button class="fl-it' + (f === st.flair ? ' on' : '') + '" data-action="style-pick" data-f="' + esc(f) + '" aria-label="Choose ' + esc(f) + '"' + (!st.unlocked && have < num(st.cost) ? ' disabled' : '') + '>' + esc(f) + '</button>').join('') + '</div>' +
-    (st.flair ? '<button class="btn btn-ghost btn-sm" data-action="style-pick" data-f="">Remove my flair</button>' : '') +
+  const b = $('#stBody'); if (!b) return; const st = FL.st, d = FL.d;
+  if (!st || !d) { b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  const have = hcTotal(), need = !st.unlocked && (d.flair || d.accent || d.frame || d.badge);
+  const L = st.lists || {};
+  const chip = (k, v, label) => '<button class="st-chip' + (d[k] === v ? ' on' : '') + '" data-action="style-pick" data-k="' + k + '" data-v="' + esc(v) + '">' + esc(label || v || 'None') + '</button>';
+  const dot = (k, v, col) => '<button class="st-dot' + (d[k] === v ? ' on' : '') + '" style="background:' + col + '" data-action="style-pick" data-k="' + k + '" data-v="' + esc(v) + '" aria-label="' + esc(v) + '"></button>';
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Make your name stand out. ' + (st.unlocked ? 'You have unlocked this, so you can change it any time for free.' : 'Unlock once for <b>' + num(st.cost) + ' HC</b>, then change it as often as you like.') + '</p>' +
+    '<div class="st-sec">Flair emoji</div><div class="st-row">' + chip('flair', '', 'None') + (st.flairs || []).map(f => chip('flair', f, f)).join('') + '</div>' +
+    '<div class="st-sec">Name colour</div><div class="st-row">' + chip('accent', '', 'Default') + (L.accents || []).map(a => dot('accent', a, ACCENTS[a] || '#888')).join('') + '</div>' +
+    '<div class="st-sec">Avatar frame</div><div class="st-row">' + chip('frame', '', 'None') + (L.frames || []).map(a => dot('frame', a, FRAMES[a] || '#888')).join('') + '</div>' +
+    '<div class="st-sec">Title badge</div><div class="st-row">' + chip('badge', '', 'None') + (L.badges || []).map(x => chip('badge', x, x)).join('') + '</div>' +
     '<div class="hc-msg" id="stMsg" aria-live="polite"></div>' +
-    (!st.unlocked && have < num(st.cost) ? '<p class="hc-note">You need ' + num(st.cost) + ' HC. You have ' + have.toLocaleString() + ' HC.</p><button class="btn btn-ghost btn-block" data-action="open-wallet">Get Heart Credits</button>' : '');
+    (need && have < num(st.cost) ? '<p class="hc-note">You need ' + num(st.cost) + ' HC to unlock. You have ' + have.toLocaleString() + ' HC.</p><button class="btn btn-ghost btn-block" data-action="open-wallet">Get Heart Credits</button>'
+      : '<button class="btn btn-primary btn-block" id="stGo" data-action="style-save" style="margin-top:12px">' + (need ? 'Unlock and save · ' + num(st.cost) + ' HC' : 'Save') + '</button>');
 }
-async function pickFlair(f){
-  if (FL.busy) return; FL.busy = true;
+function pickStyle(k, v){ if (!FL.d) return; FL.d[k] = v; renderStyle(); }
+async function saveStyle(){
+  if (FL.busy || !FL.d) return; FL.busy = true;
+  const go = $('#stGo'); if (go) { go.disabled = true; go.textContent = 'Saving…'; }
   try {
-    const { data, error } = await sb.rpc('set_flair', { p_flair: f || '', p_key: FL.key });
+    const d = FL.d;
+    const { data, error } = await sb.rpc('set_style', { p_flair: d.flair, p_accent: d.accent, p_frame: d.frame, p_badge: d.badge, p_key: FL.key });
     if (error) throw error;
     if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
-    FL.st = Object.assign({}, FL.st, { flair: data.flair || null, unlocked: true });
-    LV[me.username] = Object.assign(LV[me.username] || { rep: 0, level: 'Newcomer' }, { flair: data.flair || '' });
-    toast(data.flair ? 'Flair saved ' + data.flair : 'Flair removed', 'ok');
-    FL.key = newKey('fl'); rerenderCurrent();
-  } catch(e) { const m = $('#stMsg'); if (m) { m.textContent = errMsg(e, 'Could not save that. Nothing was charged.'); m.className = 'hc-msg bad'; } }
-  FL.busy = false; renderStyle();
+    FL.st = Object.assign({}, FL.st, { unlocked: true, flair: data.flair, accent: data.accent, frame: data.frame, badge: data.badge });
+    LV[me.username] = Object.assign(LV[me.username] || { rep: 0, level: 'Newcomer' }, { flair: data.flair || '', accent: data.accent || '', frame: data.frame || '', badge: data.badge || '' });
+    $$('[data-au]').forEach(el => el.removeAttribute('data-bd'));
+    toast('Profile style saved ✨', 'ok'); FL.key = newKey('fl'); closeOv('ovStyle'); rerenderCurrent(); setTimeout(styleAvatars, 60);
+  } catch(e) { const m = $('#stMsg'); if (m) { m.textContent = errMsg(e, 'Could not save that. Nothing was charged.'); m.className = 'hc-msg bad'; } if (go) { go.disabled = false; go.textContent = 'Try again'; } }
+  FL.busy = false;
 }
 function renderBan(){
   const c = $('#banBar'); if (!c) return;
@@ -3194,7 +3236,8 @@ function bindEvents(){
       case 'boost-open': openBoost(pid); break;
       case 'boost-go': doBoost(el.dataset.kind); break;
       case 'style-open': openStyle(); break;
-      case 'style-pick': pickFlair(el.dataset.f); break;
+      case 'style-pick': pickStyle(el.dataset.k, el.dataset.v); break;
+      case 'style-save': saveStyle(); break;
       case 'rew-open': openRewards(); break;
       case 'rew-claim': claimDaily(); break;
       case 'rew-share': shareInvite(); break;
