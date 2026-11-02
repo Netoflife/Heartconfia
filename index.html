@@ -491,6 +491,7 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .ubadge{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:100px;font-size:10.5px;font-weight:700;border:1px solid var(--line2);color:var(--t2);vertical-align:middle}
 .st-sec{margin:12px 0 4px;font-size:12.5px;font-weight:800;color:var(--t2)}
 .st-row{display:flex;flex-wrap:wrap;gap:6px}.st-chip{padding:7px 11px;border-radius:100px;background:var(--s2);border:1px solid var(--line2);font-size:13px;color:var(--text)}.st-chip.on{border-color:var(--gold);background:var(--s3,var(--s2))}.st-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);padding:0}.st-dot.on{border-color:var(--text)}
+.sp-row{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line2);font-size:14px;color:var(--t2)}.sp-row b{color:var(--text)}.sp-row.low b{color:#ff6b6b}
 .hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
@@ -670,6 +671,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovStyle" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">✨</div><h2 class="m-title" id="stTitle">Your style</h2></div>
     <div class="m-body" id="stBody"></div>
+  </div>
+</div>
+
+<div id="ovSpend" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="spTitle">
+  <div class="modal">
+    <button class="m-close" data-action="spend-no" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">💎</div><h2 class="m-title" id="spTitle">Confirm</h2></div>
+    <div class="m-body" id="spBody"></div>
   </div>
 </div>
 
@@ -1396,7 +1405,7 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovStyle'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovStyle','ovSpend'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
@@ -2590,6 +2599,10 @@ async function doRename(){
   const inp = $('#nmInput'), go = $('#nmGo'); if (!inp || !go || !NM.ok) return;
   const v = inp.value.trim(); if (v !== NM.name) return;
   if (!NM.key) NM.key = newKey('rn');
+  const rst = W.st || {};
+  if (num(rst.free_left) <= 0 && num(rst.cost) > 0) {
+    if (!(await confirmSpend({ title: 'Change username', cost: num(rst.cost), action: 'Change name' }))) return;
+  }
   go.disabled = true; const old = go.textContent; go.textContent = 'Saving…';
   try {
     const { data, error } = await sb.rpc('change_username', { p_new: v, p_key: NM.key });
@@ -2650,7 +2663,7 @@ async function openMsg(tab){
 }
 async function refreshInbox(quiet){
   try {
-    const [c, r, pf] = await Promise.all([sb.rpc('get_my_chats'), sb.rpc('get_my_requests'), MSG.prefs ? Promise.resolve(null) : sb.rpc('get_message_prefs')]);
+    const [c, r, pf] = await Promise.all([sb.rpc('get_my_chats', { p_archived: !!MSG.showArch }), sb.rpc('get_my_requests'), MSG.prefs ? Promise.resolve(null) : sb.rpc('get_message_prefs')]);
     if (c.error) throw c.error; if (r.error) throw r.error;
     MSG.chats = c.data || []; MSG.reqs = r.data || { incoming: [], outgoing: [] };
     if (pf && !pf.error) MSG.prefs = pf.data;
@@ -2671,7 +2684,8 @@ function renderMsg(){
   if (MSG.err) h += '<p class="hc-note">' + esc(MSG.err) + '</p>';
   if (MSG.tab === 'chats') {
     h += MSG.chats.length ? MSG.chats.map(c => '<button class="mrow" data-action="msg-chat" data-id="' + esc(c.id) + '"><span class="d-ava" aria-hidden="true">' + esc(String(c.other_name || '?').slice(0, 2).toUpperCase()) + '</span><span style="min-width:0"><b>' + esc(c.other_name || 'Someone') + (c.closed ? ' · closed' : '') + '</b><small>' + esc(c.last_preview || '') + '</small></span>' + (num(c.unread) ? '<span class="mdot">' + num(c.unread) + '</span>' : '') + '</button>').join('')
-      : '<p class="hc-note">No chats yet. Tap ✉ on a story or comment to ask someone if they would like to talk privately.</p>';
+      : '<p class="hc-note">' + (MSG.showArch ? 'No archived chats.' : 'No chats yet. Tap ✉ on a story or comment to ask someone if they would like to talk privately.') + '</p>';
+    h += '<button class="btn btn-ghost btn-sm" data-action="msg-arch-toggle">' + (MSG.showArch ? '← Back to chats' : 'Archived chats') + '</button>';
   } else {
     h += '<p class="hc-note" style="margin-top:0">People who want to talk to you. You choose. Nobody sees who you are.</p>';
     h += inc ? MSG.reqs.incoming.map(r => '<div class="mreq"><b>' + esc(r.from_name || 'Someone') + '</b> <small>· ' + esc(msgTime(r.created_at)) + (r.story ? ' · about “' + esc(r.story) + '”' : '') + '</small><p>' + esc(r.body) + '</p><div class="macts"><button class="btn btn-ghost btn-sm" data-action="msg-decline" data-id="' + esc(r.id) + '">Decline</button><button class="btn btn-primary btn-sm" data-action="msg-accept" data-id="' + esc(r.id) + '">Accept</button></div></div>').join('')
@@ -2716,7 +2730,7 @@ function renderCompose(){
   $('#msTitle').textContent = 'Ask to talk privately';
   const cost = MSG.prefs ? num(MSG.prefs.cost) : 5, have = hcTotal();
   const ta = $('#mqText'), keep = ta ? ta.value : '';
-  b.innerHTML = '<p class="hc-note" style="margin-top:0">Write a short, kind note. The person decides whether to accept. They will only see your username, never who you are. For safety, a first note cannot contain links, emails or phone numbers.</p>' +
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Write a short, kind note. The person decides whether to accept. They will only see your username, never who you are. For safety, notes and chats cannot contain links, emails or phone numbers.</p>' +
     '<textarea class="msgbox" id="mqText" maxlength="300" rows="4" placeholder="Hi, I read your story and…"></textarea>' +
     '<div class="hc-msg" id="mqMsg" aria-live="polite"></div>' +
     '<p class="hc-note">Sending costs <b>' + cost + ' HC</b> (you have <b>' + have.toLocaleString() + ' HC</b>). If it is not accepted within 7 days, the credits are returned to you automatically. You can send up to 5 requests a day.</p>' +
@@ -2727,6 +2741,7 @@ async function sendRequest(){
   const ta = $('#mqText'), go = $('#mqGo'), msg = $('#mqMsg'); if (!ta || !go || !MSG.comp || MSG.busy) return;
   const v = ta.value.trim();
   if (v.length < 5) { msg.textContent = 'Please write at least a few words.'; msg.className = 'hc-msg bad'; return; }
+  if (!(await confirmSpend({ title: 'Send message request', cost: MSG.prefs ? num(MSG.prefs.cost) : 5, action: 'Send request', note: 'Returned automatically if it is not accepted within 7 days.' }))) return;
   MSG.busy = true; go.disabled = true; const old = go.textContent; go.textContent = 'Sending…';
   try {
     const { data, error } = await sb.rpc('send_message_request', { p_post: MSG.comp.cid ? null : MSG.comp.pid, p_comment: MSG.comp.cid || null, p_message: v, p_key: MSG.comp.key });
@@ -2759,7 +2774,7 @@ async function openChat(id){
   try {
     const { data, error } = await sb.rpc('get_messages', { p_conv: id, p_after: 0 });
     if (error) throw error;
-    MSG.conv = { id: id, name: data.other_name, messages: data.messages || [], closed: !!data.closed, blocked: !!data.blocked_by_me };
+    MSG.conv = { id: id, name: data.other_name, messages: data.messages || [], closed: !!data.closed, blocked: !!data.blocked_by_me, archived: !!data.archived };
     MSG.lastId = MSG.conv.messages.length ? MSG.conv.messages[MSG.conv.messages.length - 1].id : 0;
     renderChat(true);
     sb.rpc('mark_conversation_read', { p_conv: id }).then(() => loadMsgCounts());
@@ -2788,7 +2803,7 @@ function renderChat(scroll){
     (c.closed ? '<p class="hc-note">This chat is closed.</p>' :
       '<textarea class="msgbox" id="chText" maxlength="1000" rows="2" placeholder="Write a message…"></textarea><div class="hc-msg" id="chMsg" aria-live="polite"></div>' +
       '<button class="btn btn-primary btn-block" id="chGo" data-action="msg-send">Send</button>' +
-      '<div class="mbar"><button class="btn btn-ghost btn-sm" data-action="msg-block">Block</button><button class="btn btn-ghost btn-sm" data-action="msg-report">Report</button></div>');
+      '<div class="mbar"><button class="btn btn-ghost btn-sm" data-action="chat-archive">' + (c.archived ? 'Unarchive' : 'Archive') + '</button><button class="btn btn-ghost btn-sm" data-action="chat-delete">Delete for me</button><button class="btn btn-ghost btn-sm" data-action="msg-block">Block</button><button class="btn btn-ghost btn-sm" data-action="msg-report">Report</button></div>');
   const t = $('#chText'); if (t && draft) t.value = draft;
   const l = $('#chList'); if (l && scroll !== false) l.scrollTop = l.scrollHeight;
 }
@@ -2805,6 +2820,17 @@ async function sendChat(){
     MSG.lastId = Math.max(MSG.lastId, data.id); renderChat(true);
   } catch(e) { const m = $('#chMsg'); if (m) { m.textContent = errMsg(e, 'Could not send that.'); m.className = 'hc-msg bad'; } }
   MSG.busy = false; const g = $('#chGo'); if (g) g.disabled = false;
+}
+
+async function archiveChat(){
+  const c = MSG.conv; if (!c) return;
+  try { const { error } = await sb.rpc('archive_chat', { p_conv: c.id, p_archive: !c.archived }); if (error) throw error; toast(c.archived ? 'Moved back to your chats' : 'Chat archived', 'ok'); MSG.showArch = false; openMsg('chats'); }
+  catch(e) { toast(errMsg(e, 'Could not do that.'), 'err'); }
+}
+async function deleteChat(){
+  const c = MSG.conv; if (!c || !confirm('Delete this chat for you? The other person keeps their copy.')) return;
+  try { const { error } = await sb.rpc('delete_chat_for_me', { p_conv: c.id }); if (error) throw error; toast('Chat deleted', 'ok'); MSG.showArch = false; openMsg('chats'); }
+  catch(e) { toast(errMsg(e, 'Could not delete that.'), 'err'); }
 }
 async function blockChat(){
   const c = MSG.conv; if (!c || !confirm('Block ' + (c.name || 'this person') + '? The chat will close and they cannot send you new requests.')) return;
@@ -2839,7 +2865,7 @@ async function rewardsBoot(){
     const ar = await sb.rpc('claim_activity_reward', { p_tz: tzName() });
     if (!ar.error && ar.data && ar.data.ok) { toast('✨ +' + ar.data.amount + ' HC for your activity', 'ok'); if (ar.data.wallet) { W.wallet = walletFromRow(ar.data.wallet); updateNav(); refreshWalletUI(); } }
     const { data } = await sb.rpc('get_rewards_status', { p_tz: tzName() });
-    if (data) { REW.st = data; if (data.daily && data.daily.claimable) setTimeout(() => toast('🎁 Your daily reward is ready. Open Rewards on your profile.', 'info'), 2500); }
+    if (data) { REW.st = data; renderAnnouncement(); if (data.daily && data.daily.claimable) setTimeout(() => toast('🎁 Your daily reward is ready. Open Rewards on your profile.', 'info'), 2500); }
   } catch(e) { console.warn('rewards', e); }
 }
 async function openRewards(){
@@ -2866,7 +2892,7 @@ function renderRewards(){
     h += '<div class="rw-card"><h3>Invite a friend</h3><p class="hc-note" style="margin-top:0">When a friend joins with your link, confirms their email, visits on ' + num(r.active_days) + ' different days and gives ' + num(r.min_verdicts) + ' verdict, you get <b>' + num(r.referrer_hc) + ' HC</b> and they get <b>' + num(r.friend_hc) + ' HC</b>.</p>' +
       '<div class="rw-link"><input readonly value="' + esc(inviteUrl()) + '" aria-label="Your invite link" onfocus="this.select()"><button class="btn btn-ghost btn-sm" data-action="rew-copy">Copy</button></div>' +
       '<button class="btn btn-primary btn-block" data-action="rew-share">Share my invite</button>' +
-      '<p class="hc-note">Invited: <b>' + num(r.invited) + '</b> · Joined: <b>' + num(r.qualified) + '</b> · Earned: <b>' + num(r.earned) + ' HC</b>' + (num(r.waiting) ? ' · Waiting for review: <b>' + num(r.waiting) + '</b>' : '') + (r.was_invited ? ' · You joined through an invite 💜' : '') + '</p></div>';
+      '<p class="hc-note">Invited: <b>' + num(r.invited) + '</b> · Joined: <b>' + num(r.qualified) + '</b> · Earned: <b>' + num(r.earned) + ' HC</b>' + (num(r.pending) ? ' · Pending: <b>' + num(r.pending) + '</b>' : '') + (num(r.waiting) ? ' · Waiting for review: <b>' + num(r.waiting) + '</b>' : '') + (num(r.rejected) ? ' · Rejected: <b>' + num(r.rejected) + '</b>' : '') + (r.was_invited ? ' · You joined through an invite 💜' : '') + '</p></div>';
   }
   const ach = st.achievements || [];
   h += '<div class="rw-card"><h3>Achievements</h3>' + ach.map(a => '<div class="rw-ach' + (a.unlocked ? ' on' : '') + '"><span style="font-size:24px">' + esc(a.icon) + '</span><span><b>' + esc(a.title) + '</b><small>' + esc(a.descr) + '</small></span><span class="rw-hc">' + (a.unlocked ? '✓' : (num(a.credits) ? '+' + num(a.credits) + ' HC' : '')) + '</span></div>').join('') + '</div>';
@@ -2885,7 +2911,7 @@ async function claimDaily(){
     if (!a.error && a.data) { (a.data.new || []).forEach((x, i) => setTimeout(() => toast((x.icon || '🏅') + ' ' + x.title + (x.credits ? ' · +' + x.credits + ' HC' : ''), 'ok'), 1500 + i * 1800)); if (a.data.wallet) { W.wallet = walletFromRow(a.data.wallet); updateNav(); refreshWalletUI(); } }
     const st = await sb.rpc('get_rewards_status', { p_tz: tzName() }); if (!st.error) REW.st = st.data;
   } catch(e) { toast(errMsg(e, 'Could not collect that right now.'), 'err'); }
-  REW.busy = false; renderRewards();
+  REW.busy = false; renderRewards(); renderAnnouncement();
 }
 async function copyInvite(){
   const u = inviteUrl(); if (!u) return;
@@ -2941,7 +2967,10 @@ function renderGift(){
       : '<button class="btn btn-primary btn-block" id="gfGo" data-action="gift-send"' + (sel ? '' : ' disabled') + '>' + (sel ? 'Send ' + esc(sel.icon) + ' · ' + num(sel.cost) + ' HC' : 'Choose a gift') + '</button>');
 }
 async function sendGiftNow(){
-  if (GF.busy || !GF.pick) return; GF.busy = true;
+  if (GF.busy || !GF.pick) return;
+  const gt = (GF.types || []).find(t => t.id === GF.pick);
+  if (!(await confirmSpend({ title: 'Send ' + (gt ? gt.label : 'gift'), cost: gt ? num(gt.cost) : 0, action: 'Send gift' }))) return;
+  GF.busy = true;
   const go = $('#gfGo'); if (go) { go.disabled = true; go.textContent = 'Sending…'; }
   try {
     const { data, error } = await sb.rpc('send_gift', { p_post: GF.cid ? null : GF.pid, p_comment: GF.cid || null, p_gift: GF.pick, p_key: GF.key });
@@ -2975,7 +3004,10 @@ function renderBoost(){
     '<div class="hc-msg" id="bsMsg" aria-live="polite"></div>';
 }
 async function doBoost(kind){
-  if (BS.busy) return; BS.busy = true;
+  if (BS.busy) return;
+  const bc = BS.o ? num(kind === 'pin' ? BS.o.pin_cost : BS.o.highlight_cost) : 0;
+  if (!(await confirmSpend({ title: kind === 'pin' ? 'Pin your story' : 'Highlight your story', cost: bc, action: kind === 'pin' ? 'Pin' : 'Highlight' }))) return;
+  BS.busy = true;
   try {
     const { data, error } = await sb.rpc('boost_post', { p_post: BS.pid, p_kind: kind, p_key: newKey('bs') });
     if (error) throw error;
@@ -3036,7 +3068,11 @@ function renderStyle(){
 }
 function pickStyle(k, v){ if (!FL.d) return; FL.d[k] = v; renderStyle(); }
 async function saveStyle(){
-  if (FL.busy || !FL.d) return; FL.busy = true;
+  if (FL.busy || !FL.d) return;
+  if (FL.st && !FL.st.unlocked && (FL.d.flair || FL.d.accent || FL.d.frame || FL.d.badge)) {
+    if (!(await confirmSpend({ title: 'Unlock your style', cost: num(FL.st.cost), action: 'Unlock and save', note: 'You pay once. After that you can change your style for free.' }))) return;
+  }
+  FL.busy = true;
   const go = $('#stGo'); if (go) { go.disabled = true; go.textContent = 'Saving…'; }
   try {
     const d = FL.d;
@@ -3050,6 +3086,26 @@ async function saveStyle(){
   } catch(e) { const m = $('#stMsg'); if (m) { m.textContent = errMsg(e, 'Could not save that. Nothing was charged.'); m.className = 'hc-msg bad'; } if (go) { go.disabled = false; go.textContent = 'Try again'; } }
   FL.busy = false;
 }
+
+/* one confirm sheet for every paid action: cost, balance, balance after */
+let SPEND_RES = null;
+function confirmSpend(o){
+  return new Promise(res => {
+    if (SPEND_RES) { try { SPEND_RES(false); } catch(e){} }
+    SPEND_RES = res;
+    const have = hcTotal(), cost = num(o.cost), after = have - cost, short = after < 0;
+    $('#spTitle').textContent = o.title || 'Confirm';
+    $('#spBody').innerHTML = (o.note ? '<p class="hc-note" style="margin-top:0">' + esc(o.note) + '</p>' : '') +
+      '<div class="sp-row"><span>Cost</span><b>' + cost.toLocaleString() + ' HC</b></div>' +
+      '<div class="sp-row"><span>Your balance</span><b>' + have.toLocaleString() + ' HC</b></div>' +
+      '<div class="sp-row' + (short ? ' low' : '') + '"><span>Balance after</span><b>' + (short ? 'Not enough' : after.toLocaleString() + ' HC') + '</b></div>' +
+      (short ? '<button class="btn btn-primary btn-block" style="margin-top:12px" data-action="spend-no">Close</button><button class="btn btn-ghost btn-block" style="margin-top:8px" data-action="open-wallet">Get Heart Credits</button>'
+             : '<button class="btn btn-primary btn-block" style="margin-top:12px" data-action="spend-yes">' + esc(o.action || 'Confirm') + ' · ' + cost.toLocaleString() + ' HC</button><button class="btn btn-ghost btn-block" style="margin-top:8px" data-action="spend-no">Cancel</button>');
+    openOv('ovSpend');
+  });
+}
+function spendDone(ok){ const r = SPEND_RES; SPEND_RES = null; closeOv('ovSpend'); if (r) r(!!ok); }
+
 function renderBan(){
   const c = $('#banBar'); if (!c) return;
   c.innerHTML = me && X.status.banned ? '<div class="banner banner-ban"><h3>⛔ Your account is restricted</h3><p>You can read stories, but you can\'t post, comment or vote.' + (X.status.reason ? ' Reason: ' + esc(X.status.reason) : '') + '</p></div>' : '';
@@ -3058,6 +3114,8 @@ function renderAnnouncement(){
   const c = $('#annBar'); if (!c) return;
   let h = '';
   if (me && X.status.is_admin) h += '<a class="adm-chip" href="/admin.html">🛠 Open admin panel</a>';
+  const dr = REW.st && REW.st.enabled && REW.st.daily;
+  if (me && dr && dr.claimable) h += '<div class="banner banner-ann" style="display:flex;align-items:center;gap:10px;justify-content:space-between"><p style="margin:0">🎁 Daily reward ready: <b>+' + num(dr.amount) + ' HC</b> · day ' + num(dr.streak) + ' of your streak</p><button class="btn btn-primary btn-sm" data-action="banner-claim">Collect</button></div>';
   const note = X.settings && typeof X.settings.maintenance_note === 'string' ? X.settings.maintenance_note.trim() : '';
   if (note) h += '<div class="banner banner-ann"><p style="margin:0">' + esc(note) + '</p></div>';
   else if (X.settings && X.settings.posting_enabled === false) h += '<div class="banner banner-ann"><p style="margin:0">New stories are paused for a moment. You can still read and vote.</p></div>';
@@ -3238,6 +3296,12 @@ function bindEvents(){
       case 'style-open': openStyle(); break;
       case 'style-pick': pickStyle(el.dataset.k, el.dataset.v); break;
       case 'style-save': saveStyle(); break;
+      case 'spend-yes': spendDone(true); break;
+      case 'spend-no': spendDone(false); break;
+      case 'chat-archive': archiveChat(); break;
+      case 'chat-delete': deleteChat(); break;
+      case 'msg-arch-toggle': MSG.showArch = !MSG.showArch; refreshInbox(); break;
+      case 'banner-claim': claimDaily(); break;
       case 'rew-open': openRewards(); break;
       case 'rew-claim': claimDaily(); break;
       case 'rew-share': shareInvite(); break;
