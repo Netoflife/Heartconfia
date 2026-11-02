@@ -2703,7 +2703,7 @@ function renderMsg(){
   if (MSG.prefs && num(MSG.prefs.blocked) > 0) h += '<button class="btn btn-ghost btn-sm" data-action="msg-unblock-all">Unblock everyone (' + num(MSG.prefs.blocked) + ')</button>';
   b.innerHTML = h;
 }
-async function togglePref(){
+async function toggleMsgPref(){
   const acc = !(!MSG.prefs || MSG.prefs.accepting !== false);
   try {
     const { data, error } = await sb.rpc('set_message_prefs', { p_accepting: acc });
@@ -3318,7 +3318,7 @@ function bindEvents(){
       case 'msg-block': blockChat(true); break;
       case 'msg-unblock-all': clearBlocks(); break;
       case 'msg-report': reportChat(); break;
-      case 'msg-pref': togglePref(); break;
+      case 'msg-pref': toggleMsgPref(); break;
       case 'vote': doVote(pid, el.dataset.v); break;
       case 'react': doRx(pid, el.dataset.e); break;
       case 'save': toggleSave(pid); break;
