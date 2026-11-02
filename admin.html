@@ -185,14 +185,17 @@ async function viewReports(v){
         return '<div class="m" style="margin:4px 0"><b>' + (m.from === 'reporter' ? esc(r.reporter_name) : esc(r.reported_name)) + ':</b> ' + esc(m.body) + '</div>'; }).join('') + '</div>' +
       '<div class="row"><button class="b g" data-cr="dismiss" data-id="' + esc(r.id) + '">Looks fine</button><button class="b d" data-cr="restrict" data-id="' + esc(r.id) + '">Switch off their messaging</button></div></div>';
   }).join('') : '';
-  if (!rows.length && !crows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>'; return; }
+  var al = null; try { al = await rpc('admin_align_config'); } catch(e){ al = null; }
+  var wordsHtml = al ? '<h3 style="margin-top:22px">Blocked words in private messages</h3><p class="hint">Notes and chats containing any of these words are refused. A first note can never contain links, emails or phone numbers.</p><div class="card"><div class="row" id="bwlist">' + al.words.map(function(w){ return '<span class="tag">' + esc(w) + ' <a href="#" data-bw="' + esc(w) + '" style="margin-left:4px">✕</a></span>'; }).join('') + '</div><div class="two" style="margin-top:8px"><div><input id="bwin" maxlength="40" placeholder="Add a word or phrase"/></div><div><button class="b p" id="bwadd">Add</button></div></div></div>' : '';
+  if (!rows.length && !crows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>' + wordsHtml; wireWords(v); return; }
   v.innerHTML = (rows.length ? '<h2>Reports waiting (' + rows.length + ')</h2>' : '') + rows.map(function(r){
     return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span><span class="tag">' + esc(r.type) + '</span>' + (r.hidden ? '<span class="tag red">hidden</span>' : '') + '</div>' +
       '<div class="t" style="margin-top:8px">' + esc(r.preview || '(content already removed)') + '</div><div class="m">Reasons: ' + esc((r.reasons || []).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
       '<div class="row"><button class="b g" data-a="dismiss" data-id="' + esc(r.content_id) + '">Looks fine</button><button class="b" data-a="hide" data-id="' + esc(r.content_id) + '">Hide</button><button class="b d" data-a="delete" data-id="' + esc(r.content_id) + '">Delete</button>' +
       (r.author_id ? '<button class="b d" data-ban="' + esc(r.author_id) + '">Restrict author</button>' : '') +
       (r.post_id ? '<a class="b" style="text-decoration:none;color:var(--text)" target="_blank" rel="noopener" href="/#post-' + esc(r.post_id) + '">View</a>' : '') + '</div></div>';
-  }).join('') + chatHtml;
+  }).join('') + chatHtml + wordsHtml;
+  wireWords(v);
   on(v, '[data-cr]', function(b){
     if (b.dataset.cr === 'restrict' && !confirm('Switch off private messaging for this person?')) return;
     act(function(){ return rpc('admin_review_msg_report', { p_id: b.dataset.id, p_action: b.dataset.cr }); }, 'Done').then(render);
@@ -202,6 +205,14 @@ async function viewReports(v){
     act(function(){ return rpc('admin_resolve_report', { p_content_id: b.dataset.id, p_action: b.dataset.a }); }, 'Done').then(render);
   });
   on(v, '[data-ban]', function(b){ banUser(b.dataset.ban, true).then(render); });
+}
+
+function wireWords(v){
+  var add = $('#bwadd'); if (add) add.onclick = function(){
+    var w = $('#bwin').value.trim(); if (!w) return;
+    act(function(){ return rpc('admin_blocked_words', { p_action: 'add', p_word: w }); }, 'Added').then(function(r){ if (r !== undefined) render(); });
+  };
+  on(v, '[data-bw]', function(a, ev){ ev.preventDefault(); act(function(){ return rpc('admin_blocked_words', { p_action: 'remove', p_word: a.dataset.bw }); }, 'Removed').then(function(r){ if (r !== undefined) render(); }); });
 }
 
 /* ---------------- stories ---------------- */
@@ -472,7 +483,7 @@ var creditState = { q: '', adj: null };
 function newKey(){ return 'adm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10); }
 function naira(k){ return '₦' + (k / 100).toLocaleString('en-NG'); }
 async function viewCredits(v){
-  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 }), rw = await rpc('admin_rewards_config'), gf = await rpc('admin_gifts_config');
+  var o = await rpc('admin_credit_overview'), cfg = await rpc('admin_credit_config'), pay = await rpc('admin_list_payments', { p_limit: 30 }), rw = await rpc('admin_rewards_config'), gf = await rpc('admin_gifts_config'), ac = await rpc('admin_align_config'), rr = await rpc('admin_referral_reviews');
   var isAdmin = myRole === 'admin';
   v.innerHTML = '<h2>Heart Credits</h2><p class="hint">1 HC = ₦10. Every change is saved in a ledger that can\'t be edited, and in the audit log.</p><div class="grid">' +
     statCard(o.purchased, 'purchased (held by users)') + statCard(o.earned, 'earned (held by users)') + statCard(o.promo, 'promotional (held by users)') +
@@ -504,6 +515,13 @@ async function viewCredits(v){
       return '<div class="card" data-ach="' + esc(a.id) + '"><div class="t">' + esc(a.icon) + ' ' + esc(a.title) + ' <span class="tag">' + esc(a.descr) + '</span></div><div class="two"><div><label>Reward (HC)</label><input type="number" min="0" max="10000" class="ac" value="' + a.credits + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Active</label><select class="aa"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (a.active ? ' selected' : '') + '>Yes</option><option value="0"' + (a.active ? '' : ' selected') + '>No</option></select></div></div>' + (isAdmin ? '<button class="b" data-a="saveach">Save</button>' : '') + '</div>';
     }).join('') +
     (rw.top_referrers.length ? '<div class="card"><div class="t">Top inviters</div>' + rw.top_referrers.map(function(r){ return '<div class="m">' + esc(r.username) + ' · ' + r.qualified + ' joined of ' + r.invited + ' invited</div>'; }).join('') + '</div>' : '') +
+    '<h3>Invites waiting for approval (' + rr.length + ')</h3><p class="hint">Invite rewards above ' + ac.approval_over + ' HC, or more than ' + ac.per_day_max + ' in a day for one person, wait here.</p>' +
+    (rr.length ? rr.map(function(r){ return '<div class="card" data-rid="' + esc(r.id) + '"><div class="t">' + esc(r.inviter) + ' invited ' + esc(r.friend) + '</div><div class="m">' + r.inviter_paid + ' friends already paid for this inviter · friend active on ' + r.friend_days + ' days</div>' + '<div class="row"><button class="b p" data-a="refok">Approve and pay</button><button class="b d" data-a="refno">Reject</button></div></div>'; }).join('') : '<div class="empty">Nothing waiting.</div>') +
+    '<h3>Invite, activity and message rules</h3><div class="card"><div class="two"><div><label>Activity reward (HC a day)</label><input id="al1" type="number" min="0" max="50" value="' + ac.activity_hc + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Friend must be active on (days)</label><input id="al2" type="number" min="0" max="60" value="' + ac.active_days + '"' + (isAdmin ? '' : ' disabled') + '/></div></div>' +
+    '<div class="two"><div><label>Friend must give (verdicts)</label><input id="al3" type="number" min="0" max="50" value="' + ac.min_verdicts + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Admin approval above (HC)</label><input id="al4" type="number" min="0" max="10000" value="' + ac.approval_over + '"' + (isAdmin ? '' : ' disabled') + '/></div></div>' +
+    '<div class="two"><div><label>Most paid invites per person per day</label><input id="al5" type="number" min="1" max="1000" value="' + ac.per_day_max + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Keep messages for (days)</label><input id="al6" type="number" min="1" max="3650" value="' + ac.retention_days + '"' + (isAdmin ? '' : ' disabled') + '/></div></div>' +
+    '<div class="two"><div><label>No links in a first note</label><select id="al7"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (ac.no_links ? ' selected' : '') + '>On</option><option value="0"' + (ac.no_links ? '' : ' selected') + '>Off</option></select></div><div></div></div>' +
+    (isAdmin ? '<button class="b p" id="alsave">Save</button>' : '<div class="m">Only a full admin can change these.</div>') + '</div>' +
     '<h3>Gifts and boosts</h3><p class="hint">Last 7 days: ' + gf.stats.gifts_7d + ' gifts (' + gf.stats.gift_spent_7d + ' HC spent, ' + gf.stats.gift_fee_7d + ' HC kept as fee). Now: ' + gf.stats.pins_active + ' pinned, ' + gf.stats.highlights_active + ' highlighted, ' + gf.stats.flairs + ' people with flair. Boost and flair prices are in the Prices list above (highlight_post, pin_post, profile_custom).</p>' +
     gf.gifts.map(function(g){
       return '<div class="card" data-gid="' + esc(g.id) + '"><div class="t">' + esc(g.icon) + ' ' + esc(g.label) + ' <span class="tag">' + esc(g.id) + '</span></div><div class="two"><div><label>Price (HC)</label><input class="gc" type="number" min="1" value="' + g.cost + '"' + (isAdmin ? '' : ' disabled') + '/></div><div><label>Receiver gets (HC)</label><input class="gr" type="number" min="0" value="' + g.receive + '"' + (isAdmin ? '' : ' disabled') + '/></div></div><div class="two"><div><label>Active</label><select class="ga"' + (isAdmin ? '' : ' disabled') + '><option value="1"' + (g.active ? ' selected' : '') + '>Yes</option><option value="0"' + (g.active ? '' : ' selected') + '>No</option></select></div><div><label>Order</label><input class="gs" type="number" value="' + g.sort + '"' + (isAdmin ? '' : ' disabled') + '/></div></div><input class="gl" type="hidden" value="' + esc(g.label) + '"/><input class="gi" type="hidden" value="' + esc(g.icon) + '"/>' + (isAdmin ? '<button class="b" data-a="savegift">Save</button>' : '') + '</div>';
@@ -529,6 +547,14 @@ async function viewCredits(v){
   $('#npadd').onclick = function(){
     act(function(){ return rpc('admin_save_package', { p_id: $('#npid').value.trim(), p_name: $('#npn').value.trim(), p_credits: parseInt($('#npc').value, 10), p_active: true, p_sort: 99 }); }, 'Package added').then(function(r){ if (r !== undefined) render(); });
   };
+  var als = $('#alsave'); if (als) als.onclick = function(){
+    act(function(){ return rpc('admin_set_align_settings', { p_activity: parseInt($('#al1').value, 10), p_active_days: parseInt($('#al2').value, 10), p_min_verdicts: parseInt($('#al3').value, 10), p_approval_over: parseInt($('#al4').value, 10), p_per_day_max: parseInt($('#al5').value, 10), p_retention: parseInt($('#al6').value, 10), p_no_links: $('#al7').value === '1' }); }, 'Saved');
+  };
+  on(v, '[data-a=refok],[data-a=refno]', function(b){
+    var c = b.closest('.card'), ok = b.dataset.a === 'refok';
+    if (!confirm(ok ? 'Pay this invite reward?' : 'Reject this invite? Nobody is paid.')) return;
+    act(function(){ return rpc('admin_review_referral', { p_id: c.dataset.rid, p_approve: ok }); }, ok ? 'Paid' : 'Rejected').then(function(r){ if (r !== undefined) render(); });
+  });
   var rs = $('#rwsave'); if (rs) rs.onclick = function(){
     act(function(){ return rpc('admin_set_rewards', { p_enabled: $('#rw0').value === '1', p_daily_base: parseInt($('#rw1').value, 10), p_daily_7: parseInt($('#rw2').value, 10), p_daily_30: parseInt($('#rw3').value, 10), p_ref_enabled: $('#rw7').value === '1', p_referrer_hc: parseInt($('#rw4').value, 10), p_friend_hc: parseInt($('#rw5').value, 10), p_ref_max: parseInt($('#rw6').value, 10) }); }, 'Rewards saved');
   };
