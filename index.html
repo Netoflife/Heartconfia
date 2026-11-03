@@ -493,6 +493,21 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .st-row{display:flex;flex-wrap:wrap;gap:6px}.st-chip{padding:7px 11px;border-radius:100px;background:var(--s2);border:1px solid var(--line2);font-size:13px;color:var(--text)}.st-chip.on{border-color:var(--gold);background:var(--s3,var(--s2))}.st-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--line2);padding:0}.st-dot.on{border-color:var(--text)}
 .sp-row{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--line2);font-size:14px;color:var(--t2)}.sp-row b{color:var(--text)}.sp-row.low b{color:#ff6b6b}
 .hc-note{font-size:12.5px;color:var(--t3);line-height:1.5;margin:8px 0}
+.pl-box{background:var(--s2);border:1px solid var(--line2);border-radius:14px;padding:12px;margin:10px 0}
+.pl-head{font-size:14px;font-weight:700;color:var(--text);margin-bottom:8px}
+.pl-in{width:100%;margin:0 0 8px;padding:10px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--s1);color:var(--text);font:inherit;font-size:14px}
+.dr-row{display:flex;gap:8px;margin-top:10px}.dr-row .btn{flex:1}
+.dr-item{padding:12px;border:1px solid var(--line2);border-radius:14px;background:var(--s2);margin-bottom:10px}
+.dr-item b{display:block;color:var(--text);font-size:14px;margin-bottom:4px;word-break:break-word}
+.dr-item span{display:block;color:var(--t2);font-size:12px;margin-bottom:8px}
+.dr-acts{display:flex;gap:8px}.dr-acts .btn{flex:1}
+.pl-card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:6px 0 16px}
+.pl-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px}
+.pl-opt{display:block;width:100%;text-align:left;position:relative;overflow:hidden;margin:0 0 8px;padding:11px 12px;border-radius:12px;border:1px solid var(--line2);background:var(--s2);color:var(--text);font:inherit;font-size:14px;cursor:pointer}
+.pl-opt .pl-bar{position:absolute;left:0;top:0;bottom:0;background:var(--rose2);opacity:.22;border-radius:12px}
+.pl-opt.mine{border-color:var(--rose2)}
+.pl-opt .pl-row{position:relative;display:flex;justify-content:space-between;gap:10px}
+.pl-foot{font-size:12px;color:var(--t2)}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
 
@@ -663,6 +678,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovBoost" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">🚀</div><h2 class="m-title" id="bsTitle">Boost your story</h2></div>
     <div class="m-body" id="bsBody"></div>
+  </div>
+</div>
+
+<div id="ovDraft" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="drTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovDraft" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">📂</div><h2 class="m-title" id="drTitle">My drafts</h2></div>
+    <div class="m-body" id="drBody"></div>
   </div>
 </div>
 
@@ -1405,7 +1428,7 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovStyle','ovSpend'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovDraft','ovStyle','ovSpend'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
@@ -1733,7 +1756,7 @@ function renderDetail(p){
       (own ? '<button class="foot-btn" data-action="boost-open" data-pid="' + esc(p.id) + '" aria-label="Boost this story">🚀</button>' : '<button class="foot-btn" data-action="gift-open" data-pid="' + esc(p.id) + '" aria-label="Send a gift">🎁</button><button class="foot-btn" data-action="msg-compose" data-pid="' + esc(p.id) + '" aria-label="Send a private message request">✉</button>') +
       '<button class="foot-btn" data-action="report-post" data-pid="' + esc(p.id) + '" aria-label="Report">' + ico('flag') + '</button></div>' +
       (p.tags.length ? '<div class="c-tags">' + p.tags.slice(0,5).map(t => '<span class="tag">' + esc(t) + '</span>').join('') + '</div>' : '') +
-      '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + '<div id="updBlock"></div>' + rxRowHTML(p) +
+      '<h1 class="d-title">' + esc(p.title || '') + '</h1>' + body + '<div id="pollBlock"></div><div id="updBlock"></div>' + rxRowHTML(p) +
       '<div class="vpanel"><div class="vpanel-title">⚖️ Who is wrong here?' + (own ? ' <span class="vpanel-note">(you can\'t vote on your own post)</span>' : (closed ? ' <span class="vpanel-note">(voting has closed)</span>' : '')) + '</div>' + verdictHTML(p) + '</div><div id="remindSlot">' + remindBoxHTML(p) + '</div>' +
       '<div class="sec-line"><h2 class="sec-title">💬 <span class="js-cmt-total">' + fmt(p.cmt) + '</span> comments</h2><select class="sort-sel" id="sortSel" aria-label="Sort comments"><option value="recent">Recent</option><option value="heated">Most heated</option><option value="top">Top rated</option></select></div>' +
       '<div class="cm-box"><label class="sr" for="cmIn">Write a comment</label><textarea class="cm-ta" id="cmIn" placeholder="What\'s your verdict? Be honest, be kind…" maxlength="' + LIM.comment + '"></textarea><div class="cm-foot"><span class="cm-count" id="cmCount">0 / ' + LIM.comment + '</span><button class="btn btn-primary btn-sm" data-action="post-comment" data-pid="' + esc(p.id) + '">Post</button></div></div>' +
@@ -1741,6 +1764,8 @@ function renderDetail(p){
     '</div>' +
     (similar.length ? '<div style="margin-top:28px"><h2 class="sec-title" style="margin-bottom:12px">Similar confessions</h2>' + similar.map((s, i) => cardHTML(s, i)).join('') + '</div>' : '');
   const sel = $('#sortSel'); if (sel) sel.value = S.detail.sort;
+  if (PLD[p.id] !== undefined) renderPoll(p.id);
+  loadPoll(p.id);
 }
 
 /* author updates: "what happened next" */
@@ -2169,10 +2194,14 @@ function renderConfess(){
     '<label class="sr" for="ptitle">Title</label><input type="text" class="ti" id="ptitle" placeholder="A title that stops the scroll…" maxlength="' + LIM.title + '" autocomplete="off"/><div class="cc" id="cc">0 / ' + LIM.title + '</div>' +
     '<label class="sr" for="pbody">Your story</label><textarea class="ta" id="pbody" placeholder="Tell your story. Be specific, the details are what make people feel it…" maxlength="' + LIM.storyMax + '"></textarea><div class="cc" id="bodyCC">0 / ' + LIM.storyMax + ' (min ' + LIM.story + ')</div>' +
     '<label class="sr" for="ptags">Tags</label><input type="text" class="tags-i" id="ptags" placeholder="Tags: cheating, breakup, trust" autocomplete="off"/><div class="hint">Use 2 to 5 tags, separated by commas.</div>' +
+    '<button type="button" class="btn btn-ghost" data-action="poll-toggle" id="plToggle" style="margin-top:10px">📊 Add a poll</button>' +
+    '<div class="pl-box hidden" id="plBox"><div class="pl-head">📊 Poll (optional)</div><div id="plIns"></div><button type="button" class="btn btn-ghost" data-action="poll-add" id="plAdd">+ Add choice</button><p class="hint" id="plNote"></p></div>' +
     '<p class="note">Don\'t include real names, phone numbers, emails or where anyone lives or works.</p>' +
     '<p class="note">⏳ People get 24 hours to give their verdict. Everyone who votes is told the result, and you can share what happened next.</p>' +
     '<button class="btn btn-primary btn-block" data-action="submit-post" id="btnSubmitPost">🖤 Post anonymously</button>' +
+    '<div class="dr-row"><button type="button" class="btn btn-ghost" data-action="draft-save">💾 Save draft</button><button type="button" class="btn btn-ghost" data-action="draft-list">📂 My drafts</button></div>' +
     '<p class="draft-note" id="draftNote">You\'ll appear as <strong style="color:var(--t2)">' + esc(me.username) + '</strong>. Your email stays private.</p></div>';
+  PLB.on = false; DR.id = null;
   restoreDraft();
 }
 async function submitPost(force){
@@ -2186,16 +2215,135 @@ async function submitPost(force){
   if (Date.now() - S.lastPostAt < LIM.postCooldown) { toast('Please wait a moment before posting again.', 'warn'); return; }
   if (force !== true && SENSITIVE_RE.test(title + ' ' + body)) { showCrisis(() => submitPost(true)); return; }
   const type = ($('.type-btn.on') || {}).dataset ? $('.type-btn.on').dataset.type : 'confession';
+  let pollOpts = null;
+  if (PLB.on) {
+    pollOpts = readPollChoices();
+    if (pollOpts.length < 2) { toast('A poll needs at least 2 choices. Fill them in or remove the poll.', 'err'); return; }
+    if (!checkContentRules(pollOpts.join(' '), 'post')) return;
+    const pc = pollCost();
+    if (pc > 0 && !(await confirmSpend({ title: 'Add a poll', cost: pc, action: 'Post with poll', note: 'The poll is added when you publish.' }))) return;
+  }
   const btn = $('#btnSubmitPost'); setBusy(btn, true, 'Posting…');
   try {
     const { data, error } = await sb.rpc('create_post', { p_type: type, p_title: title, p_content: body, p_tags: tags });
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : data;
     if (row) { upsertPost(row); S.follow.add(row.id); MY.posts.add(row.id); }
+    if (row && pollOpts) {
+      try {
+        const r = await sb.rpc('add_poll', { p_post: row.id, p_options: pollOpts, p_key: newKey('poll') });
+        if (r.error) throw r.error;
+        if (r.data && r.data.wallet) { W.wallet = walletFromRow(r.data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
+      } catch(pe) { toast('Your story is posted, but the poll could not be added: ' + errMsg(pe, 'please try again later.'), 'warn'); }
+    }
+    if (DR.id) { const did = DR.id; DR.id = null; sb.rpc('delete_draft', { p_id: did }).then(() => {}, () => {}); }
+    PLB.on = false;
     S.lastPostAt = Date.now(); ls.remove(draftKey());
     toast('Story posted anonymously 💔', 'ok'); award('first_post');
     S.filter = 'all'; renderFilters(); go('home'); loadFeed(true);
   } catch(e) { console.error('Post failed:', e); toast(errMsg(e, 'Post failed. Your draft is saved.'), 'err'); setBusy(btn, false); }
+}
+
+/* =====================================================================
+   DRAFTS + POLLS (Phase 5, release 1)
+   ===================================================================== */
+const DR = { id: null, list: null, busy: false };
+const PLB = { on: false };
+const PLD = {};
+function pollCost(){ return num(((W.catalog || {}).prices || {}).poll); }
+function readPollChoices(){
+  return $$('#plIns .pl-in').map(i => clean(i.value).trim()).filter(Boolean);
+}
+function plInputHTML(v){ return '<input type="text" class="pl-in" maxlength="60" placeholder="Poll choice" autocomplete="off" value="' + esc(v || '') + '"/>'; }
+function setPollBuilder(on, opts){
+  PLB.on = !!on;
+  const box = $('#plBox'), tg = $('#plToggle'); if (!box || !tg) return;
+  box.classList.toggle('hidden', !on);
+  tg.textContent = on ? '✖ Remove poll' : '📊 Add a poll';
+  if (on) {
+    const o = (opts && opts.length ? opts : ['', '']).slice(0, 4); while (o.length < 2) o.push('');
+    $('#plIns').innerHTML = o.map(plInputHTML).join('');
+    const c = pollCost();
+    $('#plNote').textContent = '2 to 4 choices. People vote once and can see results after voting. Closes in 7 days.' + (c > 0 ? ' Costs ' + c + ' HC when you publish.' : ' Free.');
+    $('#plAdd').classList.toggle('hidden', o.length >= 4);
+  }
+}
+function addPollChoiceRow(){
+  const box = $('#plIns'); if (!box) return;
+  const n = $$('#plIns .pl-in').length; if (n >= 4) return;
+  box.insertAdjacentHTML('beforeend', plInputHTML(''));
+  if (n + 1 >= 4) $('#plAdd').classList.add('hidden');
+}
+async function saveServerDraft(){
+  if (!me || DR.busy) return;
+  const title = clean(($('#ptitle') || {}).value), body = clean(($('#pbody') || {}).value);
+  const tags = clean(($('#ptags') || {}).value).split(',').map(t => t.trim()).filter(Boolean).slice(0, 5);
+  if (!title && !body) { toast('Write something first, then save it as a draft.', 'warn'); return; }
+  const type = ($('.type-btn.on') || {}).dataset ? $('.type-btn.on').dataset.type : 'confession';
+  const poll = PLB.on ? readPollChoices() : null;
+  DR.busy = true;
+  try {
+    const { data, error } = await sb.rpc('save_draft', { p_id: DR.id, p_type: type, p_title: title, p_content: body, p_tags: tags, p_poll: poll && poll.length ? poll : null });
+    if (error) throw error;
+    DR.id = data && data.id ? data.id : DR.id; DR.list = null;
+    toast('Draft saved 💾 Only you can see it.', 'ok');
+  } catch(e) { toast(errMsg(e, 'Could not save the draft.'), 'err'); }
+  DR.busy = false;
+}
+async function openDrafts(){
+  if (!me) { showAuth('signup'); return; }
+  openOv('ovDraft'); const b = $('#drBody'); if (b) b.innerHTML = '<p class="hc-note">Loading…</p>';
+  try {
+    const { data, error } = await sb.rpc('list_drafts'); if (error) throw error;
+    DR.list = Array.isArray(data) ? data : []; renderDrafts();
+  } catch(e) { if (b) b.innerHTML = '<p class="hc-note">' + esc(errMsg(e, 'Could not load your drafts.')) + '</p>'; }
+}
+function renderDrafts(){
+  const b = $('#drBody'); if (!b) return; const l = DR.list || [];
+  if (!l.length) { b.innerHTML = '<p class="hc-note" style="margin-top:0">No drafts yet. Use “Save draft” to keep a story for later. Drafts are private. You can keep 10.</p>'; return; }
+  b.innerHTML = '<p class="hc-note" style="margin-top:0">Private to you. ' + l.length + ' of 10 used.</p>' + l.map(d =>
+    '<div class="dr-item"><b>' + esc(d.title || '(no title yet)') + '</b><span>' + esc(tAgo(d.updated_at)) + (d.poll ? ' · 📊 poll' : '') + '</span><div class="dr-acts"><button class="btn btn-primary" data-action="draft-use" data-did="' + esc(d.id) + '">Continue</button><button class="btn btn-ghost" data-action="draft-del" data-did="' + esc(d.id) + '">Delete</button></div></div>').join('');
+}
+function useDraft(id){
+  const d = (DR.list || []).find(x => x.id === id); if (!d) return;
+  go('confess'); renderConfess();
+  const t = $('#ptitle'), bd = $('#pbody'), g = $('#ptags');
+  if (t) t.value = d.title || ''; if (bd) { bd.value = d.content || ''; resize(bd); } if (g) g.value = (d.tags || []).join(', ');
+  $$('.type-btn').forEach(x => { const on = x.dataset.type === d.type; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+  setPollBuilder(!!(d.poll && d.poll.length), d.poll || null);
+  updateCounters(); DR.id = d.id; closeOv('ovDraft');
+  const n = $('#draftNote'); if (n) n.textContent = 'Draft loaded';
+}
+async function removeDraft(id){
+  try {
+    const { error } = await sb.rpc('delete_draft', { p_id: id }); if (error) throw error;
+    DR.list = (DR.list || []).filter(x => x.id !== id); if (DR.id === id) DR.id = null; renderDrafts();
+  } catch(e) { toast(errMsg(e, 'Could not delete that draft.'), 'err'); }
+}
+async function loadPoll(pid){
+  try {
+    const { data, error } = await sb.rpc('get_poll', { p_post: pid }); if (error) throw error;
+    PLD[pid] = data || null;
+  } catch(e) { PLD[pid] = null; }
+  if (S.detail && S.detail.id === pid) renderPoll(pid);
+}
+function renderPoll(pid){
+  const box = $('#pollBlock'); if (!box) return; const pl = PLD[pid];
+  if (!pl) { box.innerHTML = ''; return; }
+  const own = isMine(pid), show = pl.closed || pl.mine !== null && pl.mine !== undefined || own;
+  const total = num(pl.total);
+  box.innerHTML = '<div class="pl-card"><div class="pl-title">📊 Poll</div>' + (pl.options || []).map((o, i) => {
+    const c = num((pl.counts || [])[i]), pct = total ? Math.round(c * 100 / total) : 0;
+    if (show) return '<div class="pl-opt' + (pl.mine === i ? ' mine' : '') + '"><span class="pl-bar" style="width:' + pct + '%"></span><span class="pl-row"><span>' + esc(o) + (pl.mine === i ? ' ✓' : '') + '</span><b>' + pct + '%</b></span></div>';
+    return '<button class="pl-opt" data-action="poll-vote" data-pid="' + esc(pid) + '" data-opt="' + i + '"><span class="pl-row"><span>' + esc(o) + '</span></span></button>';
+  }).join('') + '<div class="pl-foot">' + total.toLocaleString() + ' vote' + (total === 1 ? '' : 's') + ' · ' + (pl.closed ? 'Closed' : 'Closes ' + esc(untilTxt(pl.closes_at))) + (!show && !me ? ' · Log in to vote' : '') + '</div></div>';
+}
+async function castPollVote(pid, opt){
+  if (!me) { showAuth('login'); return; }
+  try {
+    const { data, error } = await sb.rpc('vote_poll', { p_post: pid, p_opt: opt }); if (error) throw error;
+    PLD[pid] = data || PLD[pid]; renderPoll(pid);
+  } catch(e) { toast(errMsg(e, 'Could not record your vote.'), 'err'); }
 }
 
 /* =====================================================================
@@ -3364,6 +3512,13 @@ function bindEvents(){
       case 'close-ov': closeOv(el.dataset.ov); break;
       case 'type': $$('.type-btn').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed','false'); }); el.classList.add('on'); el.setAttribute('aria-pressed','true'); break;
       case 'submit-post': submitPost(); break;
+      case 'poll-toggle': setPollBuilder(!PLB.on); break;
+      case 'poll-add': addPollChoiceRow(); break;
+      case 'poll-vote': castPollVote(el.dataset.pid, parseInt(el.dataset.opt, 10)); break;
+      case 'draft-save': saveServerDraft(); break;
+      case 'draft-list': openDrafts(); break;
+      case 'draft-use': useDraft(el.dataset.did); break;
+      case 'draft-del': removeDraft(el.dataset.did); break;
       case 'crisis-edit': crisisCb = null; closeOv('ovCrisis'); break;
       case 'crisis-continue': { const cb = crisisCb; crisisCb = null; closeOv('ovCrisis'); if (cb) cb(); break; }
       case 'pref-topic': { const t = el.dataset.tag; prefs.topics = prefs.topics.includes(t) ? prefs.topics.filter(x => x !== t) : prefs.topics.concat(t); saveUserData(); el.classList.toggle('on', prefs.topics.includes(t)); el.setAttribute('aria-pressed', String(prefs.topics.includes(t))); break; }
