@@ -124,7 +124,7 @@ function showLogin(msg){
 /* ---------------- shell ---------------- */
 var TABS = [
   ['dash','Dashboard'],['reports','Reports'],['stories','Stories'],['comments','Comments'],['people','People'],
-  ['credits','Credits'],['themes','Themes'],['prompts','Prompts'],['news','Announcements'],['settings','Settings'],['delivery','Delivery & jobs'],['audit','Audit log']
+  ['credits','Credits'],['themes','Themes'],['prompts','Prompts'],['news','Announcements'],['email','Email'],['settings','Settings'],['delivery','Delivery & jobs'],['audit','Audit log']
 ];
 var ROLE_TABS = {
   admin: null,
@@ -601,7 +601,82 @@ async function loadWallets(){
   });
 }
 
-var VIEWS = { credits: viewCredits, dash: viewDash, reports: viewReports, stories: viewStories, comments: viewComments, people: viewPeople, themes: viewThemes, prompts: viewPrompts, news: viewNews, settings: viewSettings, delivery: viewDelivery, audit: viewAudit };
+/* ---------------- email (admins only) ---------------- */
+var EM = { busy: false };
+function emShell(heading, inner){
+  return '<!doctype html><html><body style="margin:0;background:#0b080c;font-family:Arial,Helvetica,sans-serif;color:#f6eef1"><div style="max-width:520px;margin:0 auto;padding:28px 20px"><div style="font-size:22px;font-weight:800;color:#ff7f9c;margin-bottom:18px">HeartConfia</div><h1 style="font-size:22px;line-height:1.25;margin:0 0 14px;color:#f6eef1">' + esc(heading) + '</h1>' + inner + '<p style="font-size:12px;color:#93808b;margin-top:28px;line-height:1.5">You\'re getting this because you have a HeartConfia account. <span style="color:#93808b">Unsubscribe</span></p></div></body></html>';
+}
+function emBody(message, name, bl, bu){
+  var paras = message.replace(/\{name\}/gi, name).split(/\n{2,}/).map(function(x){ return x.trim(); }).filter(Boolean).map(function(x){ return '<p style="font-size:15px;line-height:1.6;color:#c4b3bb;margin:0 0 14px">' + esc(x).replace(/\n/g, '<br>') + '</p>'; }).join('');
+  var btn = bl && bu ? '<p style="margin:18px 0"><a style="background:#f2486f;color:#fff;text-decoration:none;padding:12px 22px;border-radius:100px;font-weight:700;display:inline-block">' + esc(bl) + '</a></p>' : '';
+  return paras + btn;
+}
+function emForm(){
+  return { audience: $('#emAud').value, username: ($('#emUser').value || '').trim(), subject: $('#emSub').value.trim(), heading: $('#emHead').value.trim(),
+    message: $('#emMsg').value.trim(), button_label: $('#emBl').value.trim(), button_url: $('#emBu').value.trim() };
+}
+async function emCall(body){
+  var ses = (await sb.auth.getSession()).data.session;
+  var res = await fetch(CFG.URL + '/functions/v1/admin-email', { method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (ses ? ses.access_token : ''), 'apikey': CFG.KEY }, body: JSON.stringify(body) });
+  var j = {}; try { j = await res.json(); } catch(e){}
+  if (!res.ok) throw new Error(j.error || ('Email service error (' + res.status + '). Is the admin-email function deployed?'));
+  return j;
+}
+async function viewEmail(v){
+  var o = await rpc('admin_email_overview');
+  v.innerHTML = '<h2>Email</h2><div class="card"><p class="hint">Sends through Resend using the HeartConfia email design. Everyone-emails skip people who turned emails off and restricted accounts, and include an unsubscribe link. Use <b>{name}</b> in the message to insert the person\'s username. Sending to one person ignores their email setting, so use it for support replies only.</p>' +
+    '<label>Send to</label><select id="emAud"><option value="all">Everyone (' + num0(o.all) + ' people)</option><option value="active30">Active in the last 30 days (' + num0(o.active30) + ' people)</option><option value="user">One person</option></select>' +
+    '<div id="emUserBox" style="display:none"><label>Username</label><input id="emUser" maxlength="40" placeholder="Their username"/></div>' +
+    '<label>Subject (what shows in the inbox)</label><input id="emSub" maxlength="150"/>' +
+    '<label>Heading inside the email (optional, uses the subject if empty)</label><input id="emHead" maxlength="120"/>' +
+    '<label>Message (blank line = new paragraph)</label><textarea id="emMsg" maxlength="5000" style="min-height:140px"></textarea>' +
+    '<div class="two"><div><label>Button text (optional)</label><input id="emBl" maxlength="40" placeholder="Open HeartConfia"/></div><div><label>Button link (https://…)</label><input id="emBu" maxlength="500" placeholder="https://heartconfia.site"/></div></div>' +
+    '<div class="row" style="margin-top:12px"><button class="b" id="emTest">Send test to me</button><button class="b d" id="emSend">Send</button></div><div class="hint" id="emStatus" style="margin-top:8px"></div></div>' +
+    '<h3>Preview</h3><iframe id="emPrev" style="width:100%;height:420px;border:1px solid var(--line2);border-radius:12px;background:#0b080c"></iframe>' +
+    '<h3>Recent sends</h3>' + ((o.history || []).length ? o.history.map(function(h){
+      return '<div class="card"><div class="t">' + esc(h.subject) + '</div><div class="m">' + esc(h.audience === 'user' ? 'to ' + (h.target || '?') : h.audience === 'all' ? 'everyone' : 'active 30 days') + ' · ' + h.sent + ' sent' + (h.failed ? ' · <b>' + h.failed + ' failed</b>' : '') + (h.done ? '' : ' · unfinished') + ' · by ' + esc(h.admin_name || '?') + ' · ' + ago(h.created_at) + '</div></div>';
+    }).join('') : '<div class="empty">Nothing sent yet.</div>');
+  function prev(){ var f = emForm(); $('#emPrev').srcdoc = emShell(f.heading || f.subject || 'Your heading', emBody(f.message || 'Your message appears here.', f.audience === 'user' ? (f.username || 'there') : 'Alex', f.button_label, f.button_url)); }
+  ['emAud','emUser','emSub','emHead','emMsg','emBl','emBu'].forEach(function(id){ $('#' + id).oninput = prev; $('#' + id).onchange = prev; });
+  $('#emAud').onchange = function(){ $('#emUserBox').style.display = $('#emAud').value === 'user' ? '' : 'none'; prev(); };
+  prev();
+  function setSt(t, bad){ var e = $('#emStatus'); e.textContent = t; e.style.color = bad ? '#ff6b6b' : ''; }
+  $('#emTest').onclick = async function(){
+    if (EM.busy) return; EM.busy = true; setSt('Sending a test to your own email…');
+    try { var f = emForm(); var r = await emCall({ action: 'test', subject: f.subject, heading: f.heading, message: f.message, button_label: f.button_label, button_url: f.button_url }); setSt('Test sent to ' + r.to + '. Check your inbox (and spam).'); }
+    catch(e){ setSt(msgOf(e), true); }
+    EM.busy = false;
+  };
+  $('#emSend').onclick = async function(){
+    if (EM.busy) return; var f = emForm();
+    if (!f.subject || !f.message) { setSt('Write a subject and a message first.', true); return; }
+    EM.busy = true;
+    try {
+      var base = { subject: f.subject, heading: f.heading, message: f.message, button_label: f.button_label, button_url: f.button_url };
+      if (f.audience === 'user') {
+        if (!f.username) throw new Error('Type the person\'s username.');
+        if (!confirm('Send this email to ' + f.username + '?')) { EM.busy = false; return; }
+        setSt('Sending…'); var r1 = await emCall(Object.assign({ action: 'user', username: f.username }, base)); toast('Sent to ' + r1.to, 'ok'); setSt('Sent to ' + r1.to + '.');
+      } else {
+        var c = await emCall({ action: 'count', audience: f.audience });
+        if (!c.count) throw new Error('Nobody to send to.');
+        if (!confirm('Send this email to ' + c.count + ' people? You cannot undo this. Tip: send a test to yourself first.')) { EM.busy = false; return; }
+        var off = 0, logId = '', sent = 0, failed = 0, done = false, lastErr = '';
+        while (!done) {
+          setSt('Sending… ' + off + ' of ' + c.count + ' (keep this page open)');
+          var r = await emCall(Object.assign({ action: 'send', audience: f.audience, offset: off, log_id: logId }, base));
+          logId = r.log_id; off = r.next_offset; sent += r.sent; failed += r.failed; done = r.done; if (r.error) lastErr = r.error;
+        }
+        setSt('Finished. ' + sent + ' sent' + (failed ? ', ' + failed + ' failed (' + lastErr + ')' : '') + '.', failed > 0); toast('Email finished', failed ? 'bad' : 'ok');
+      }
+    } catch(e){ setSt(msgOf(e), true); toast(msgOf(e), 'bad'); }
+    EM.busy = false;
+  };
+}
+function num0(n){ return Number(n || 0).toLocaleString(); }
+
+var VIEWS = { email: viewEmail, credits: viewCredits, dash: viewDash, reports: viewReports, stories: viewStories, comments: viewComments, people: viewPeople, themes: viewThemes, prompts: viewPrompts, news: viewNews, settings: viewSettings, delivery: viewDelivery, audit: viewAudit };
 
 /* ---------------- start ---------------- */
 async function start(){
