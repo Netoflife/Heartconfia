@@ -514,6 +514,9 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 .col-row{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.col-row .btn{flex:1;min-width:110px}
 .col-item{display:flex;gap:8px;align-items:center;padding:10px 0;border-top:1px solid var(--line2)}.col-item button.ci{flex:1;text-align:left;background:none;border:0;color:var(--text);font:inherit;font-size:14px;cursor:pointer;padding:0}.col-item small{display:block;color:var(--t2);font-size:12px}
 .col-in{width:100%;margin:0 0 8px;padding:10px 12px;border-radius:10px;border:1px solid var(--line2);background:var(--s1);color:var(--text);font:inherit;font-size:14px}
+.cr-box{height:46vh;min-height:220px;overflow-y:auto;padding:8px;border:1px solid var(--line2);border-radius:14px;background:var(--s2)}
+.cr-msg{max-width:85%;margin:0 0 8px;padding:8px 10px;border-radius:12px;background:var(--s1);color:var(--text);font-size:14px;word-break:break-word;white-space:pre-wrap}
+.cr-msg.me{margin-left:auto;background:rgba(242,72,111,.18)}.cr-msg small{display:block;color:var(--rose2);font-size:11px;margin-bottom:2px}.cr-msg em{display:block;color:var(--t2);font-size:10px;font-style:normal;margin-top:2px}
 .hc-msg{font-size:13px;min-height:18px;margin:-6px 0 12px}
 .hc-msg.ok{color:var(--green)}.hc-msg.bad{color:var(--rose2)}
 
@@ -708,6 +711,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovQa" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">❓</div><h2 class="m-title" id="qaTitle">Questions</h2></div>
     <div class="m-body" id="qaBody"></div>
+  </div>
+</div>
+
+<div id="ovCir" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="cirTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovCir" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">👥</div><h2 class="m-title" id="cirTitle">Circles</h2></div>
+    <div class="m-body" id="cirBody"></div>
   </div>
 </div>
 
@@ -1222,6 +1233,12 @@ function handleHash(){
     if (mh[2]) openChat(mh[2]); else openMsg('requests');
     return;
   }
+  const mcr = location.hash.match(/^#circle-([0-9a-f-]{36})$/i);
+  if (mcr) {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+    if (!me) { showAuth('login'); return; }
+    openCirById(mcr[1]); return;
+  }
   const mq = location.hash.match(/^#question-([0-9a-f-]{36})$/i);
   if (mq) {
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
@@ -1461,7 +1478,7 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovDraft','ovCol','ovQa','ovStyle','ovSpend'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovDraft','ovCol','ovQa','ovCir','ovStyle','ovSpend'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
@@ -2691,6 +2708,170 @@ async function qaReportSend(){
 }
 
 /* =====================================================================
+   CIRCLES (Phase 5, release 5)
+   ===================================================================== */
+const CIR = { view: 'list', list: null, rules: null, cur: null, msgs: [], lastId: 0, timer: null, busy: false, err: '', rpt: null, sending: false };
+function cirRules(){ return CIR.rules || { free_owned: 1, max_owned: 2, extra_cost: 20, max_members: 30 }; }
+function cirStop(){ if (CIR.timer) { clearInterval(CIR.timer); CIR.timer = null; } }
+async function openCircles(){
+  if (!me) { showAuth('signup'); return; }
+  CIR.view = 'list'; CIR.list = null; CIR.err = ''; cirStop(); openOv('ovCir'); renderCir(); await cirLoadList();
+}
+async function cirLoadList(){
+  try { const { data, error } = await sb.rpc('get_my_circles'); if (error) throw error; CIR.list = data.list || []; CIR.rules = data.rules || CIR.rules; CIR.err = ''; }
+  catch(e) { CIR.err = errMsg(e, 'Could not load your Circles.'); CIR.list = []; }
+  if (CIR.view === 'list') renderCir();
+}
+function renderCir(){
+  const b = $('#cirBody'), t = $('#cirTitle'); if (!b) return;
+  if (CIR.view === 'new') {
+    t.textContent = 'New Circle'; const r = cirRules(), owned = (CIR.list || []).filter(c => c.role === 'owner').length, cost = owned >= r.free_owned ? num(r.extra_cost) : 0;
+    b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="cir-back" style="margin-bottom:10px">‹ Back</button>' +
+      '<input id="cirName" class="col-in" maxlength="50" placeholder="Circle name, like “Healing after a breakup”" autocomplete="off"/><textarea id="cirDesc" class="col-in" maxlength="200" rows="3" placeholder="What is this Circle about? (optional)"></textarea>' +
+      '<p class="hc-note">A Circle is a small private group (up to ' + num(r.max_members) + ' people). People join with a code you share and you approve each one. ' + (cost ? 'Your first Circle is free. This one costs <b>' + cost + ' HC</b>.' : 'Your first Circle is free.') + ' Be kind. No links, emails or phone numbers.</p>' +
+      '<div class="hc-msg" id="cirMsg" aria-live="polite"></div><button class="btn btn-primary btn-block" data-action="cir-create">Create Circle</button>';
+    return;
+  }
+  if (CIR.view === 'join') {
+    t.textContent = 'Join a Circle';
+    b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="cir-back" style="margin-bottom:10px">‹ Back</button>' +
+      '<input id="cirCode" class="col-in" maxlength="8" placeholder="8-character code" autocomplete="off" style="text-transform:uppercase;letter-spacing:2px"/>' +
+      '<p class="hc-note">Ask the Circle owner for their code. They will approve your request before you can see anything.</p><div class="hc-msg" id="cirMsg" aria-live="polite"></div><button class="btn btn-primary btn-block" data-action="cir-join-send">Ask to join</button>';
+    return;
+  }
+  if (CIR.view === 'room') { renderCirRoom(); return; }
+  if (CIR.view === 'info') { renderCirInfo(); return; }
+  t.textContent = 'Circles'; const l = CIR.list;
+  b.innerHTML = (CIR.err ? '<p class="hc-note">' + esc(CIR.err) + '</p>' : l === null ? '<p class="hc-note">Loading…</p>' : !l.length ? '<p class="hc-note" style="margin-top:0">Circles are small private groups for people going through the same thing. Create one, or join with a code from a friend.</p>' :
+    l.map(c => '<button class="col-card" data-action="cir-view" data-cid="' + esc(c.id) + '"><b>' + (c.unread ? '🔴 ' : '') + esc(c.name) + '</b><span>' + num(c.members) + ' member' + (num(c.members) === 1 ? '' : 's') + ' · ' + (c.role === 'owner' ? 'You own it' : 'Member') +
+      (c.pending ? ' · ' + num(c.pending) + ' waiting to join' : '') + (c.status === 'frozen' ? ' · paused for review' : '') + '</span></button>').join('')) +
+    '<div class="col-row"><button class="btn btn-primary" data-action="cir-new">+ Create</button><button class="btn btn-ghost" data-action="cir-join">Join with code</button></div>' +
+    '<p class="hc-note">Circles are private, but not encrypted: moderators can read messages if someone reports them. Never share contact details.</p>';
+}
+async function cirCreate(){
+  if (CIR.busy) return; const name = clean(($('#cirName') || {}).value).trim(), desc = clean(($('#cirDesc') || {}).value).trim(), m = $('#cirMsg');
+  if (name.length < 3) { if (m) { m.textContent = 'Give it a name of at least 3 letters.'; m.className = 'hc-msg bad'; } return; }
+  const r = cirRules(), owned = (CIR.list || []).filter(c => c.role === 'owner').length;
+  if (owned >= r.free_owned && num(r.extra_cost) > 0 && !(await confirmSpend({ title: 'New Circle', cost: num(r.extra_cost), action: 'Create' }))) return;
+  CIR.busy = true;
+  try {
+    const { data, error } = await sb.rpc('create_circle', { p_name: name, p_desc: desc, p_key: newKey('circ') }); if (error) throw error;
+    if (data.wallet) { W.wallet = walletFromRow(data.wallet); updateNav(); refreshWalletUI(); loadLedger(true); }
+    toast('Circle created 👥', 'ok'); CIR.busy = false; await openCirInfo(data.id); return;
+  } catch(e) { const m2 = $('#cirMsg'); if (m2) { m2.textContent = errMsg(e, 'Could not create it.'); m2.className = 'hc-msg bad'; } }
+  CIR.busy = false;
+}
+async function cirJoin(){
+  if (CIR.busy) return; const code = clean(($('#cirCode') || {}).value).trim().toUpperCase(), m = $('#cirMsg'); CIR.busy = true;
+  try { const { data, error } = await sb.rpc('join_circle', { p_code: code }); if (error) throw error; if (m) { m.textContent = 'Request sent to the owner of “' + data.name + '”. You will get an alert when you are in.'; m.className = 'hc-msg ok'; } }
+  catch(e) { if (m) { m.textContent = errMsg(e, 'Could not send the request.'); m.className = 'hc-msg bad'; } }
+  CIR.busy = false;
+}
+async function openCirById(id){ openOv('ovCir'); await openCirRoom(id); }
+async function cirLoadInfo(id){
+  try { const { data, error } = await sb.rpc('get_circle', { p_id: id }); if (error) throw error; CIR.cur = data || false; CIR.err = data ? '' : 'You are not in this Circle, or it is closed.'; }
+  catch(e) { CIR.cur = false; CIR.err = errMsg(e, 'Could not open it.'); }
+}
+async function openCirRoom(id){
+  cirStop(); CIR.view = 'room'; CIR.cur = null; CIR.msgs = []; CIR.lastId = 0; CIR.rpt = null; openOv('ovCir'); renderCir();
+  await cirLoadInfo(id); if (CIR.cur) await cirPoll(true);
+  renderCir();
+  if (CIR.cur) CIR.timer = setInterval(() => { const ov = document.getElementById('ovCir'); if (!ov || ov.classList.contains('hidden') || CIR.view !== 'room') { cirStop(); return; } cirPoll(false); }, 6000);
+}
+async function openCirInfo(id){
+  cirStop(); CIR.view = 'info'; CIR.rpt = null; openOv('ovCir'); CIR.cur = null; renderCir(); await cirLoadInfo(id); renderCir();
+}
+async function cirPoll(first){
+  const c = CIR.cur; if (!c) return;
+  try {
+    const { data, error } = await sb.rpc('get_circle_messages', { p_id: c.id, p_after: CIR.lastId }); if (error) throw error; if (!data) return;
+    c.status = data.status; c.muted = data.muted;
+    const add = data.messages || []; if (add.length) { CIR.msgs = CIR.msgs.concat(add); CIR.lastId = add[add.length - 1].id; }
+    if (CIR.view === 'room' && (first || add.length)) { const box = $('#cirMsgs'); const atEnd = !box || box.scrollHeight - box.scrollTop - box.clientHeight < 80; renderCirMsgs(); if (box && (first || atEnd)) { const b2 = $('#cirMsgs'); if (b2) b2.scrollTop = b2.scrollHeight; } }
+    else if (CIR.view === 'room') renderCirHead();
+  } catch(e) { if (first) CIR.err = errMsg(e, 'Could not load messages.'); }
+}
+function renderCirHead(){
+  const h = $('#cirNote'); const c = CIR.cur; if (!h || !c) return;
+  h.textContent = c.status === 'frozen' ? '⏸ Paused while moderators review this Circle.' : c.muted ? 'The owner has muted you.' : '';
+}
+function renderCirMsgs(){
+  const box = $('#cirMsgs'); if (!box) return;
+  box.innerHTML = CIR.msgs.length ? CIR.msgs.map(m => '<div class="cr-msg' + (m.mine ? ' me' : '') + '">' + (m.mine ? '' : '<small>' + esc(m.author) + '</small>') + '<div>' + esc(m.body) + '</div><em>' + esc(tAgo(m.at)) + '</em></div>').join('') : '<p class="hc-note">No messages yet. Say hello 👋</p>';
+  renderCirHead();
+}
+function renderCirRoom(){
+  const b = $('#cirBody'), t = $('#cirTitle'); const c = CIR.cur;
+  if (c === null) { t.textContent = 'Circle'; b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  if (c === false) { t.textContent = 'Circle'; b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="cir-back">‹ Back</button><p class="hc-note">' + esc(CIR.err) + '</p>'; return; }
+  t.textContent = c.name;
+  b.innerHTML = '<div class="col-row" style="margin-top:0"><button class="btn btn-ghost btn-sm" data-action="cir-back">‹ Back</button><button class="btn btn-ghost btn-sm" data-action="cir-info">👥 Members &amp; settings</button></div>' +
+    '<div class="cr-box" id="cirMsgs"></div><div class="hc-note" id="cirNote" style="margin:6px 0"></div>' +
+    '<div style="display:flex;gap:8px"><textarea id="cirIn" class="col-in" maxlength="1000" rows="2" placeholder="Write a message…" style="margin:0"></textarea><button class="btn btn-primary" data-action="cir-send">Send</button></div>';
+  renderCirMsgs(); const box = $('#cirMsgs'); if (box) box.scrollTop = box.scrollHeight;
+}
+async function cirSend(){
+  const c = CIR.cur; if (!c || CIR.sending) return; const ta = $('#cirIn'); const body = clean((ta || {}).value).trim(); if (!body) return;
+  if (!checkContentRules(body, 'post')) return; CIR.sending = true;
+  try { const { error } = await sb.rpc('send_circle_message', { p_id: c.id, p_body: body }); if (error) throw error; if (ta) ta.value = ''; await cirPoll(false); const bx = $('#cirMsgs'); if (bx) bx.scrollTop = bx.scrollHeight; }
+  catch(e) { toast(errMsg(e, 'Could not send.'), 'err'); }
+  CIR.sending = false;
+}
+function renderCirInfo(){
+  const b = $('#cirBody'), t = $('#cirTitle'); const c = CIR.cur;
+  if (c === null) { t.textContent = 'Circle'; b.innerHTML = '<p class="hc-note">Loading…</p>'; return; }
+  if (c === false) { t.textContent = 'Circle'; b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="cir-back">‹ Back</button><p class="hc-note">' + esc(CIR.err) + '</p>'; return; }
+  t.textContent = c.name; const owner = c.role === 'owner';
+  let h = '<div class="col-row" style="margin-top:0"><button class="btn btn-ghost btn-sm" data-action="cir-back">‹ All Circles</button><button class="btn btn-primary btn-sm" data-action="cir-room" data-cid="' + esc(c.id) + '">💬 Open chat</button></div>' +
+    (c.description ? '<p class="hc-note" style="margin-top:0">' + esc(c.description) + '</p>' : '') + (c.status === 'frozen' ? '<p class="hc-note">⏸ Paused while moderators review this Circle.</p>' : '');
+  if (owner) {
+    h += '<div class="rw-card"><h3>Invite code</h3><div style="font-size:22px;letter-spacing:3px;font-weight:700;color:var(--text)">' + esc(c.code || '') + '</div><div class="col-row"><button class="btn btn-ghost" data-action="cir-copy">Copy code</button><button class="btn btn-ghost" data-action="cir-newcode">New code</button></div><p class="hc-note" style="margin:0">Share it privately. Everyone who uses it still needs your approval.</p></div>';
+    if ((c.requests || []).length) h += '<div class="rw-card"><h3>Waiting to join (' + c.requests.length + ')</h3>' + c.requests.map(q => '<div class="col-item"><span style="flex:1">' + esc(q.name) + '</span><button class="btn btn-primary btn-sm" data-action="cir-req" data-rid="' + esc(q.id) + '" data-ok="1">Accept</button><button class="btn btn-ghost btn-sm" data-action="cir-req" data-rid="' + esc(q.id) + '" data-ok="0">Decline</button></div>').join('') + '</div>';
+  }
+  h += '<div class="rw-card"><h3>Members (' + (c.members || []).length + '/' + num(c.max_members) + ')</h3>' + (c.members || []).map(m =>
+    '<div class="col-item"><span style="flex:1">' + esc(m.name) + (m.role === 'owner' ? ' 👑' : '') + (m.me ? ' (you)' : '') + (m.muted ? ' · muted' : '') + '</span>' +
+    (!m.me && owner && m.role !== 'owner' ? '<button class="btn btn-ghost btn-sm" data-action="cir-mute" data-n="' + esc(m.name) + '" data-on="' + (m.muted ? '0' : '1') + '">' + (m.muted ? 'Unmute' : 'Mute') + '</button><button class="btn btn-ghost btn-sm" data-action="cir-remove" data-n="' + esc(m.name) + '">Remove</button>' : '') +
+    (!m.me ? '<button class="btn btn-ghost btn-sm" data-action="cir-block" data-n="' + esc(m.name) + '">Block</button>' : '') + '</div>').join('') + '</div>';
+  h += '<div class="col-row">' + (owner ? '<button class="btn btn-ghost" data-action="cir-close">Close this Circle</button>' : '<button class="btn btn-ghost" data-action="cir-leave">Leave</button>') + '<button class="btn btn-ghost" data-action="cir-report">Report</button></div>';
+  if (CIR.rpt) h += '<textarea id="cirRptIn" class="col-in" maxlength="300" rows="3" placeholder="What is wrong? Moderators will see the last 20 messages."></textarea><button class="btn btn-primary btn-block" data-action="cir-report-send">Send report</button>';
+  b.innerHTML = h;
+}
+async function cirAct(action, name, okMsg){
+  const c = CIR.cur; if (!c || CIR.busy) return; CIR.busy = true;
+  try { const { data, error } = await sb.rpc('circle_owner_action', { p_id: c.id, p_action: action, p_name: name || null }); if (error) throw error;
+    if (okMsg) toast(okMsg, 'ok'); CIR.busy = false;
+    if (action === 'close') { await openCircles(); return; }
+    await openCirInfo(c.id); return; }
+  catch(e) { toast(errMsg(e, 'Could not do that.'), 'err'); }
+  CIR.busy = false;
+}
+async function cirRequest(rid, ok){
+  const c = CIR.cur; if (!c || CIR.busy) return; CIR.busy = true;
+  try { const { error } = await sb.rpc('respond_circle_request', { p_request: rid, p_accept: ok }); if (error) throw error; toast(ok ? 'Added to your Circle' : 'Declined', 'ok'); CIR.busy = false; await openCirInfo(c.id); return; }
+  catch(e) { toast(errMsg(e, 'Could not do that.'), 'err'); }
+  CIR.busy = false;
+}
+async function cirBlock(name){
+  const c = CIR.cur; if (!c || CIR.busy || !confirm('Block ' + name + '? You will no longer see their messages in Circles or chats.')) return; CIR.busy = true;
+  try { const { error } = await sb.rpc('circle_block_member', { p_id: c.id, p_name: name }); if (error) throw error; toast('Blocked', 'ok'); }
+  catch(e) { toast(errMsg(e, 'Could not block.'), 'err'); }
+  CIR.busy = false;
+}
+async function cirLeave(){
+  const c = CIR.cur; if (!c || CIR.busy || !confirm('Leave this Circle?')) return; CIR.busy = true;
+  try { const { error } = await sb.rpc('leave_circle', { p_id: c.id }); if (error) throw error; CIR.busy = false; toast('You left the Circle', 'ok'); await openCircles(); return; }
+  catch(e) { toast(errMsg(e, 'Could not leave.'), 'err'); }
+  CIR.busy = false;
+}
+async function cirReportSend(){
+  const c = CIR.cur; if (!c || CIR.busy) return; const reason = clean(($('#cirRptIn') || {}).value).trim();
+  if (reason.length < 3) { toast('Tell us briefly what is wrong.', 'warn'); return; } CIR.busy = true;
+  try { const { error } = await sb.rpc('report_circle', { p_id: c.id, p_name: null, p_reason: reason }); if (error) throw error; toast('Thanks. A moderator will look at it.', 'ok'); CIR.rpt = null; renderCir(); }
+  catch(e) { toast(errMsg(e, 'Could not send the report.'), 'err'); }
+  CIR.busy = false;
+}
+
+/* =====================================================================
    TRENDING
    ===================================================================== */
 async function loadTrending(force){
@@ -2770,7 +2951,7 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
-    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="col-open">📚 Collections</button><button class="btn btn-ghost btn-sm" data-action="qa-open">❓ Questions</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Style</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="col-open">📚 Collections</button><button class="btn btn-ghost btn-sm" data-action="qa-open">❓ Questions</button><button class="btn btn-ghost btn-sm" data-action="cir-open">👥 Circles</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Style</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
     '<div id="pfRep"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
@@ -3779,7 +3960,7 @@ function bindEvents(){
     if (el.tagName === 'A' && a === 'open') e.preventDefault();
     switch (a) {
       case 'open': openPost(pid); break;
-      case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else if (/^#question-/.test(lk)) { const qq = lk.match(/^#question-([0-9a-f-]{36})$/i); if (qq) openQaById(qq[1]); } else if (/^#collection-/.test(lk)) { const cc = lk.match(/^#collection-([0-9a-f-]{36})$/i); if (cc) openColById(cc[1]); } else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
+      case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else if (/^#circle-/.test(lk)) { const cr = lk.match(/^#circle-([0-9a-f-]{36})$/i); if (cr) openCirById(cr[1]); } else if (/^#question-/.test(lk)) { const qq = lk.match(/^#question-([0-9a-f-]{36})$/i); if (qq) openQaById(qq[1]); } else if (/^#collection-/.test(lk)) { const cc = lk.match(/^#collection-([0-9a-f-]{36})$/i); if (cc) openColById(cc[1]); } else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
       case 'gift-open': openGift(pid, cid); break;
       case 'gift-pick': GF.pick = el.dataset.id; renderGift(); break;
       case 'gift-send': sendGiftNow(); break;
@@ -3856,6 +4037,26 @@ function bindEvents(){
       case 'close-ov': closeOv(el.dataset.ov); break;
       case 'type': $$('.type-btn').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed','false'); }); el.classList.add('on'); el.setAttribute('aria-pressed','true'); break;
       case 'submit-post': submitPost(); break;
+      case 'cir-open': openCircles(); break;
+      case 'cir-back': cirStop(); CIR.view = 'list'; CIR.rpt = null; renderCir(); cirLoadList(); break;
+      case 'cir-new': CIR.view = 'new'; renderCir(); break;
+      case 'cir-join': CIR.view = 'join'; renderCir(); break;
+      case 'cir-create': cirCreate(); break;
+      case 'cir-join-send': cirJoin(); break;
+      case 'cir-view': openCirRoom(el.dataset.cid); break;
+      case 'cir-room': openCirRoom(el.dataset.cid); break;
+      case 'cir-info': if (CIR.cur) openCirInfo(CIR.cur.id); break;
+      case 'cir-send': cirSend(); break;
+      case 'cir-copy': try { navigator.clipboard.writeText(CIR.cur.code).then(() => toast('Code copied', 'ok'), () => toast(CIR.cur.code, 'info')); } catch(e) { toast(CIR.cur && CIR.cur.code, 'info'); } break;
+      case 'cir-newcode': if (confirm('Make a new code? The old one stops working.')) cirAct('new_code', null, 'New code ready'); break;
+      case 'cir-req': cirRequest(el.dataset.rid, el.dataset.ok === '1'); break;
+      case 'cir-mute': cirAct(el.dataset.on === '1' ? 'mute' : 'unmute', el.dataset.n, el.dataset.on === '1' ? 'Muted' : 'Unmuted'); break;
+      case 'cir-remove': if (confirm('Remove ' + el.dataset.n + ' from this Circle? They cannot rejoin.')) cirAct('remove', el.dataset.n, 'Removed'); break;
+      case 'cir-block': cirBlock(el.dataset.n); break;
+      case 'cir-close': if (confirm('Close this Circle for everyone? This cannot be undone.')) cirAct('close', null, 'Circle closed'); break;
+      case 'cir-leave': cirLeave(); break;
+      case 'cir-report': CIR.rpt = { name: null }; renderCir(); break;
+      case 'cir-report-send': cirReportSend(); break;
       case 'qa-open': openQa('open'); break;
       case 'qa-filter': QA.filter = el.dataset.f; QA.list = null; renderQa(); qaLoad(); break;
       case 'qa-view': openQaDetail(el.dataset.qid); break;
