@@ -576,7 +576,7 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
   <section id="pg-trending" class="page" aria-labelledby="trTitle">
     <div class="container">
       <div class="page-head"><h1 class="page-title" id="trTitle">Trending</h1><p class="page-sub">The stories everyone is talking about right now.</p></div>
-      <div id="trendWrap"></div>
+      <button class="btn btn-ghost btn-block" data-action="qa-open" style="margin-bottom:14px">❓ Questions &amp; answers from the community</button><div id="trendWrap"></div>
     </div>
   </section>
 
@@ -700,6 +700,14 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
     <button class="m-close" data-action="close-ov" data-ov="ovCol" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     <div class="m-head"><div class="m-icon" aria-hidden="true">📚</div><h2 class="m-title" id="colTitle">Collections</h2></div>
     <div class="m-body" id="colBody"></div>
+  </div>
+</div>
+
+<div id="ovQa" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="qaTitle">
+  <div class="modal">
+    <button class="m-close" data-action="close-ov" data-ov="ovQa" aria-label="Close"><svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="m-head"><div class="m-icon" aria-hidden="true">❓</div><h2 class="m-title" id="qaTitle">Questions</h2></div>
+    <div class="m-body" id="qaBody"></div>
   </div>
 </div>
 
@@ -1214,6 +1222,11 @@ function handleHash(){
     if (mh[2]) openChat(mh[2]); else openMsg('requests');
     return;
   }
+  const mq = location.hash.match(/^#question-([0-9a-f-]{36})$/i);
+  if (mq) {
+    try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
+    openQaById(mq[1]); return;
+  }
   const mc = location.hash.match(/^#collection-([0-9a-f-]{36})$/i);
   if (mc) {
     try { history.replaceState(null, '', location.pathname + location.search); } catch(e){}
@@ -1448,7 +1461,7 @@ async function doGoogle(btn){
 async function doLogout(){
   try { if (sb) await sb.auth.signOut(); } catch(e){}
   resetSession();
-  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovDraft','ovCol','ovStyle','ovSpend'].forEach(closeOv);
+  ['ovAuth','ovPw','ovRpt','ovCrisis','ovQuote','ovOnb','ovWallet','ovName','ovMsg','ovRew','ovGift','ovBoost','ovDraft','ovCol','ovQa','ovStyle','ovSpend'].forEach(closeOv);
   toast('Logged out safely', 'info'); go('home');
 }
 
@@ -2539,6 +2552,145 @@ function colCopyLink(){
 }
 
 /* =====================================================================
+   Q&A (Phase 5, release 4)
+   ===================================================================== */
+const QA = { view: 'list', filter: 'open', list: null, mineAt: null, rules: null, cur: null, err: '', busy: false, bounty: 0, rpt: null };
+function qaRules(){ return QA.rules || { free_per_day: 3, max_per_day: 10, ask_cost: 5, bounties: [10, 20, 50], fee_pct: 10, pick_days: 7, expire_days: 14, best_reward: 2 }; }
+function qaWallet(d){ if (d && d.wallet) { W.wallet = walletFromRow(d.wallet); updateNav(); refreshWalletUI(); loadLedger(true); } }
+async function openQa(filter){
+  QA.filter = filter || 'open'; QA.view = 'list'; QA.list = null; QA.err = ''; QA.rpt = null;
+  openOv('ovQa'); renderQa(); await qaLoad();
+}
+async function qaLoad(){
+  if (QA.filter === 'mine' && !me) { QA.filter = 'open'; }
+  try {
+    const { data, error } = await sb.rpc('get_questions', { p_filter: QA.filter, p_limit: 30, p_offset: 0 }); if (error) throw error;
+    QA.list = data.list || []; QA.rules = data.rules || QA.rules; QA.err = '';
+  } catch(e) { QA.err = errMsg(e, 'Could not load questions.'); QA.list = []; }
+  if (QA.view === 'list') renderQa();
+}
+function qaCardHTML(q){
+  return '<button class="col-card" data-action="qa-view" data-qid="' + esc(q.id) + '"><b>' + (q.bounty > 0 ? '🏆 ' : '') + esc(q.title) + '</b><span>' + esc(q.author) + ' · ' + num(q.answers) + ' answer' + (num(q.answers) === 1 ? '' : 's') +
+    (q.bounty > 0 ? ' · ' + num(q.bounty) + ' HC bounty' : '') + (q.status === 'answered' ? ' · ✓ answered' : q.status === 'closed' ? ' · closed' : '') + ' · ' + esc(tAgo(q.created_at)) + '</span></button>';
+}
+function renderQa(){
+  const b = $('#qaBody'), t = $('#qaTitle'); if (!b) return;
+  if (QA.view === 'ask') { renderQaAsk(); return; }
+  if (QA.view === 'detail') { renderQaDetail(); return; }
+  t.textContent = 'Questions';
+  const tabs = '<div class="col-tabs">' + [['open', 'Open'], ['answered', 'Answered']].concat(me ? [['mine', 'Mine']] : []).map(x => '<button class="col-tab' + (QA.filter === x[0] ? ' on' : '') + '" data-action="qa-filter" data-f="' + x[0] + '">' + x[1] + '</button>').join('') + '</div>';
+  let inner = '';
+  if (QA.err) inner = '<p class="hc-note">' + esc(QA.err) + '</p>';
+  else if (QA.list === null) inner = '<p class="hc-note">Loading…</p>';
+  else if (!QA.list.length) inner = '<p class="hc-note" style="margin-top:0">' + (QA.filter === 'mine' ? 'You have not asked anything yet.' : QA.filter === 'answered' ? 'No answered questions yet.' : 'No open questions right now. Be the first to ask.') + '</p>';
+  else inner = QA.list.map(qaCardHTML).join('');
+  b.innerHTML = tabs + inner + '<button class="btn btn-primary btn-block" data-action="qa-ask">❓ Ask a question</button>';
+}
+async function qaStartAsk(){
+  if (!me) { showAuth('signup'); return; }
+  QA.view = 'ask'; QA.bounty = 0; renderQa();
+  try { const { data, error } = await sb.rpc('get_questions', { p_filter: 'mine', p_limit: 50, p_offset: 0 }); if (error) throw error; QA.mineAt = (data.list || []).map(x => new Date(x.created_at).getTime()); QA.rules = data.rules || QA.rules; }
+  catch(e) { QA.mineAt = null; }
+  if (QA.view === 'ask') renderQa();
+}
+function qaAskCost(){
+  const r = qaRules(); const n = (QA.mineAt || []).filter(x => Date.now() - x < 86400000).length;
+  return (QA.mineAt && n >= r.free_per_day ? num(r.ask_cost) : 0) + num(QA.bounty);
+}
+function renderQaAsk(){
+  const b = $('#qaBody'), t = $('#qaTitle'); t.textContent = 'Ask a question'; const r = qaRules();
+  const keepT = ($('#qaT') || {}).value || '', keepB = ($('#qaB') || {}).value || '', keepG = ($('#qaG') || {}).value || '';
+  const cost = qaAskCost();
+  b.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="qa-back" style="margin-bottom:10px">‹ Back</button>' +
+    '<input id="qaT" class="col-in" maxlength="120" placeholder="Your question (10 to 120 characters)" autocomplete="off"/>' +
+    '<textarea id="qaB" class="col-in" maxlength="1000" rows="4" placeholder="Add details (optional)"></textarea>' +
+    '<input id="qaG" class="col-in" maxlength="60" placeholder="Tags, separated by commas (up to 3)" autocomplete="off"/>' +
+    '<p class="hc-note" style="margin:0 0 6px"><b>Bounty (optional)</b>: held now and paid to the best answer you choose. ' + num(r.fee_pct) + '% is kept as a fee. Returned if nobody answers within ' + num(r.expire_days) + ' days.</p>' +
+    '<div class="col-row">' + [0].concat(r.bounties || []).map(v => '<button class="btn ' + (QA.bounty === v ? 'btn-primary' : 'btn-ghost') + '" data-action="qa-bounty" data-v="' + v + '">' + (v ? v + ' HC' : 'None') + '</button>').join('') + '</div>' +
+    '<p class="hc-note">' + (cost ? 'This will cost <b>' + cost + ' HC</b> in total.' : 'Free. You can ask ' + num(r.free_per_day) + ' questions a day for free.') + ' Use no names, links, emails or phone numbers.</p>' +
+    '<div class="hc-msg" id="qaMsg" aria-live="polite"></div><button class="btn btn-primary btn-block" data-action="qa-submit-ask">Post question</button>';
+  $('#qaT').value = keepT; $('#qaB').value = keepB; $('#qaG').value = keepG;
+}
+async function qaSubmitAsk(force){
+  if (QA.busy) return; const title = clean(($('#qaT') || {}).value).trim(), body = clean(($('#qaB') || {}).value).trim(), m = $('#qaMsg');
+  const tags = clean(($('#qaG') || {}).value).split(',').map(x => x.trim().toLowerCase().replace(/^#/, '')).filter(Boolean).slice(0, 3);
+  if (title.length < 10) { if (m) { m.textContent = 'Write your question in at least 10 characters.'; m.className = 'hc-msg bad'; } return; }
+  if (!checkContentRules(title + ' ' + body, 'post')) return;
+  if (force !== true && SENSITIVE_RE.test(title + ' ' + body)) { showCrisis(() => qaSubmitAsk(true)); return; }
+  const cost = qaAskCost();
+  if (cost > 0 && !(await confirmSpend({ title: 'Post question', cost, action: 'Post', note: QA.bounty ? 'The bounty is held until you choose the best answer.' : '' }))) return;
+  QA.busy = true;
+  try {
+    const { data, error } = await sb.rpc('ask_question', { p_title: title, p_body: body, p_tags: tags, p_bounty: QA.bounty, p_key: newKey('qa') }); if (error) throw error;
+    qaWallet(data); toast('Question posted ❓', 'ok'); QA.busy = false; QA.mineAt = null; await openQaDetail(data.id); return;
+  } catch(e) { const m2 = $('#qaMsg'); if (m2) { m2.textContent = errMsg(e, 'Could not post your question.'); m2.className = 'hc-msg bad'; } }
+  QA.busy = false;
+}
+async function openQaById(id){ openOv('ovQa'); await openQaDetail(id); }
+async function openQaDetail(id){
+  QA.view = 'detail'; QA.cur = null; QA.rpt = null; QA.err = ''; openOv('ovQa'); renderQa();
+  try { const { data, error } = await sb.rpc('get_question', { p_id: id }); if (error) throw error; QA.cur = data || false; }
+  catch(e) { QA.cur = false; QA.err = errMsg(e, 'Could not open it.'); }
+  renderQa();
+}
+function renderQaDetail(){
+  const b = $('#qaBody'), t = $('#qaTitle'); const q = QA.cur; const r = qaRules();
+  const back = '<button class="btn btn-ghost btn-sm" data-action="qa-back" style="margin-bottom:10px">‹ Back</button>';
+  if (q === null) { t.textContent = 'Question'; b.innerHTML = back + '<p class="hc-note">Loading…</p>'; return; }
+  if (q === false) { t.textContent = 'Question'; b.innerHTML = back + '<p class="hc-note">' + esc(QA.err || 'This question is not available.') + '</p>'; return; }
+  t.textContent = 'Question';
+  const keepA = ($('#qaA') || {}).value || '';
+  let h = back + '<h3 style="margin:0 0 6px;font-size:16px;color:var(--text);word-break:break-word">' + esc(q.title) + '</h3>' + (q.body ? '<p class="hc-note" style="margin:0 0 8px;white-space:pre-wrap">' + esc(q.body) + '</p>' : '') +
+    '<p class="hc-note" style="margin:0 0 8px">' + esc(q.author) + ' · ' + esc(tAgo(q.created_at)) + (q.bounty > 0 ? ' · 🏆 ' + num(q.bounty) + ' HC bounty' : '') +
+    (q.status === 'answered' ? ' · ✓ answered' : q.status === 'closed' ? ' · closed' : '') + (q.hidden ? ' · hidden by a moderator' : '') + '</p>' +
+    ((q.tags || []).length ? '<div class="c-tags" style="margin-bottom:8px">' + q.tags.map(x => '<span class="tag">' + esc(x) + '</span>').join('') + '</div>' : '');
+  if (q.is_asker && q.status === 'open' && (q.answers || []).length) h += '<p class="hc-note">Choose the best answer' + (q.bounty > 0 ? ' to pay the bounty' : '') + '. If you do not, the most helpful answer wins after ' + num(r.pick_days) + ' days.</p>';
+  h += (q.answers || []).length ? q.answers.map(a =>
+    '<div class="rw-card" style="margin-bottom:10px">' + (a.best ? '<div class="hc-note" style="margin:0 0 4px;color:var(--green)">✓ Best answer</div>' : '') +
+    '<div style="white-space:pre-wrap;word-break:break-word;color:var(--text);font-size:14px">' + esc(a.body) + '</div>' +
+    '<div class="hc-note" style="margin:6px 0 0">' + esc(a.author) + ' · ' + esc(tAgo(a.created_at)) + '</div>' +
+    '<div class="col-row" style="margin:8px 0 0">' +
+      (a.mine ? '' : '<button class="btn ' + (a.i_marked ? 'btn-primary' : 'btn-ghost') + '" data-action="qa-helpful" data-aid="' + esc(a.id) + '">👍 Helpful · ' + num(a.helpful) + '</button>') +
+      (a.mine ? '<span class="hc-note" style="margin:0">👍 ' + num(a.helpful) + '</span>' : '') +
+      (q.is_asker && q.status === 'open' ? '<button class="btn btn-ghost" data-action="qa-best" data-aid="' + esc(a.id) + '">Choose as best</button>' : '') +
+      (!a.mine && !a.reported ? '<button class="btn btn-ghost" data-action="qa-report" data-type="answer" data-id="' + esc(a.id) + '">Report</button>' : '') + '</div></div>').join('') : '<p class="hc-note">No answers yet.</p>';
+  if (!q.is_asker && q.status === 'open' && !q.i_answered && me) {
+    h += '<textarea id="qaA" class="col-in" maxlength="1500" rows="4" placeholder="Write your answer (20 to 1500 characters). Be kind and specific."></textarea><div class="hc-msg" id="qaMsg" aria-live="polite"></div><button class="btn btn-primary btn-block" data-action="qa-answer-send">Send answer</button>';
+  } else if (!me && q.status === 'open') h += '<button class="btn btn-primary btn-block" data-action="auth-signup">Join to answer</button>';
+  else if (q.i_answered && q.status === 'open') h += '<p class="hc-note">You answered this question.</p>';
+  if (!q.is_asker && me && !q.reported) h += '<button class="btn btn-ghost btn-sm" style="margin-top:10px" data-action="qa-report" data-type="question" data-id="' + esc(q.id) + '">Report this question</button>';
+  if (QA.rpt) h += '<textarea id="qaRptIn" class="col-in" maxlength="300" rows="3" style="margin-top:10px" placeholder="What is wrong?"></textarea><button class="btn btn-primary btn-block" data-action="qa-report-send">Send report</button>';
+  b.innerHTML = h; const ta = $('#qaA'); if (ta) ta.value = keepA;
+}
+async function qaSendAnswer(){
+  const q = QA.cur; if (!q || QA.busy) return; const body = clean(($('#qaA') || {}).value).trim(), m = $('#qaMsg');
+  if (body.length < 20) { if (m) { m.textContent = 'Write at least 20 characters.'; m.className = 'hc-msg bad'; } return; }
+  if (!checkContentRules(body, 'post')) return; QA.busy = true;
+  try { const { error } = await sb.rpc('answer_question', { p_q: q.id, p_body: body }); if (error) throw error; toast('Answer sent 💬', 'ok'); QA.busy = false; await openQaDetail(q.id); return; }
+  catch(e) { const m2 = $('#qaMsg'); if (m2) { m2.textContent = errMsg(e, 'Could not send your answer.'); m2.className = 'hc-msg bad'; } }
+  QA.busy = false;
+}
+async function qaHelpful(aid){
+  const q = QA.cur; if (!q || QA.busy) return; if (!me) { showAuth('signup'); return; } QA.busy = true;
+  try { const { data, error } = await sb.rpc('mark_helpful', { p_answer: aid }); if (error) throw error; const a = (q.answers || []).find(x => x.id === aid); if (a) { a.i_marked = data.on; a.helpful = num(data.helpful); } renderQa(); }
+  catch(e) { toast(errMsg(e, 'Could not do that.'), 'err'); }
+  QA.busy = false;
+}
+async function qaPickBest(aid){
+  const q = QA.cur; if (!q || QA.busy || !confirm('Choose this as the best answer?' + (q.bounty > 0 ? ' The bounty will be paid and cannot be taken back.' : ''))) return; QA.busy = true;
+  try { const { error } = await sb.rpc('pick_best_answer', { p_q: q.id, p_answer: aid }); if (error) throw error; toast('Best answer chosen ✓', 'ok'); QA.busy = false; await openQaDetail(q.id); return; }
+  catch(e) { toast(errMsg(e, 'Could not choose that.'), 'err'); }
+  QA.busy = false;
+}
+async function qaReportSend(){
+  const q = QA.cur; if (!q || !QA.rpt || QA.busy) return; const reason = clean(($('#qaRptIn') || {}).value).trim();
+  if (reason.length < 3) { toast('Tell us briefly what is wrong.', 'warn'); return; } QA.busy = true;
+  try { const { error } = await sb.rpc('report_qa', { p_type: QA.rpt.type, p_id: QA.rpt.id, p_reason: reason }); if (error) throw error; toast('Thanks. A moderator will look at it.', 'ok'); QA.busy = false; QA.rpt = null; await openQaDetail(q.id); return; }
+  catch(e) { toast(errMsg(e, 'Could not send the report.'), 'err'); }
+  QA.busy = false;
+}
+
+/* =====================================================================
    TRENDING
    ===================================================================== */
 async function loadTrending(force){
@@ -2618,7 +2770,7 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
-    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="col-open">📚 Collections</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Style</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="col-open">📚 Collections</button><button class="btn btn-ghost btn-sm" data-action="qa-open">❓ Questions</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Style</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
     '<div id="pfRep"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
@@ -3627,7 +3779,7 @@ function bindEvents(){
     if (el.tagName === 'A' && a === 'open') e.preventDefault();
     switch (a) {
       case 'open': openPost(pid); break;
-      case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else if (/^#collection-/.test(lk)) { const cc = lk.match(/^#collection-([0-9a-f-]{36})$/i); if (cc) openColById(cc[1]); } else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
+      case 'open-notif': { const lk = el.dataset.link || ''; const m = lk.match(/#post-([A-Za-z0-9-]+)/); if (m) openPost(m[1]); else if (/^#requests/.test(lk)) openMsg('requests'); else if (/^#question-/.test(lk)) { const qq = lk.match(/^#question-([0-9a-f-]{36})$/i); if (qq) openQaById(qq[1]); } else if (/^#collection-/.test(lk)) { const cc = lk.match(/^#collection-([0-9a-f-]{36})$/i); if (cc) openColById(cc[1]); } else { const c = lk.match(/^#chat-([0-9a-f-]{36})$/i); if (c) openChat(c[1]); } break; }
       case 'gift-open': openGift(pid, cid); break;
       case 'gift-pick': GF.pick = el.dataset.id; renderGift(); break;
       case 'gift-send': sendGiftNow(); break;
@@ -3704,6 +3856,18 @@ function bindEvents(){
       case 'close-ov': closeOv(el.dataset.ov); break;
       case 'type': $$('.type-btn').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-pressed','false'); }); el.classList.add('on'); el.setAttribute('aria-pressed','true'); break;
       case 'submit-post': submitPost(); break;
+      case 'qa-open': openQa('open'); break;
+      case 'qa-filter': QA.filter = el.dataset.f; QA.list = null; renderQa(); qaLoad(); break;
+      case 'qa-view': openQaDetail(el.dataset.qid); break;
+      case 'qa-back': QA.view = 'list'; QA.rpt = null; renderQa(); qaLoad(); break;
+      case 'qa-ask': qaStartAsk(); break;
+      case 'qa-bounty': QA.bounty = parseInt(el.dataset.v, 10) || 0; renderQa(); break;
+      case 'qa-submit-ask': qaSubmitAsk(); break;
+      case 'qa-answer-send': qaSendAnswer(); break;
+      case 'qa-helpful': qaHelpful(el.dataset.aid); break;
+      case 'qa-best': qaPickBest(el.dataset.aid); break;
+      case 'qa-report': QA.rpt = { type: el.dataset.type, id: el.dataset.id }; renderQa(); break;
+      case 'qa-report-send': qaReportSend(); break;
       case 'col-open': openCollections('mine'); break;
       case 'col-save-post': openColPicker(el.dataset.pid); break;
       case 'col-tab': COL.tab = el.dataset.tab; COL.view = 'list'; COL.form = null; renderCol(); colLoadTab(); break;
