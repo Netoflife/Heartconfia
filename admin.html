@@ -185,9 +185,32 @@ async function viewReports(v){
         return '<div class="m" style="margin:4px 0"><b>' + (m.from === 'reporter' ? esc(r.reporter_name) : esc(r.reported_name)) + ':</b> ' + esc(m.body) + '</div>'; }).join('') + '</div>' +
       '<div class="row"><button class="b g" data-cr="dismiss" data-id="' + esc(r.id) + '">Looks fine</button><button class="b d" data-cr="restrict" data-id="' + esc(r.id) + '">Switch off their messaging</button></div></div>';
   }).join('') : '';
+  var colRows = []; try { colRows = await rpc('admin_list_collection_reports'); } catch(e){ colRows = []; }
+  if (colRows.length) chatHtml += '<h2 style="margin-top:22px">Collection reports (' + colRows.length + ')</h2>' + colRows.map(function(r){
+    return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span>' + (r.hidden ? '<span class="tag">hidden</span>' : '') + (r.is_public ? '' : '<span class="tag">now private</span>') + '</div>' +
+      '<div class="t" style="margin-top:6px">' + esc(r.name) + '</div><div class="m">by ' + esc(r.owner_name) + (r.note ? ' · ' + esc(r.note) : '') + '</div>' +
+      '<div class="m" style="margin-top:4px">Stories: ' + esc((r.items || []).join(' · ') || 'none') + '</div><div class="m">Reasons: ' + esc((r.reasons || []).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
+      '<div class="row"><button class="b g" data-col="dismiss" data-id="' + esc(r.id) + '">Looks fine (show again)</button><button class="b" data-col="hide" data-id="' + esc(r.id) + '">Keep hidden</button><button class="b d" data-col="private" data-id="' + esc(r.id) + '">Make private</button></div></div>';
+  }).join('');
+  var qa = { reports: [], pairs: [] }; try { qa = await rpc('admin_list_qa_reports'); } catch(e){}
+  if ((qa.reports || []).length) chatHtml += '<h2 style="margin-top:22px">Q&A reports (' + qa.reports.length + ')</h2>' + qa.reports.map(function(r){
+    return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span><span class="tag">' + esc(r.type) + '</span>' + (r.hidden ? '<span class="tag">hidden</span>' : '') + '</div>' +
+      '<div class="t" style="margin-top:6px">' + esc(r.text) + '</div><div class="m">Reasons: ' + esc((r.reasons || []).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
+      '<div class="row"><button class="b g" data-qa="dismiss" data-type="' + esc(r.type) + '" data-id="' + esc(r.id) + '">Looks fine (show again)</button><button class="b d" data-qa="hide" data-type="' + esc(r.type) + '" data-id="' + esc(r.id) + '">Keep hidden</button></div></div>';
+  }).join('');
+  if ((qa.pairs || []).length) chatHtml += '<h3 style="margin-top:22px">Q&A: possible reward farming</h3><p class="hint">These pairs chose each other as best answer 3 or more times in 30 days.</p>' + qa.pairs.map(function(p){
+    return '<div class="card"><div class="t">' + esc(p.asker) + ' ⇄ ' + esc(p.answerer) + '</div><div class="m">' + p.n + ' times</div></div>'; }).join('');
+  var cirRows = []; try { cirRows = await rpc('admin_list_circle_reports'); } catch(e){ cirRows = []; }
+  if (cirRows.length) chatHtml += '<h2 style="margin-top:22px">Circle reports (' + cirRows.length + ')</h2>' + cirRows.map(function(r){
+    return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span><span class="tag">' + esc(r.status) + '</span><span class="tag">' + r.members + ' members</span></div>' +
+      '<div class="t" style="margin-top:6px">' + esc(r.name) + '</div><div class="m">owner ' + esc(r.owner || '?') + (r.description ? ' · ' + esc(r.description) : '') + '</div>' +
+      '<div class="m" style="margin-top:4px">Reasons: ' + esc((r.reasons || []).map(function(x){ return x.reason + (x.target ? ' (about ' + x.target + ')' : ''); }).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
+      '<div style="margin:8px 0;max-height:220px;overflow:auto;padding:8px;border-radius:10px;background:var(--bg2,#0003)">' + (r.snapshot || []).map(function(m){ return '<div class="m" style="margin:4px 0"><b>' + esc(m.from) + ':</b> ' + esc(m.body) + '</div>'; }).join('') + '</div>' +
+      '<div class="row"><button class="b g" data-cir="dismiss" data-id="' + esc(r.id) + '">Looks fine (unpause)</button><button class="b" data-cir="freeze" data-id="' + esc(r.id) + '">Keep paused</button><button class="b d" data-cir="close" data-id="' + esc(r.id) + '">Close Circle</button></div></div>';
+  }).join('');
   var al = null; try { al = await rpc('admin_align_config'); } catch(e){ al = null; }
   var wordsHtml = al ? '<h3 style="margin-top:22px">Blocked words in private messages</h3><p class="hint">Notes and chats containing any of these words are refused. A first note can never contain links, emails or phone numbers.</p><div class="card"><div class="row" id="bwlist">' + al.words.map(function(w){ return '<span class="tag">' + esc(w) + ' <a href="#" data-bw="' + esc(w) + '" style="margin-left:4px">✕</a></span>'; }).join('') + '</div><div class="two" style="margin-top:8px"><div><input id="bwin" maxlength="40" placeholder="Add a word or phrase"/></div><div><button class="b p" id="bwadd">Add</button></div></div></div>' : '';
-  if (!rows.length && !crows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>' + wordsHtml; wireWords(v); return; }
+  if (!rows.length && !crows.length && !colRows.length && !(qa.reports || []).length && !(qa.pairs || []).length && !cirRows.length) { v.innerHTML = '<h2>Reports</h2><div class="empty">🎉 Nothing waiting. All clear.</div>' + wordsHtml; wireWords(v); return; }
   v.innerHTML = (rows.length ? '<h2>Reports waiting (' + rows.length + ')</h2>' : '') + rows.map(function(r){
     return '<div class="card"><div class="row"><span class="tag ' + (r.n >= 3 ? 'red' : 'gold') + '">' + r.n + ' report' + (r.n > 1 ? 's' : '') + '</span><span class="tag">' + esc(r.type) + '</span>' + (r.hidden ? '<span class="tag red">hidden</span>' : '') + '</div>' +
       '<div class="t" style="margin-top:8px">' + esc(r.preview || '(content already removed)') + '</div><div class="m">Reasons: ' + esc((r.reasons || []).join(' · ')) + ' · ' + ago(r.last_at) + '</div>' +
@@ -196,6 +219,17 @@ async function viewReports(v){
       (r.post_id ? '<a class="b" style="text-decoration:none;color:var(--text)" target="_blank" rel="noopener" href="/#post-' + esc(r.post_id) + '">View</a>' : '') + '</div></div>';
   }).join('') + chatHtml + wordsHtml;
   wireWords(v);
+  on(v, '[data-cir]', function(b){
+    if (b.dataset.cir === 'close' && !confirm('Close this Circle for everyone?')) return;
+    act(function(){ return rpc('admin_review_circle', { p_id: b.dataset.id, p_action: b.dataset.cir }); }, 'Done').then(render);
+  });
+  on(v, '[data-qa]', function(b){
+    act(function(){ return rpc('admin_review_qa', { p_type: b.dataset.type, p_id: b.dataset.id, p_action: b.dataset.qa }); }, 'Done').then(render);
+  });
+  on(v, '[data-col]', function(b){
+    if (b.dataset.col === 'private' && !confirm('Switch this collection to private? Followers are removed.')) return;
+    act(function(){ return rpc('admin_review_collection', { p_id: b.dataset.id, p_action: b.dataset.col }); }, 'Done').then(render);
+  });
   on(v, '[data-cr]', function(b){
     if (b.dataset.cr === 'restrict' && !confirm('Switch off private messaging for this person?')) return;
     act(function(){ return rpc('admin_review_msg_report', { p_id: b.dataset.id, p_action: b.dataset.cr }); }, 'Done').then(render);
