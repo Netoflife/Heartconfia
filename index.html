@@ -522,6 +522,23 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 
 .site-foot{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;padding:28px 0 8px;font-size:12.5px;color:var(--t3)}
 .site-foot a{color:var(--t3);text-decoration:underline;text-underline-offset:3px}
+
+.ib-seg{display:flex;gap:4px;background:var(--card,#151017);border:1px solid var(--line,#2a2030);border-radius:24px;padding:3px;margin-bottom:12px}
+.ib-tab{flex:1;min-height:40px;border-radius:20px;border:0;background:transparent;color:var(--t3,#b8a6af);font:inherit;font-size:14px;cursor:pointer}
+.ib-tab.on{background:rgba(242,72,111,.16);color:var(--rose,#ff9fb4);font-weight:700}
+.ib-n{font-style:normal;display:inline-block;min-width:18px;height:18px;line-height:18px;border-radius:9px;background:#d92f59;color:#fff;font-size:11px;font-weight:700;padding:0 5px;text-align:center}
+.ib-req{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:rgba(150,110,255,.1);border:1px solid rgba(150,110,255,.3);border-radius:16px;padding:12px 14px;margin-bottom:12px;color:inherit;font:inherit;cursor:pointer}
+.ib-req b{display:block;font-size:14px}.ib-req small{color:var(--t3,#b8a6af);font-size:12px}.ib-go{margin-left:auto;color:var(--rose,#ff9fb4);font-weight:700;font-size:12px}
+.ex-head{display:flex;align-items:center;gap:10px}.ex-head .tr-sec-title{flex:1;margin:0}
+.ex-more{background:none;border:0;color:var(--rose,#ff9fb4);font:inherit;font-size:12px;font-weight:700;min-height:36px;cursor:pointer}
+.ex-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px}
+.ex-mini{flex:none;width:160px;text-align:left;border-radius:14px;background:var(--card,#1d1620);border:1px solid var(--line,#2a2030);padding:10px;color:inherit;font:inherit;cursor:pointer}
+.ex-mini b{display:block;font-size:14px;margin-bottom:4px}.ex-mini span{font-size:12px;color:var(--t3,#b8a6af)}
+.ex-join{display:flex;align-items:center;gap:10px;background:rgba(150,110,255,.1);border:1px solid rgba(150,110,255,.3);border-radius:16px;padding:12px 14px}
+.ex-join b{display:block;font-size:14px}.ex-join small{font-size:12px;color:var(--t3,#b8a6af)}.ex-join .btn{margin-left:auto}
+.pf-list{background:var(--card,#151017);border:1px solid var(--line,#2a2030);border-radius:16px;overflow:hidden}
+.pf-row{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:48px;padding:0 14px;background:transparent;border:0;border-bottom:1px solid var(--line,#2a2030);color:inherit;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.pf-row:last-child{border-bottom:0}.pf-chev{color:var(--t3,#b8a6af);font-size:18px}
 </style>
 </head>
 <body>
@@ -578,8 +595,8 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 
   <section id="pg-trending" class="page" aria-labelledby="trTitle">
     <div class="container">
-      <div class="page-head"><h1 class="page-title" id="trTitle">Trending</h1><p class="page-sub">The stories everyone is talking about right now.</p></div>
-      <button class="btn btn-ghost btn-block" data-action="qa-open" style="margin-bottom:14px">❓ Questions &amp; answers from the community</button><div id="trendWrap"></div>
+      <div class="page-head"><h1 class="page-title" id="trTitle">Explore</h1><p class="page-sub">Trending stories, questions, collections and Circles.</p></div>
+      <div id="trendWrap"></div><div id="exWrap"></div>
     </div>
   </section>
 
@@ -592,8 +609,8 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 
   <section id="pg-notifications" class="page" aria-labelledby="nfTitle">
     <div class="container">
-      <div class="page-head"><h1 class="page-title" id="nfTitle">Alerts</h1></div>
-      <div id="nfWrap"></div>
+      <div class="page-head"><h1 class="page-title" id="nfTitle">Inbox</h1></div>
+      <div id="nfTabs"></div><div id="nfWrap"></div>
     </div>
   </section>
 
@@ -616,10 +633,10 @@ h1,h2,h3{font-family:var(--fd);font-weight:700}
 
 <nav id="bottomnav" aria-label="Main">
   <button class="ntab active" data-page="home" aria-label="Feed" aria-current="page"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>Feed</button>
-  <button class="ntab" data-page="trending" aria-label="Trending"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>Trending</button>
+  <button class="ntab" data-page="trending" aria-label="Explore"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="16 8 14 14 8 16 10 10"/></svg>Explore</button>
   <button class="ntab-plus" data-page="confess" aria-label="Share a confession"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
-  <button class="ntab" data-page="notifications" aria-label="Alerts" id="navNotifBtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>Alerts<span class="ntab-badge hidden" id="notifBadge"></span></button>
-  <button class="ntab" data-page="profile" aria-label="Profile"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</button>
+  <button class="ntab" data-page="notifications" aria-label="Inbox" id="navNotifBtn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Inbox<span class="ntab-badge hidden" id="notifBadge"></span></button>
+  <button class="ntab" data-page="profile" aria-label="Me"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Me</button>
 </nav>
 
 <div id="ovAuth" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
@@ -1198,9 +1215,9 @@ function go(next){
   page = next;
   switch (next) {
     case 'home': renderFeed(); renderHomeExtras(); break;
-    case 'trending': loadTrending(); break;
+    case 'trending': loadTrending(); loadExplore(); break;
     case 'confess': renderConfess(); break;
-    case 'notifications': renderNotifs(); markNotifsRead(); break;
+    case 'notifications': renderNotifs(); loadInboxMsgs(); if (INB.tab !== 'messages') markNotifsRead(); break;
     case 'profile': renderProfile(); break;
     case 'resources': renderResources(); break;
     case 'swipe': loadSwipe(); break;
@@ -1210,7 +1227,7 @@ function go(next){
 function rerenderCurrent(){
   switch (page) {
     case 'home': renderFeed(); renderHomeExtras(); break;
-    case 'trending': loadTrending(true); break;
+    case 'trending': loadTrending(true); loadExplore(true); break;
     case 'confess': renderConfess(); break;
     case 'notifications': renderNotifs(); break;
     case 'profile': renderProfile(); break;
@@ -1485,7 +1502,7 @@ async function doLogout(){
 function updateNav(){
   const r = $('#navRight'); if (!r) return;
   if (me && me.username) {
-    r.innerHTML = '<button class="msg-chip" data-action="msg-open" aria-label="Private messages' + (msgBadge() ? ', ' + msgBadge() + ' new' : '') + '">✉' + (msgBadge() ? '<span class="mbadge">' + (msgBadge() > 9 ? '9+' : msgBadge()) + '</span>' : '') + '</button>' + (W.wallet ? '<button class="hc-chip" data-action="open-wallet" aria-label="Heart Credits: ' + hcTotal() + '">💎 ' + fmt(hcTotal()) + '</button>' : '') + '<button class="ava-btn' + (unread > 0 ? ' has-notif' : '') + '" data-page="profile" aria-label="Profile">' + esc(me.username.slice(0,2).toUpperCase()) + '</button>';
+    r.innerHTML = (W.wallet ? '<button class="hc-chip" data-action="open-wallet" aria-label="Heart Credits: ' + hcTotal() + '">💎 ' + fmt(hcTotal()) + '</button>' : '') + '<button class="ava-btn' + (unread > 0 ? ' has-notif' : '') + '" data-page="profile" aria-label="Profile">' + esc(me.username.slice(0,2).toUpperCase()) + '</button>';
   } else {
     r.innerHTML = '<button class="btn btn-ghost btn-sm" data-action="auth-login">Log in</button><button class="btn btn-primary btn-sm" data-action="auth-signup">Join free</button>';
   }
@@ -2241,7 +2258,7 @@ function updateCounters(){
 function renderConfess(){
   const w = $('#cfWrap'); if (!w) return;
   if (!me) { w.innerHTML = '<div class="empty"><div class="empty-ic">🔒</div><p>Join to share your story anonymously.</p><button class="btn btn-primary" data-action="auth-signup">Create free account</button></div>'; return; }
-  w.innerHTML = '<div class="cf-form"><div class="type-row" role="group" aria-label="Post type"><button class="type-btn on" data-action="type" data-type="confession" aria-pressed="true">💔 Confession</button><button class="type-btn" data-action="type" data-type="advice" aria-pressed="false">🧠 Advice</button><button class="type-btn" data-action="type" data-type="debate" aria-pressed="false">⚖️ Debate</button></div>' +
+  w.innerHTML = '<div class="ib-seg" style="margin-bottom:12px"><button class="ib-tab on" data-action="cf-story">Story</button><button class="ib-tab" data-action="cf-question">Question</button><button class="ib-tab" data-action="draft-list" style="flex:0 0 auto;padding:0 14px">📂 Drafts</button></div><div class="cf-form"><div class="type-row" role="group" aria-label="Post type"><button class="type-btn on" data-action="type" data-type="confession" aria-pressed="true">💔 Confession</button><button class="type-btn" data-action="type" data-type="advice" aria-pressed="false">🧠 Advice</button><button class="type-btn" data-action="type" data-type="debate" aria-pressed="false">⚖️ Debate</button></div>' +
     '<label class="sr" for="ptitle">Title</label><input type="text" class="ti" id="ptitle" placeholder="A title that stops the scroll…" maxlength="' + LIM.title + '" autocomplete="off"/><div class="cc" id="cc">0 / ' + LIM.title + '</div>' +
     '<label class="sr" for="pbody">Your story</label><textarea class="ta" id="pbody" placeholder="Tell your story. Be specific, the details are what make people feel it…" maxlength="' + LIM.storyMax + '"></textarea><div class="cc" id="bodyCC">0 / ' + LIM.storyMax + ' (min ' + LIM.story + ')</div>' +
     '<label class="sr" for="ptags">Tags</label><input type="text" class="tags-i" id="ptags" placeholder="Tags: cheating, breakup, trust" autocomplete="off"/><div class="hint">Use 2 to 5 tags, separated by commas.</div>' +
@@ -2904,18 +2921,65 @@ async function loadTrending(force){
   } catch(e) { console.error(e); w.innerHTML = '<div class="empty"><div class="empty-ic">📡</div><p>' + esc(errMsg(e, 'Could not load trending.')) + '</p><button class="btn btn-primary" data-action="retry-trending">Try again</button></div>'; delete w.dataset.ready; }
 }
 
+
+/* =====================================================================
+   EXPLORE EXTRAS (menu release): questions, collections, circles
+   ===================================================================== */
+const EX = { qs: null, cols: null, at: 0 };
+async function loadExplore(force){
+  const w = $('#exWrap'); if (!w || !sb) return;
+  if (!force && EX.qs && Date.now() - EX.at < 60000) { renderExplore(); return; }
+  renderExplore();
+  try {
+    const [q, c] = await Promise.all([sb.rpc('get_questions', { p_filter: 'open', p_limit: 3, p_offset: 0 }), sb.rpc('get_public_collections', { p_limit: 6, p_offset: 0 })]);
+    EX.qs = (q.data && q.data.list) || []; EX.cols = c.data || []; EX.at = Date.now();
+  } catch(e) { EX.qs = EX.qs || []; EX.cols = EX.cols || []; }
+  if (page === 'trending') renderExplore();
+}
+function renderExplore(){
+  const w = $('#exWrap'); if (!w) return;
+  const qs = EX.qs, cols = EX.cols;
+  let h = '<div class="tr-sec"><div class="ex-head"><h2 class="tr-sec-title">❓ Questions</h2><button class="ex-more" data-action="qa-open">See all</button><button class="ex-more" data-action="cf-question">Ask one</button></div>' +
+    (qs === null ? '<p class="hc-note">Loading…</p>' : qs.length ? qs.map(qaCardHTML).join('') : '<p class="hc-note">No open questions yet. Be the first to ask.</p>') + '</div>';
+  h += '<div class="tr-sec"><div class="ex-head"><h2 class="tr-sec-title">📚 Collections</h2><button class="ex-more" data-action="ex-discover">Discover</button></div>' +
+    (cols === null ? '<p class="hc-note">Loading…</p>' : cols.length ? '<div class="ex-row">' + cols.map(c => '<button class="ex-mini" data-action="col-view" data-cid="' + esc(c.id) + '"><b>' + esc(c.name) + '</b><span>' + num(c.items) + ' stories · ' + num(c.followers) + ' followers</span></button>').join('') + '</div>' : '<p class="hc-note">No public collections yet.</p>') + '</div>';
+  h += '<div class="tr-sec"><div class="ex-head"><h2 class="tr-sec-title">👥 Circles</h2><button class="ex-more" data-action="cir-open">My Circles</button></div>' +
+    '<div class="ex-join"><div><b>Have a Circle code?</b><small>Private groups. The owner approves you.</small></div><button class="btn btn-primary btn-sm" data-action="ex-cir-join">Join</button></div></div>';
+  w.innerHTML = h;
+}
+
 /* =====================================================================
    NOTIFICATIONS
    ===================================================================== */
+function inboxTotal(){ return num(unread) + (typeof msgBadge === 'function' ? msgBadge() : 0); }
 function updateNotifBadge(){
-  const b = $('#notifBadge'); if (!b) return;
-  if (unread > 0) { b.classList.remove('hidden'); b.textContent = unread > 9 ? '9+' : String(unread); } else b.classList.add('hidden');
+  const b = $('#notifBadge'); if (!b) return; const n = inboxTotal();
+  if (n > 0) { b.classList.remove('hidden'); b.textContent = n > 9 ? '9+' : String(n); } else b.classList.add('hidden');
 }
+const INB = { tab: null };
 function renderNotifs(){
-  const w = $('#nfWrap'); if (!w) return;
-  if (!me) { w.innerHTML = '<div class="empty"><div class="empty-ic">🔔</div><p>Log in to see your alerts.</p><button class="btn btn-primary btn-sm" data-action="auth-login">Log in</button></div>'; return; }
+  const w = $('#nfWrap'); if (!w) return; const tb = $('#nfTabs');
+  if (!me) { if (tb) tb.innerHTML = ''; w.innerHTML = '<div class="empty"><div class="empty-ic">🔔</div><p>Log in to see your inbox.</p><button class="btn btn-primary btn-sm" data-action="auth-login">Log in</button></div>'; return; }
+  if (!INB.tab) INB.tab = (num(unread) === 0 && msgBadge() > 0) ? 'messages' : 'alerts';
+  const mb = msgBadge();
+  if (tb) tb.innerHTML = '<div class="ib-seg" role="tablist"><button class="ib-tab' + (INB.tab === 'alerts' ? ' on' : '') + '" role="tab" data-action="inbox-tab" data-tab="alerts">Alerts' + (num(unread) ? ' <i class="ib-n">' + num(unread) + '</i>' : '') + '</button><button class="ib-tab' + (INB.tab === 'messages' ? ' on' : '') + '" role="tab" data-action="inbox-tab" data-tab="messages">Messages' + (mb ? ' <i class="ib-n">' + mb + '</i>' : '') + '</button></div>';
+  if (INB.tab === 'messages') { renderInboxMsgs(w); return; }
   if (!NOTIFS.length) { w.innerHTML = '<div class="empty"><div class="empty-ic">🔔</div><p>Nothing yet. Replies, closed verdicts and story updates will show up here.</p></div>'; return; }
-  w.innerHTML = NOTIFS.map(n => '<button class="nf-item' + (n.read ? '' : ' unread') + '" data-action="open-notif" data-link="' + esc(n.link || '') + '"><span class="nf-icon">' + esc(n.icon || '💬') + '</span><span style="flex:1"><span class="nf-text" style="display:block">' + esc(n.text || '') + '</span><span class="nf-time" style="display:block">' + esc(tAgo(n.created_at || n.time)) + '</span></span></button>').join('');
+  w.innerHTML = NOTIFS.map(n => '<button class="nf-item' + (n.read ? '' : ' unread') + '" data-action="open-notif" data-link="' + esc(n.link || '') + '"><span class="nf-icon">' + esc(n.icon || '💬') + '</span><span style="flex:1"><span class="nf-text" style="display:block">' + esc(n.text || '') + '</span><span class="nf-time" style="display:block">' + esc(tAgo(n.created_at)) + '</span></span></button>').join('');
+}
+function renderInboxMsgs(w){
+  const inc = (MSG.reqs.incoming || []).length, l = CIR.list || [];
+  let h = '';
+  if (inc) h += '<button class="ib-req" data-action="inbox-requests"><span><b>' + inc + ' message request' + (inc === 1 ? '' : 's') + '</b><small>People who want to chat privately</small></span><span class="ib-go">Review</span></button>';
+  h += MSG.chats.map(c => '<button class="mrow" data-action="msg-chat" data-id="' + esc(c.id) + '"><span class="d-ava" aria-hidden="true">' + esc(String(c.other_name || '?').slice(0, 2).toUpperCase()) + '</span><span style="min-width:0"><b>' + esc(c.other_name || 'Someone') + (c.closed ? ' · closed' : '') + '</b><small>' + esc(c.last_preview || '') + '</small></span>' + (num(c.unread) ? '<span class="mdot" aria-label="New"></span>' : '') + '</button>').join('');
+  h += l.map(c => '<button class="mrow" data-action="cir-room" data-cid="' + esc(c.id) + '"><span class="d-ava" aria-hidden="true">👥</span><span style="min-width:0"><b>' + esc(c.name) + '</b><small>Circle · ' + num(c.members) + ' members' + (c.pending ? ' · ' + num(c.pending) + ' waiting to join' : '') + '</small></span>' + (c.unread ? '<span class="mdot" aria-label="New"></span>' : '') + '</button>').join('');
+  if (!h) h = '<div class="empty"><div class="empty-ic">✉️</div><p>No conversations yet. Tap ✉ on a story or comment to ask someone to talk privately, or join a Circle from Explore.</p></div>';
+  w.innerHTML = h;
+}
+async function loadInboxMsgs(){
+  if (!me || !sb) return;
+  try { await Promise.all([refreshInbox(true), cirLoadList()]); } catch(e){}
+  if (page === 'notifications') renderNotifs();
 }
 async function markNotifsRead(){
   if (!me || !unread) return;
@@ -2951,11 +3015,14 @@ async function renderProfile(){
   const badges = ach.slice(0, 6).map(id => { const a = ACHIEVEMENTS.find(x => x.id === id); return a ? '<span class="pf-badge" title="' + esc(a.desc) + '">' + a.icon + ' ' + esc(a.title) + '</span>' : ''; }).join('');
   const shell = '<div class="pf-header"><div class="pf-ava" aria-hidden="true">' + esc(me.username.slice(0,2).toUpperCase()) + '</div><div class="pf-name">' + esc(me.username) + '</div>' + (join ? '<div class="pf-joined">Member since ' + esc(join) + '</div>' : '') + (badges ? '<div class="pf-badges">' + badges + '</div>' : '') +
     '<div class="pf-stats" id="pfStats"><div><div class="ps-n">–</div><div class="ps-l">Confessions</div></div><div><div class="ps-n">–</div><div class="ps-l">Reactions</div></div><div><div class="ps-n">–</div><div class="ps-l">Verdicts</div></div><div><div class="ps-n">' + streak + '</div><div class="ps-l">Day streak</div></div></div></div>' +
-    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button><button class="btn btn-ghost btn-sm" data-action="col-open">📚 Collections</button><button class="btn btn-ghost btn-sm" data-action="qa-open">❓ Questions</button><button class="btn btn-ghost btn-sm" data-action="cir-open">👥 Circles</button><button class="btn btn-ghost btn-sm" data-action="style-open">✨ Style</button><button class="btn btn-ghost btn-sm" data-action="open-rename">Change name</button></div></div>' +
+    '<div class="hc-card"><div><b id="hcCardBal">' + hcTotal().toLocaleString() + ' HC</b><small>Heart Credits</small></div><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn btn-ghost btn-sm" data-action="open-wallet">Wallet</button><button class="btn btn-ghost btn-sm" data-action="rew-open">🎁 Rewards</button></div></div>' +
     '<div id="pfRep"></div>' +
-    '<h2 class="sec-title" style="margin-bottom:10px">Alerts</h2><div class="prefs" id="prefsBox"></div>' +
+    '<h2 class="sec-title" style="margin:18px 0 10px">My stuff</h2><div class="pf-list">' + '<button class="pf-row" data-action="pf-scroll" data-to="myPosts"><span>💬 My confessions</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="draft-list"><span>📂 Drafts</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="pf-saved"><span>🔖 Saved</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="col-open"><span>📚 Collections</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="cir-open"><span>👥 Circles</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="pf-myq"><span>❓ My questions</span><span class="pf-chev">›</span></button>' + '</div>' +
+    '<h2 class="sec-title" style="margin:18px 0 10px">Customize</h2><div class="pf-list">' + '<button class="pf-row" data-action="style-open"><span>✨ Style: colour, frame, badge</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="open-rename"><span>✏️ Change username</span><span class="pf-chev">›</span></button>' + '</div>' +
+    '<h2 class="sec-title" style="margin:18px 0 10px">Settings</h2><div class="pf-list">' + '<button class="pf-row" data-action="pf-privacy"><span>🔒 Privacy policy</span><span class="pf-chev">›</span></button>' + '<button class="pf-row" data-action="go-resources"><span>🫂 Help and support</span><span class="pf-chev">›</span></button>' + '</div>' +
+    '<h2 class="sec-title" style="margin-bottom:10px">Notifications and email</h2><div class="prefs" id="prefsBox"></div>' +
     '<h2 class="sec-title" style="margin-bottom:10px">Your interests</h2><div class="chips">' + TOPICS.map(t => '<button class="chip' + (prefs.topics.includes(t) ? ' on' : '') + '" data-action="pref-topic" data-tag="' + t + '" aria-pressed="' + prefs.topics.includes(t) + '">#' + t + '</button>').join('') + '</div>' +
-    '<h2 class="sec-title" style="margin-bottom:12px">Your confessions</h2><div id="myPosts">' + skeletonHTML(1) + '</div>' +
+    '<h2 class="sec-title" style="margin-bottom:12px">My confessions</h2><div id="myPosts">' + skeletonHTML(1) + '</div>' +
     '<div style="text-align:center;padding:24px 0;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button class="btn btn-ghost" data-action="go-resources">🫂 Support</button><button class="btn btn-ghost" data-action="logout">Sign out</button></div>';
   w.innerHTML = shell;
   renderPrefs(); loadRepCard(); fetchPrefs().then(() => { if (page === 'profile') renderPrefs(); });
@@ -3310,7 +3377,7 @@ const MSG = { view: 'inbox', tab: 'chats', chats: [], reqs: { incoming: [], outg
 function msgBadge(){ return num(MSG.counts.requests) + num(MSG.counts.unread); }
 async function loadMsgCounts(){
   if (!me || !sb) return;
-  try { const { data, error } = await sb.rpc('get_message_counts'); if (!error && data) { MSG.counts = data; updateNav(); } } catch(e){}
+  try { const { data, error } = await sb.rpc('get_message_counts'); if (!error && data) { MSG.counts = data; updateNav(); updateNotifBadge(); if (page === 'notifications') renderNotifs(); } } catch(e){}
 }
 function stopMsgPoll(){ if (MSG.poll) { clearInterval(MSG.poll); MSG.poll = null; } }
 function startMsgPoll(){
@@ -3980,6 +4047,16 @@ function bindEvents(){
       case 'rew-share': shareInvite(); break;
       case 'rew-copy': copyInvite(); break;
       case 'msg-open': openMsg(); break;
+      case 'inbox-tab': INB.tab = el.dataset.tab; renderNotifs(); if (INB.tab === 'messages') loadInboxMsgs(); else markNotifsRead(); break;
+      case 'inbox-requests': openMsg('requests'); break;
+      case 'cf-story': break;
+      case 'cf-question': if (!me) { showAuth('signup'); break; } openOv('ovQa'); qaStartAsk(); break;
+      case 'ex-discover': openCollections('discover'); break;
+      case 'ex-cir-join': if (!me) { showAuth('signup'); break; } CIR.view = 'join'; openOv('ovCir'); renderCir(); break;
+      case 'pf-scroll': { const t = document.getElementById(el.dataset.to); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); break; }
+      case 'pf-saved': S.filter = 'saved'; go('home'); renderFilters(); loadFeed(true); break;
+      case 'pf-myq': openQa('mine'); break;
+      case 'pf-privacy': window.location.href = 'privacy.html'; break;
       case 'msg-tab': MSG.tab = el.dataset.tab; renderMsg(); break;
       case 'msg-compose': openCompose(pid, cid); break;
       case 'msg-send-request': sendRequest(); break;
